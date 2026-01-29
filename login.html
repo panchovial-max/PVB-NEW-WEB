@@ -614,7 +614,8 @@
     </script>
 
     <script>
-        const API_BASE = 'http://localhost:8001/api';
+        // Using Supabase Auth instead of custom API
+        const API_BASE = ''; // Not needed - using Supabase directly
         const LOG_ENDPOINT = 'http://127.0.0.1:7242/ingest/aa1d3a64-908e-40bb-99e0-ce8fd7cea53c';
         const RUN_ID = 'login-debug-' + Date.now();
         const SESSION_ID = 'debug-session';
@@ -1172,6 +1173,155 @@
         // Add network status listeners
         window.addEventListener('online', checkNetworkStatus);
         window.addEventListener('offline', checkNetworkStatus);
+
+        // =========================================
+        // SUPABASE AUTH FIX - Overrides API_BASE calls
+        // =========================================
+
+        // Wait for DOM to be ready
+        setTimeout(() => {
+            const signupForm = document.getElementById('signupForm');
+            const loginForm = document.getElementById('loginForm');
+
+            if (signupForm) {
+                // Remove all existing listeners by cloning
+                const newSignupForm = signupForm.cloneNode(true);
+                signupForm.parentNode.replaceChild(newSignupForm, signupForm);
+
+                // Add new Supabase-based handler
+                newSignupForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const fullName = document.getElementById('fullName').value.trim();
+                    const email = document.getElementById('signupEmail').value.trim();
+                    const password = document.getElementById('signupPassword').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
+                    const agreeTerms = document.getElementById('agreeTerms').checked;
+
+                    const errorAlert = document.getElementById('signupError');
+                    const successAlert = document.getElementById('signupSuccess');
+                    const signupBtn = this.querySelector('button[type="submit"]');
+
+                    errorAlert.classList.remove('show');
+                    successAlert.classList.remove('show');
+
+                    if (password !== confirmPassword) {
+                        errorAlert.textContent = 'Passwords do not match';
+                        errorAlert.classList.add('show');
+                        return;
+                    }
+
+                    if (password.length < 8) {
+                        errorAlert.textContent = 'Password must be at least 8 characters';
+                        errorAlert.classList.add('show');
+                        return;
+                    }
+
+                    if (!agreeTerms) {
+                        errorAlert.textContent = 'Please agree to Terms';
+                        errorAlert.classList.add('show');
+                        return;
+                    }
+
+                    signupBtn.disabled = true;
+                    signupBtn.textContent = 'CREATING ACCOUNT...';
+
+                    try {
+                        if (!supabase) {
+                            await initSupabaseClient();
+                        }
+
+                        const { data, error } = await supabase.auth.signUp({
+                            email: email,
+                            password: password,
+                            options: {
+                                data: { full_name: fullName }
+                            }
+                        });
+
+                        if (error) {
+                            errorAlert.textContent = error.message;
+                            errorAlert.classList.add('show');
+                        } else if (data.user) {
+                            successAlert.textContent = `Account created! Welcome, ${fullName}!`;
+                            successAlert.classList.add('show');
+
+                            if (data.session) {
+                                localStorage.setItem('session_id', data.session.access_token);
+                                localStorage.setItem('user_id', data.user.id);
+                                localStorage.setItem('email', data.user.email);
+                                localStorage.setItem('full_name', fullName);
+                                localStorage.setItem('supabase_session', JSON.stringify(data.session));
+
+                                setTimeout(() => {
+                                    window.location.href = 'dashboard.html';
+                                }, 1500);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Signup error:', error);
+                        errorAlert.textContent = 'Unable to create account';
+                        errorAlert.classList.add('show');
+                    } finally {
+                        signupBtn.disabled = false;
+                        signupBtn.textContent = 'SIGN UP';
+                    }
+                });
+            }
+
+            if (loginForm) {
+                // Remove all existing listeners by cloning
+                const newLoginForm = loginForm.cloneNode(true);
+                loginForm.parentNode.replaceChild(newLoginForm, loginForm);
+
+                // Add new Supabase-based handler
+                newLoginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const email = document.getElementById('email').value.trim();
+                    const password = document.getElementById('password').value;
+
+                    const errorAlert = document.getElementById('loginError');
+                    const loginBtn = this.querySelector('button[type="submit"]');
+
+                    errorAlert.classList.remove('show');
+
+                    loginBtn.disabled = true;
+                    loginBtn.textContent = 'SIGNING IN...';
+
+                    try {
+                        if (!supabase) {
+                            await initSupabaseClient();
+                        }
+
+                        const { data, error } = await supabase.auth.signInWithPassword({
+                            email: email,
+                            password: password
+                        });
+
+                        if (error) {
+                            errorAlert.textContent = error.message || 'Invalid credentials';
+                            errorAlert.classList.add('show');
+                        } else if (data.user && data.session) {
+                            localStorage.setItem('session_id', data.session.access_token);
+                            localStorage.setItem('user_id', data.user.id);
+                            localStorage.setItem('email', data.user.email);
+                            localStorage.setItem('full_name', data.user.user_metadata?.full_name || '');
+                            localStorage.setItem('supabase_session', JSON.stringify(data.session));
+
+                            window.location.href = 'dashboard.html';
+                        }
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        errorAlert.textContent = 'Unable to sign in';
+                        errorAlert.classList.add('show');
+                    } finally {
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = 'SIGN IN';
+                    }
+                });
+            }
+        }, 100);
     </script>
 </body>
 </html>
