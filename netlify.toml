@@ -1,0 +1,85 @@
+# Netlify Configuration for PVB Estudio Creativo
+
+[build]
+  # No build command needed for static site
+  command = "echo 'No build needed'"
+
+  # Publish directory (root of the project)
+  publish = "."
+
+  # Functions directory
+  functions = "netlify/functions"
+
+[build.environment]
+  # Node version for functions
+  NODE_VERSION = "18"
+
+# Redirects and rewrites
+[[redirects]]
+  # Redirect root domain to www
+  from = "https://panchovial.com/*"
+  to = "https://www.panchovial.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  # SPA fallback (optional - for future client-side routing)
+  from = "/dashboard/*"
+  to = "/dashboard.html"
+  status = 200
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/login.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/dashboard.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Environment variables (these will be set in Netlify UI)
+# DO NOT commit actual values - this is just documentation
+# [context.production.environment]
+#   SUPABASE_URL = "https://htkzpktnaladabovakwc.supabase.co"
+#   SUPABASE_ANON_KEY = "your-anon-key"
+#   SUPABASE_SERVICE_KEY = "your-service-key"
+#   BASE_URL = "https://www.panchovial.com"
+#   INSTAGRAM_APP_ID = "your-instagram-app-id"
+#   INSTAGRAM_APP_SECRET = "your-instagram-app-secret"
+#   META_APP_ID = "your-meta-app-id"
+#   META_APP_SECRET = "your-meta-app-secret"
+#   LINKEDIN_CLIENT_ID = "your-linkedin-client-id"
+#   LINKEDIN_CLIENT_SECRET = "your-linkedin-client-secret"
+#   TIKTOK_CLIENT_KEY = "your-tiktok-client-key"
+#   TIKTOK_CLIENT_SECRET = "your-tiktok-client-secret"

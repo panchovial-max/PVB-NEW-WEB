@@ -93,12 +93,27 @@
             border: 1px solid #E0E0E0;
             border-radius: 8px;
             font-size: 16px;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .form-input:hover {
+            border-color: #D0D0D0;
         }
 
         .form-input:focus {
             outline: none;
             border-color: #FF0000;
+            box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.1);
+        }
+
+        .form-input:invalid:not(:placeholder-shown) {
+            border-color: #DC2626;
+            background-color: rgba(220, 38, 38, 0.02);
+        }
+
+        .form-input:valid:not(:placeholder-shown) {
+            border-color: #16A34A;
         }
 
         .form-options {
@@ -213,46 +228,162 @@
             margin-bottom: 10px;
         }
 
-        .client-login-section {
-            background-color: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .client-login-buttons {
+        /* Login Tabs */
+        .login-tabs {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
+            gap: 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #E0E0E0;
         }
 
-        .client-login-btn {
-            background-color: #f0f0f0;
-            border: 1px solid #d0d0d0;
-            border-radius: 6px;
-            padding: 10px 15px;
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 14px;
+            font-weight: 700;
+            color: #666;
             cursor: pointer;
             transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .tab-btn:hover {
+            color: #333;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .tab-btn:focus {
+            outline: 2px solid #FF0000;
+            outline-offset: 2px;
+        }
+
+        .tab-btn.active {
+            color: #FF0000;
+            border-bottom-color: #FF0000;
+        }
+
+        /* Auth Forms */
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .terms-link {
+            color: #FF0000;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .terms-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Social Login Styles */
+        .social-login-section {
+            margin-top: 2rem;
+        }
+
+        .social-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .social-divider::before,
+        .social-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #E0E0E0;
+        }
+
+        .social-divider span {
+            padding: 0 1rem;
+        }
+
+        .social-login-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .social-login-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            background: #FFFFFF;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
-        .client-login-btn:hover {
-            background-color: #e0e0e0;
-            border-color: #c0c0c0;
+        .social-login-btn:hover {
+            border-color: #CCC;
+            background: #F9F9F9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .client-login-btn img {
-            width: 24px;
-            height: 24px;
+        .social-login-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .social-login-btn svg {
+            flex-shrink: 0;
+        }
+
+        .social-login-btn span {
+            flex: 1;
+            text-align: left;
+        }
+
+        .social-login-btn.google:hover {
+            border-color: #4285F4;
+            background: #F8F9FA;
+        }
+
+        .social-login-btn.facebook:hover {
+            border-color: #1877F2;
+            background: #F0F2F5;
+        }
+
+        .social-login-btn.github:hover {
+            border-color: #181717;
+            background: #F6F8FA;
+        }
+
+        .social-login-btn.apple:hover {
+            border-color: #000;
+            background: #F5F5F7;
+        }
+
+        .social-login-btn.microsoft:hover {
+            border-color: #00A4EF;
+            background: #F8F9FA;
         }
 
         @media (max-width: 480px) {
+            .social-login-buttons {
+                grid-template-columns: 1fr;
+            }
             .login-container {
                 padding: 1.5rem;
                 margin: 1rem;
@@ -269,15 +400,20 @@
                 <span class="logo-dot">●</span>
                 <span class="logo-name">ESTUDIO CREATIVO</span>
             </div>
-            <h1>Client Login</h1>
-            <p>Access your campaign analytics dashboard</p>
+            <div class="login-tabs">
+                <button class="tab-btn active" data-tab="login">SIGN IN</button>
+                <button class="tab-btn" data-tab="signup">SIGN UP</button>
+            </div>
+            <h1 id="pageTitle">Client Login</h1>
+            <p id="pageSubtitle">Access your campaign analytics dashboard</p>
         </div>
 
         <div class="login-body">
             <div class="alert alert-error" id="errorAlert"></div>
             <div class="alert alert-success" id="successAlert"></div>
 
-            <form id="loginForm">
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <input
@@ -285,7 +421,7 @@
                         id="email"
                         name="email"
                         class="form-input"
-                        placeholder="Enter your client email"
+                        placeholder="Enter your email"
                         required
                         autocomplete="email"
                     >
@@ -317,29 +453,116 @@
                 </button>
             </form>
 
-            <div class="client-login-section">
-                <h3>Quick Client Access</h3>
-                <p>Select your client profile to log in quickly:</p>
-                <div class="client-login-buttons" id="clientLoginButtons">
-                    <button class="client-login-btn" data-email="techstartup@example.com">
-                        <img src="https://via.placeholder.com/24?text=TS" alt="Tech Startup">
-                        Tech Startup
+            <!-- Signup Form -->
+            <form id="signupForm" class="auth-form">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input
+                        type="text"
+                        id="signupName"
+                        name="full_name"
+                        class="form-input"
+                        placeholder="Enter your full name"
+                        required
+                        autocomplete="name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="signupEmail">Email Address</label>
+                    <input
+                        type="email"
+                        id="signupEmail"
+                        name="email"
+                        class="form-input"
+                        placeholder="Enter your email"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input
+                        type="password"
+                        id="signupPassword"
+                        name="password"
+                        class="form-input"
+                        placeholder="Create a password (min. 8 characters)"
+                        required
+                        autocomplete="new-password"
+                        minlength="8"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input
+                        type="password"
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        class="form-input"
+                        placeholder="Confirm your password"
+                        required
+                        autocomplete="new-password"
+                        minlength="8"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="remember-me">
+                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                        I agree to the <a href="#" class="terms-link">Terms of Service</a> and <a href="#" class="terms-link">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-login" id="signupBtn">
+                    CREATE ACCOUNT
                     </button>
-                    <button class="client-login-btn" data-email="ecommerce@example.com">
-                        <img src="https://via.placeholder.com/24?text=EC" alt="E-commerce">
-                        E-commerce
+            </form>
+
+            <!-- Social Login Section -->
+            <div class="social-login-section">
+                <div class="social-divider">
+                    <span>Or continue with</span>
+                </div>
+                <div class="social-login-buttons">
+                    <!-- Google (Gmail) - El más usado globalmente -->
+                    <button class="social-login-btn google" data-provider="google" onclick="initiateSocialLogin('google')" aria-label="Sign in with Google">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                        <span>Google</span>
                     </button>
-                    <button class="client-login-btn" data-email="fashionbrand@example.com">
-                        <img src="https://via.placeholder.com/24?text=FB" alt="Fashion Brand">
-                        Fashion Brand
+
+                    <!-- Facebook - Muy popular en apps de consumidor -->
+                    <button class="social-login-btn facebook" data-provider="facebook" onclick="initiateSocialLogin('facebook')" aria-label="Sign in with Facebook">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
+                        </svg>
+                        <span>Facebook</span>
                     </button>
-                    <button class="client-login-btn" data-email="restaurant@example.com">
-                        <img src="https://via.placeholder.com/24?text=RS" alt="Restaurant">
-                        Restaurant
+
+                    <!-- Apple - Requerido para apps iOS con login social -->
+                    <button class="social-login-btn apple" data-provider="apple" onclick="initiateSocialLogin('apple')" aria-label="Sign in with Apple">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" fill="#000000"/>
+                        </svg>
+                        <span>Apple</span>
                     </button>
-                    <button class="client-login-btn" data-email="saascompany@example.com">
-                        <img src="https://via.placeholder.com/24?text=SC" alt="SaaS Company">
-                        SaaS Company
+
+                    <!-- Microsoft - Popular en entornos empresariales -->
+                    <button class="social-login-btn microsoft" data-provider="microsoft" onclick="initiateSocialLogin('microsoft')" aria-label="Sign in with Microsoft">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 0h11.377v11.372H0V0z" fill="#F25022"/>
+                            <path d="M12.623 0H24v11.372H12.623V0z" fill="#00A4EF"/>
+                            <path d="M0 12.628h11.377V24H0V12.628z" fill="#7FBA00"/>
+                            <path d="M12.623 12.628H24V24H12.623V12.628z" fill="#FFB900"/>
+                        </svg>
+                        <span>Microsoft</span>
                     </button>
                 </div>
             </div>
@@ -351,11 +574,53 @@
         </div>
     </div>
 
+    <!-- Supabase JS Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    
+    <!-- Supabase Configuration -->
+    <script>
+        // Supabase Configuration - PVB Estudio Creativo
+        const SUPABASE_URL = window.SUPABASE_URL || 'https://htkzpktnaladabovakwc.supabase.co';
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0a3pwa3RuYWxhZGFib3Zha3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MjI2ODYsImV4cCI6MjA4NTE5ODY4Nn0.uFjYQ5vesDpscJGaDHW7bQ-PJsNeTtqeeyCl0NZoRUA';
+        
+        // Initialize Supabase client after library loads
+        let supabase = null;
+        
+        // Function to initialize Supabase
+        function initSupabaseClient() {
+            try {
+                // The Supabase UMD build exposes it as window.supabase
+                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('✅ Supabase initialized with URL:', SUPABASE_URL);
+                    return true;
+                }
+                console.warn('⚠️ Supabase library not found. Authentication will use custom API.');
+                return false;
+            } catch (error) {
+                console.error('❌ Error initializing Supabase:', error);
+                return false;
+            }
+        }
+        
+        // Initialize after page loads (give time for CDN script to load)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(initSupabaseClient, 100);
+            });
+        } else {
+            setTimeout(initSupabaseClient, 100);
+        }
+    </script>
+
     <script>
         const API_BASE = 'http://localhost:8001/api';
+        const LOG_ENDPOINT = 'http://127.0.0.1:7242/ingest/aa1d3a64-908e-40bb-99e0-ce8fd7cea53c';
+        const RUN_ID = 'login-debug-' + Date.now();
+        const SESSION_ID = 'debug-session';
 
-        // Enhanced Debugging Function
-        function debugLog(message, type = 'info') {
+        // #region agent log - Enhanced Debugging Function with remote logging
+        function debugLog(message, type = 'info', data = {}, hypothesisId = null) {
             const debugArea = document.getElementById('debugArea');
             const timestamp = new Date().toISOString();
             const logMessage = `[${timestamp}] [${type.toUpperCase()}] ${message}\n`;
@@ -364,6 +629,18 @@
                 debugArea.textContent += logMessage;
                 debugArea.scrollTop = debugArea.scrollHeight;
             }
+            
+            // Remote logging
+            const logEntry = {
+                location: 'login.html:' + (new Error().stack.split('\n')[2]?.match(/:\d+:\d+/)?.[0] || 'unknown'),
+                message: message,
+                data: data,
+                timestamp: Date.now(),
+                sessionId: SESSION_ID,
+                runId: RUN_ID,
+                hypothesisId: hypothesisId || 'unknown'
+            };
+            fetch(LOG_ENDPOINT, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(logEntry)}).catch(() => {});
             
             // Console logging with color coding
             switch(type) {
@@ -377,42 +654,210 @@
                     console.log(logMessage);
             }
         }
+        // #endregion
 
-        // Quick Client Login
-        document.getElementById('clientLoginButtons').addEventListener('click', (e) => {
-            const clientButton = e.target.closest('.client-login-btn');
-            if (clientButton) {
-                const email = clientButton.getAttribute('data-email');
+        // Tab Switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                
+                // Update active tab
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update forms
+                document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+                
+                // Update page title
+                const pageTitle = document.getElementById('pageTitle');
+                const pageSubtitle = document.getElementById('pageSubtitle');
+                
+                if (tab === 'login') {
+                    document.getElementById('loginForm').classList.add('active');
+                    pageTitle.textContent = 'Client Login';
+                    pageSubtitle.textContent = 'Access your campaign analytics dashboard';
+                } else {
+                    document.getElementById('signupForm').classList.add('active');
+                    pageTitle.textContent = 'Create Account';
+                    pageSubtitle.textContent = 'Join PVB Estudio Creativo';
+                }
+                
+                // Clear alerts
+                document.getElementById('errorAlert').classList.remove('show');
+                document.getElementById('successAlert').classList.remove('show');
+            });
+        });
+
+        // #region agent log - Signup Form Handler with instrumentation
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            debugLog('signupForm: Submit event triggered', 'info', {}, 'H2');
+
+            const fullName = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            debugLog('signupForm: Form data extracted', 'info', {fullName, email, passwordLength: password.length, passwordsMatch: password === confirmPassword, agreeTerms}, 'H2');
+
+            const signupBtn = document.getElementById('signupBtn');
+            const errorAlert = document.getElementById('errorAlert');
+            const successAlert = document.getElementById('successAlert');
+
+            // Reset alerts
+            errorAlert.classList.remove('show');
+            successAlert.classList.remove('show');
+
+            // Validation
+            if (password !== confirmPassword) {
+                errorAlert.textContent = 'Passwords do not match';
+                errorAlert.classList.add('show');
+                return;
+            }
+
+            if (password.length < 8) {
+                errorAlert.textContent = 'Password must be at least 8 characters';
+                errorAlert.classList.add('show');
+                return;
+            }
+
+            if (!agreeTerms) {
+                errorAlert.textContent = 'Please agree to the Terms of Service and Privacy Policy';
+                errorAlert.classList.add('show');
+                return;
+            }
+
+            // Disable signup button
+            signupBtn.disabled = true;
+            signupBtn.textContent = 'CREATING ACCOUNT...';
+
+            // #region agent log - Signup API request
+            try {
+                const requestBody = { full_name: fullName, email, password };
+                debugLog('signupForm: Starting signup fetch', 'info', {url: `${API_BASE}/signup`, email, hasPassword: !!password}, 'H3');
+                
+                const response = await fetch(`${API_BASE}/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody),
+                    signal: AbortSignal.timeout(10000)
+                });
+                debugLog('signupForm: Fetch completed', 'info', {status: response.status, ok: response.ok}, 'H3');
+
+                const responseText = await response.text();
+                debugLog('signupForm: Response text received', 'info', {responseTextLength: responseText.length}, 'H4');
+                let data;
+                
+                try {
+                    data = JSON.parse(responseText);
+                    debugLog('signupForm: JSON parsed successfully', 'info', {hasSuccess: 'success' in data}, 'H4');
+                } catch (parseError) {
+                    debugLog('signupForm: JSON parse failed', 'error', {parseError: parseError.message}, 'H4');
+                    throw new Error('Invalid JSON response');
+                }
+            // #endregion
+
+                if (data.success) {
+                    debugLog('signupForm: Signup successful', 'info', {sessionId: data.session_id}, 'H5');
+                    successAlert.textContent = `Account created successfully! Welcome, ${fullName}!`;
+                    successAlert.classList.add('show');
+
+                    // Auto-login after signup
+                    setTimeout(async () => {
+                        try {
+                            debugLog('signupForm: Attempting auto-login', 'info', {email}, 'H5');
+                            const loginResponse = await fetch(`${API_BASE}/login`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ email, password })
+                            });
+                            debugLog('signupForm: Auto-login response received', 'info', {status: loginResponse.status}, 'H5');
+
+                            const loginData = await loginResponse.json();
+                            debugLog('signupForm: Auto-login response received', 'info', {status: loginResponse.status, success: loginData.success}, 'H5');
+                            if (loginData.success) {
+                                debugLog('signupForm: Auto-login successful, redirecting', 'info', {}, 'H5');
+                                localStorage.setItem('session_id', loginData.session_id);
+                                localStorage.setItem('user_id', loginData.user.user_id);
+                                localStorage.setItem('email', loginData.user.email);
+                                localStorage.setItem('full_name', loginData.user.full_name);
+                                localStorage.setItem('role', loginData.user.role);
+                                
+                                window.location.href = 'dashboard.html';
+                            } else {
+                                debugLog('signupForm: Auto-login failed', 'error', {message: loginData.message}, 'H5');
+                            }
+                        } catch (loginError) {
+                            debugLog('signupForm: Auto-login error', 'error', {errorName: loginError.name, errorMessage: loginError.message}, 'H5');
+                            // Redirect to login tab
+                            document.querySelector('[data-tab="login"]').click();
                 document.getElementById('email').value = email;
-                document.getElementById('password').value = 'demo123';
-                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+                            errorAlert.textContent = 'Account created! Please sign in.';
+                            errorAlert.classList.add('show');
+                        }
+                    }, 1500);
+                } else {
+                    errorAlert.textContent = data.message || 'Signup failed. Please try again.';
+                    errorAlert.classList.add('show');
+                    debugLog('signupForm: Signup failed', 'error', {message: data.message}, 'H5');
+                }
+            // #endregion
+            } catch (error) {
+                debugLog('signupForm: Exception caught', 'error', {errorName: error.name, errorMessage: error.message}, 'H3');
+                
+                let errorMessage = 'An unexpected error occurred. Please try again.';
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Request timed out. Please check your internet connection.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Unable to connect to the server. Please check your network connection.';
+                }
+                
+                errorAlert.textContent = errorMessage;
+                errorAlert.classList.add('show');
+                debugLog('signupForm: Error alert shown', 'error', {errorMessage}, 'H3');
+            } finally {
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'CREATE ACCOUNT';
+                debugLog('signupForm: Signup button re-enabled', 'info', {}, 'H2');
             }
         });
 
-        // Network Diagnostics
+
+        // #region agent log - Network Diagnostics with detailed logging
         async function checkServerAvailability() {
+            debugLog('checkServerAvailability: Starting health check', 'info', {apiBase: API_BASE}, 'H1');
             try {
+                const startTime = Date.now();
+                debugLog('checkServerAvailability: Attempting fetch to /health', 'info', {url: `${API_BASE}/health`}, 'H1');
                 const response = await fetch(`${API_BASE}/health`, { 
-                    method: 'GET', 
-                    timeout: 5000 
+                    method: 'GET'
                 });
+                const fetchTime = Date.now() - startTime;
+                debugLog('checkServerAvailability: Fetch completed', 'info', {status: response.status, ok: response.ok, time: fetchTime}, 'H1');
                 
                 if (!response.ok) {
-                    debugLog('Server health check failed', 'error');
+                    debugLog('checkServerAvailability: Server health check failed - non-OK response', 'error', {status: response.status, statusText: response.statusText}, 'H1');
                     return false;
                 }
 
                 const healthData = await response.json();
-                debugLog(`Server Health: ${JSON.stringify(healthData)}`, 'info');
+                debugLog('checkServerAvailability: Health check successful', 'info', {healthData, status: healthData.status}, 'H1');
                 return healthData.status === 'healthy';
             } catch (error) {
-                debugLog(`Server availability error: ${error.message}`, 'error');
+                debugLog('checkServerAvailability: Error during health check', 'error', {errorName: error.name, errorMessage: error.message, errorStack: error.stack}, 'H1');
                 return false;
             }
         }
+        // #endregion
 
+        // #region agent log - Login form submit handler with detailed instrumentation
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            debugLog('loginForm: Submit event triggered', 'info', {}, 'H2');
 
             // Clear previous debug logs
             const debugArea = document.getElementById('debugArea');
@@ -420,19 +865,22 @@
                 debugArea.textContent = '';
             }
 
-            // Server availability check
+            // #region agent log - Server availability check
             const serverAvailable = await checkServerAvailability();
+            debugLog('loginForm: Server availability result', 'info', {serverAvailable}, 'H1');
             if (!serverAvailable) {
                 const errorAlert = document.getElementById('errorAlert');
                 errorAlert.textContent = 'Server is currently unavailable. Please try again later.';
                 errorAlert.classList.add('show');
-                debugLog('Cannot proceed: Server is not responding', 'error');
+                debugLog('loginForm: Cannot proceed - server not responding', 'error', {}, 'H1');
                 return;
             }
+            // #endregion
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('rememberMe').checked;
+            debugLog('loginForm: Form data extracted', 'info', {email, passwordLength: password.length, rememberMe}, 'H2');
 
             const loginBtn = document.getElementById('loginBtn');
             const errorAlert = document.getElementById('errorAlert');
@@ -445,83 +893,93 @@
             // Disable login button
             loginBtn.disabled = true;
             loginBtn.textContent = 'SIGNING IN...';
+            debugLog('loginForm: Login button disabled, preparing request', 'info', {}, 'H2');
 
-            debugLog(`Attempting login for: ${email}`, 'info');
-
+            // #region agent log - Login API request
             try {
-                const response = await fetch(`${API_BASE}/login`, {
+                const requestBody = { email, password, rememberMe };
+                const requestUrl = `${API_BASE}/login`;
+                debugLog('loginForm: Starting login fetch', 'info', {url: requestUrl, email, hasPassword: !!password}, 'H3');
+                
+                const requestStartTime = Date.now();
+                const response = await fetch(requestUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ 
-                        email, 
-                        password, 
-                        rememberMe 
-                    }),
+                    body: JSON.stringify(requestBody),
                     signal: AbortSignal.timeout(10000)
                 });
+                const requestTime = Date.now() - requestStartTime;
+                debugLog('loginForm: Fetch completed', 'info', {status: response.status, ok: response.ok, time: requestTime}, 'H3');
 
-                debugLog(`Response status: ${response.status}`, 'info');
-
-                // Detailed response logging
+                // #region agent log - Response processing
                 const responseText = await response.text();
-                debugLog(`Full response: ${responseText}`, 'info');
+                debugLog('loginForm: Response text received', 'info', {responseTextLength: responseText.length, preview: responseText.substring(0, 200)}, 'H4');
 
                 let data;
                 try {
                     data = JSON.parse(responseText);
+                    debugLog('loginForm: JSON parsed successfully', 'info', {hasSuccess: 'success' in data, hasMessage: 'message' in data}, 'H4');
                 } catch (parseError) {
-                    debugLog(`JSON parse error: ${parseError.message}`, 'error');
+                    debugLog('loginForm: JSON parse failed', 'error', {parseError: parseError.message, responseText}, 'H4');
                     throw new Error('Invalid JSON response');
                 }
 
                 if (data.success) {
+                    debugLog('loginForm: Login successful', 'info', {sessionId: data.session_id, userId: data.user?.user_id}, 'H5');
                     // Store session information
                     localStorage.setItem('session_id', data.session_id);
                     localStorage.setItem('user_id', data.user.user_id);
                     localStorage.setItem('email', data.user.email);
                     localStorage.setItem('full_name', data.user.full_name);
                     localStorage.setItem('role', data.user.role);
+                    debugLog('loginForm: Session data stored in localStorage', 'info', {stored: true}, 'H5');
 
                     // Show success message
                     successAlert.textContent = `Welcome back, ${data.user.full_name}!`;
                     successAlert.classList.add('show');
-                    debugLog('Login successful', 'info');
+                    debugLog('loginForm: Success alert shown, redirecting', 'info', {}, 'H5');
 
                     // Redirect to dashboard
                     setTimeout(() => {
+                        debugLog('loginForm: Redirecting to dashboard', 'info', {}, 'H5');
                         window.location.href = 'dashboard.html';
                     }, 1000);
                 } else {
-                    // Show specific error message from server
                     const errorMessage = data.message || 'Login failed. Please check your credentials.';
                     errorAlert.textContent = errorMessage;
                     errorAlert.classList.add('show');
-                    debugLog(`Login failed: ${errorMessage}`, 'error');
+                    debugLog('loginForm: Login failed', 'error', {errorMessage, errorCode: data.error_code}, 'H5');
                 }
+                // #endregion
             } catch (error) {
-                console.error('Login error:', error);
+                debugLog('loginForm: Exception caught', 'error', {errorName: error.name, errorMessage: error.message, errorStack: error.stack?.substring(0, 500)}, 'H3');
                 
-                // Detailed error handling
                 let errorMessage = 'An unexpected error occurred. Please try again.';
                 if (error.name === 'AbortError') {
                     errorMessage = 'Request timed out. Please check your internet connection.';
+                    debugLog('loginForm: Request timeout', 'error', {}, 'H3');
                 } else if (error.message.includes('Failed to fetch')) {
                     errorMessage = 'Unable to connect to the server. Please check your network connection.';
+                    debugLog('loginForm: Fetch failed - network/CORS issue', 'error', {}, 'H3');
                 } else if (error.message.includes('HTTP error')) {
                     errorMessage = 'Server error. Please try again later.';
+                    debugLog('loginForm: HTTP error', 'error', {}, 'H3');
                 }
                 
                 errorAlert.textContent = errorMessage;
                 errorAlert.classList.add('show');
-                debugLog(`Catch block error: ${errorMessage}`, 'error');
+                debugLog('loginForm: Error alert shown', 'error', {errorMessage}, 'H3');
             } finally {
                 // Re-enable login button
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'SIGN IN';
+                debugLog('loginForm: Login button re-enabled', 'info', {}, 'H2');
             }
+            // #endregion
         });
+        // #endregion
 
         // Debug toggle functionality
         document.getElementById('toggleDebug').addEventListener('click', () => {
@@ -546,10 +1004,174 @@
             }
         }
 
+        // #region agent log - Page initialization
+        window.addEventListener('load', () => {
+            debugLog('Page loaded', 'info', {apiBase: API_BASE, protocol: window.location.protocol, hostname: window.location.hostname}, 'H1');
+            checkNetworkStatus();
+        });
+        // #endregion
+
+        // #region agent log - Social Login OAuth Flow with Supabase (Top 4 Providers)
+        async function initiateSocialLogin(provider) {
+            debugLog(`initiateSocialLogin: Starting OAuth for ${provider}`, 'info', {provider, hasSupabase: !!supabase}, 'H6');
+            
+            // Top 4 OAuth Providers: Google, Facebook, Apple, Microsoft
+            const topProviders = ['google', 'facebook', 'apple', 'microsoft'];
+            
+            // Prefer Supabase for top providers if available
+            if (supabase && SUPABASE_URL && SUPABASE_URL.includes('supabase.co') && topProviders.includes(provider.toLowerCase())) {
+                try {
+                    debugLog(`initiateSocialLogin: Using Supabase Auth for ${provider}`, 'info', {}, 'H6');
+                    
+                    // Map provider names to Supabase provider IDs
+                    const supabaseProviderMap = {
+                        'google': 'google',
+                        'facebook': 'facebook',
+                        'apple': 'apple',
+                        'microsoft': 'azure' // Microsoft uses 'azure' in Supabase
+                    };
+                    
+                    const supabaseProvider = supabaseProviderMap[provider.toLowerCase()] || provider.toLowerCase();
+                    
+                    // Initiate OAuth sign-in with Supabase
+                    const { data, error } = await supabase.auth.signInWithOAuth({
+                        provider: supabaseProvider,
+                        options: {
+                            redirectTo: `${window.location.origin}${window.location.pathname}?provider=${provider}`,
+                            queryParams: {
+                                access_type: 'offline',
+                                prompt: 'consent',
+                            }
+                        }
+                    });
+                    
+                    if (error) {
+                        throw error;
+                    }
+                    
+                    if (data?.url) {
+                        debugLog(`initiateSocialLogin: Supabase OAuth URL received`, 'info', {url: data.url}, 'H6');
+                        window.location.href = data.url;
+                        return;
+                    } else {
+                        throw new Error('No redirect URL received from Supabase');
+                    }
+                } catch (error) {
+                    debugLog(`initiateSocialLogin: Supabase error, falling back to custom API`, 'warn', {errorMessage: error.message}, 'H6');
+                    // Fall through to custom API
+                }
+            }
+            
+            // Fallback to custom API implementation
+            try {
+                debugLog(`initiateSocialLogin: Using custom API for ${provider}`, 'info', {}, 'H6');
+                const response = await fetch(`${API_BASE}/social-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ provider })
+                });
+                
+                const data = await response.json();
+                debugLog(`initiateSocialLogin: Response received`, 'info', {success: data.success, hasUrl: !!data.authorizationUrl}, 'H6');
+                
+                if (data.success && data.authorizationUrl) {
+                    debugLog(`initiateSocialLogin: Redirecting to ${provider} OAuth`, 'info', {url: data.authorizationUrl}, 'H6');
+                    // Redirect to OAuth provider
+                    window.location.href = data.authorizationUrl;
+                } else {
+                    const errorMessage = data.message || `Failed to initiate ${provider} login`;
+                    debugLog(`initiateSocialLogin: Failed`, 'error', {message: errorMessage}, 'H6');
+                    const errorAlert = document.getElementById('errorAlert');
+                    errorAlert.textContent = errorMessage;
+                    errorAlert.classList.add('show');
+                }
+            } catch (error) {
+                debugLog(`initiateSocialLogin: Exception caught`, 'error', {errorName: error.name, errorMessage: error.message}, 'H6');
+                const errorAlert = document.getElementById('errorAlert');
+                errorAlert.textContent = `Unable to connect to ${provider}. Please try again.`;
+                errorAlert.classList.add('show');
+            }
+        }
+        // #endregion
+
+        // #region agent log - Page initialization with Supabase
+        window.addEventListener('load', async () => {
+            debugLog('Page loaded', 'info', {apiBase: API_BASE, protocol: window.location.protocol, hostname: window.location.hostname, hasSupabase: !!supabase}, 'H1');
+            checkNetworkStatus();
+            
+            // Initialize Supabase if not already initialized
+            if (!supabase) {
+                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                    try {
+                        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                        debugLog('Supabase initialized on page load', 'info', {url: SUPABASE_URL}, 'H1');
+                    } catch (error) {
+                        debugLog('Failed to initialize Supabase', 'error', {errorMessage: error.message}, 'H1');
+                    }
+                } else {
+                    debugLog('Supabase library not available, using custom API', 'warn', {}, 'H1');
+                }
+            }
+            
+            // Handle Supabase OAuth callback
+            if (supabase) {
+                try {
+                    const { data, error } = await supabase.auth.getSession();
+                    if (data?.session && !error) {
+                        debugLog('Supabase session found', 'info', {userId: data.session.user.id}, 'H1');
+                        // Store session info
+                        localStorage.setItem('supabase_session', JSON.stringify(data.session));
+                        localStorage.setItem('session_id', data.session.access_token);
+                        localStorage.setItem('user_id', data.session.user.id);
+                        localStorage.setItem('email', data.session.user.email);
+                        localStorage.setItem('full_name', data.session.user.user_metadata?.full_name || data.session.user.email);
+                        localStorage.setItem('role', data.session.user.role || 'client');
+                        
+                        // Check if this is an OAuth callback
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const provider = urlParams.get('provider');
+                        if (provider) {
+                            // Clean URL and redirect
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                            window.location.href = 'dashboard.html';
+                            return;
+                        }
+                    } else if (error) {
+                        debugLog('Supabase session error', 'warn', {errorMessage: error.message}, 'H1');
+                    }
+                } catch (error) {
+                    debugLog('Supabase session check failed', 'error', {errorMessage: error.message}, 'H1');
+                }
+            }
+            
+            // Check for OAuth callback error on page load
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+            if (error) {
+                const errorAlert = document.getElementById('errorAlert');
+                const errorMsg = errorDescription ? decodeURIComponent(errorDescription) : decodeURIComponent(error);
+                errorAlert.textContent = errorMsg;
+                errorAlert.classList.add('show');
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            
+            // Check for OAuth callback success (session token) - fallback for custom API
+            const session = urlParams.get('session');
+            if (session) {
+                localStorage.setItem('session_id', session);
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+            }
+        });
+        // #endregion
+
         // Add network status listeners
         window.addEventListener('online', checkNetworkStatus);
         window.addEventListener('offline', checkNetworkStatus);
-        window.addEventListener('load', checkNetworkStatus);
     </script>
 </body>
 </html>

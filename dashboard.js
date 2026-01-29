@@ -1,751 +1,304 @@
-// PVB Estudio Creativo Campaign Analytics Dashboard - JavaScript
+// PVB Estudio Creativo - Dashboard JavaScript
+// Handles authentication, data loading, and dashboard interactions
 
-const API_BASE = 'http://localhost:8001/api';
+// Supabase Configuration
+const SUPABASE_URL = 'https://htkzpktnaladabovakwc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0a3pwa3RuYWxhZGFib3Zha3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MjI2ODYsImV4cCI6MjA4NTE5ODY4Nn0.uFjYQ5vesDpscJGaDHW7bQ-PJsNeTtqeeyCl0NZoRUA';
 
-// Chart instances
-let roiChart = null;
-let revenueChart = null;
+// Initialize Supabase client
+let supabase = null;
 
-// Initialize dashboard
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🎨 PVB Estudio Creativo Campaign Analytics Dashboard');
+// Check authentication on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize Supabase
+    if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
 
-    // Check authentication
-    checkAuthentication();
-});
+    // Check if user is logged in
+    const sessionToken = localStorage.getItem('session_id');
+    const userId = localStorage.getItem('user_id');
+    const userEmail = localStorage.getItem('email');
+    const fullName = localStorage.getItem('full_name');
 
-// Check if user is authenticated
-async function checkAuthentication() {
-    const sessionId = localStorage.getItem('session_id');
-
-    if (!sessionId) {
+    if (!sessionToken || !userId) {
+        // Not logged in - redirect to login
+        console.warn('No session found, redirecting to login');
         window.location.href = 'login.html';
         return;
     }
 
+    // User is logged in - initialize dashboard
+    await initializeDashboard({
+        session_token: sessionToken,
+        user_id: userId,
+        email: userEmail,
+        full_name: fullName
+    });
+});
+
+// Initialize dashboard with user data
+async function initializeDashboard(userData) {
     try {
-        const response = await fetch(`${API_BASE}/verify-session`, {
-            headers: {
-                'X-Session-ID': sessionId
-            }
-        });
+        // Update greeting
+        const userGreeting = document.getElementById('userGreeting');
+        if (userGreeting && userData.full_name) {
+            userGreeting.textContent = `Welcome, ${userData.full_name.split(' ')[0]}!`;
+        }
 
-        const data = await response.json();
+        // Load dashboard data
+        await loadDashboardData(userData);
 
-        if (!data.valid) {
-            localStorage.clear();
-            window.location.href = 'login.html';
+        // Setup event listeners
+        setupEventListeners(userData);
+
+        // Check for OAuth success callback
+        const urlParams = new URLSearchParams(window.location.search);
+        const oauthSuccess = urlParams.get('oauth_success');
+        if (oauthSuccess) {
+            showNotification(`${oauthSuccess.toUpperCase()} account connected successfully!`, 'success');
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // Reload social accounts
+            await loadSocialAccounts(userData);
+        }
+
+    } catch (error) {
+        console.error('Dashboard initialization error:', error);
+        showNotification('Failed to load dashboard', 'error');
+    }
+}
+
+// Load dashboard data
+async function loadDashboardData(userData) {
+    try {
+        // Show loading state
+        showLoadingState(true);
+
+        // Load social accounts
+        await loadSocialAccounts(userData);
+
+        // Load campaigns (if any)
+        await loadCampaigns(userData);
+
+        // Load KPI metrics
+        await loadKPIMetrics(userData);
+
+        // Load charts
+        await loadCharts(userData);
+
+        showLoadingState(false);
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        showLoadingState(false);
+        showNotification('Failed to load some data', 'error');
+    }
+}
+
+// Load social accounts from Supabase
+async function loadSocialAccounts(userData) {
+    if (!supabase) {
+        console.warn('Supabase not initialized');
+        return;
+    }
+
+    try {
+        const { data: accounts, error } = await supabase
+            .from('social_accounts')
+            .select('*')
+            .eq('user_id', userData.user_id)
+            .eq('is_active', true);
+
+        if (error) {
+            throw error;
+        }
+
+        console.log('Social accounts loaded:', accounts);
+
+        // Update UI with connected accounts
+        updateSocialAccountsUI(accounts || []);
+
+        return accounts || [];
+    } catch (error) {
+        console.error('Error loading social accounts:', error);
+        return [];
+    }
+}
+
+// Update social accounts UI
+function updateSocialAccountsUI(accounts) {
+    if (!accounts || accounts.length === 0) {
+        console.log('No connected accounts');
+        return;
+    }
+
+    console.log('Connected accounts:', accounts.length);
+
+    // Log connected platforms for debugging
+    const platforms = accounts.map(acc => acc.platform);
+    console.log('Connected platforms:', platforms.join(', '));
+
+    // If there's a UI element to show connected accounts, update it here
+    const accountsContainer = document.getElementById('connectedAccounts');
+    if (accountsContainer) {
+        accountsContainer.innerHTML = accounts.map(account => `
+            <div class="connected-account" data-platform="${account.platform}">
+                <img src="${getPlatformIcon(account.platform)}" alt="${account.platform}" class="platform-icon">
+                <div class="account-info">
+                    <strong>${account.account_name || account.platform}</strong>
+                    <span class="account-username">@${account.username || 'N/A'}</span>
+                    <span class="sync-status ${account.is_active ? 'active' : 'inactive'}">
+                        ${account.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+// Get platform icon URL
+function getPlatformIcon(platform) {
+    const icons = {
+        'instagram': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg',
+        'facebook': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg',
+        'linkedin': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg',
+        'tiktok': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/tiktok.svg',
+        'twitter': 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/twitter.svg'
+    };
+    return icons[platform] || 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/link.svg';
+}
+
+// Load campaigns
+async function loadCampaigns(userData) {
+    if (!supabase) return;
+
+    try {
+        const { data: campaigns, error } = await supabase
+            .from('campaigns')
+            .select('*')
+            .eq('user_id', userData.user_id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error loading campaigns:', error);
             return;
         }
 
-        // User is authenticated, load user info
-        await loadUserInfo();
+        // Update campaign selector
+        const campaignSelect = document.getElementById('campaignSelect');
+        if (campaignSelect && campaigns) {
+            // Clear existing options except "All Campaigns"
+            campaignSelect.innerHTML = '<option value="all">All Campaigns</option>';
 
-        // Load initial data
-        loadDashboardData();
-
-        // Setup event listeners
-        setupEventListeners();
-
-        // Load campaigns for dropdown
-        loadCampaignsList();
-
-        // Initialize calendar
-        if (window.calendarAPI) {
-            window.calendarAPI.initialize();
+            campaigns.forEach(campaign => {
+                const option = document.createElement('option');
+                option.value = campaign.id;
+                option.textContent = campaign.campaign_name;
+                campaignSelect.appendChild(option);
+            });
         }
 
-        // Initialize settings
-        initializeSettings();
-
+        return campaigns || [];
     } catch (error) {
-        console.error('Authentication error:', error);
-        alert('Error connecting to server. Please make sure the API server is running.');
-    }
-}
-
-// Load user information
-async function loadUserInfo() {
-    const sessionId = localStorage.getItem('session_id');
-
-    try {
-        const response = await fetch(`${API_BASE}/user-info`, {
-            headers: {
-                'X-Session-ID': sessionId
-            }
-        });
-
-        const data = await response.json();
-
-        if (data.user) {
-            // Update user greeting
-            const greeting = document.getElementById('userGreeting');
-            if (greeting) {
-                greeting.textContent = `${data.user.full_name}'s Dashboard`;
-            }
-        }
-    } catch (error) {
-        console.error('Error loading user info:', error);
-    }
-}
-
-// Setup event listeners
-function setupEventListeners() {
-    // Refresh button
-    document.getElementById('refreshData').addEventListener('click', () => {
-        console.log('Refreshing data...');
-        loadDashboardData();
-        if (window.calendarAPI) {
-            window.calendarAPI.initialize();
-        }
-    });
-
-    // Export button
-    document.getElementById('exportData').addEventListener('click', exportData);
-
-    // Settings button
-    document.getElementById('settingsBtn').addEventListener('click', openSettings);
-
-    // Logout button
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-
-    // Filter changes
-    document.getElementById('campaignSelect').addEventListener('change', loadDashboardData);
-    document.getElementById('dateRange').addEventListener('change', loadDashboardData);
-    document.getElementById('campaignType').addEventListener('change', loadCampaignsList);
-
-    // Social Media Configuration button
-    document.getElementById('socialMediaConfig').addEventListener('click', openSocialMediaConfig);
-}
-
-// Logout function
-async function logout() {
-    const sessionId = localStorage.getItem('session_id');
-
-    try {
-        await fetch(`${API_BASE}/logout`, {
-            method: 'POST',
-            headers: {
-                'X-Session-ID': sessionId
-            }
-        });
-    } catch (error) {
-        console.error('Logout error:', error);
-    }
-
-    // Clear local storage
-    localStorage.clear();
-
-    // Redirect to login
-    window.location.href = 'login.html';
-}
-
-// Get headers with session ID
-function getHeaders() {
-    return {
-        'X-Session-ID': localStorage.getItem('session_id')
-    };
-}
-
-// Show loading overlay
-function showLoading() {
-    document.getElementById('loadingOverlay').classList.add('active');
-}
-
-// Hide loading overlay
-function hideLoading() {
-    document.getElementById('loadingOverlay').classList.remove('active');
-}
-
-// Load all dashboard data
-async function loadDashboardData() {
-    showLoading();
-
-    try {
-        await Promise.all([
-            loadKPIs(),
-            loadROITrend(),
-            loadRevenueCost(),
-            loadSocialMedia(),
-            loadSEOMetrics(),
-            loadCampaignsTable()
-        ]);
-
-        console.log('✅ Dashboard data loaded');
-    } catch (error) {
-        console.error('❌ Error loading dashboard:', error);
-        alert('Error loading dashboard data. Make sure the API server is running on port 8001.');
-    } finally {
-        hideLoading();
+        console.error('Error loading campaigns:', error);
+        return [];
     }
 }
 
 // Load KPI metrics
-async function loadKPIs() {
-    const days = document.getElementById('dateRange').value;
-    const campaignId = document.getElementById('campaignSelect').value;
-
-    const response = await fetch(`${API_BASE}/kpis?days=${days}&campaign_id=${campaignId}`, {
-        headers: getHeaders()
-    });
-    const data = await response.json();
-
-    if (data.kpis) {
-        // ROI
-        document.getElementById('totalROI').textContent = `${data.kpis.roi.value}%`;
-        document.getElementById('roiChange').textContent = `${data.kpis.roi.change >= 0 ? '+' : ''}${data.kpis.roi.change}%`;
-        document.getElementById('roiChange').className = `kpi-change ${data.kpis.roi.change >= 0 ? 'positive' : 'negative'}`;
-
-        // Revenue
-        document.getElementById('totalRevenue').textContent = `$${formatNumber(data.kpis.revenue.value)}`;
-        document.getElementById('revenueChange').textContent = `${data.kpis.revenue.change >= 0 ? '+' : ''}${data.kpis.revenue.change}%`;
-        document.getElementById('revenueChange').className = `kpi-change ${data.kpis.revenue.change >= 0 ? 'positive' : 'negative'}`;
-
-        // Conversions
-        document.getElementById('totalConversions').textContent = formatNumber(data.kpis.conversions.value);
-        document.getElementById('conversionsChange').textContent = `${data.kpis.conversions.change >= 0 ? '+' : ''}${data.kpis.conversions.change}%`;
-        document.getElementById('conversionsChange').className = `kpi-change ${data.kpis.conversions.change >= 0 ? 'positive' : 'negative'}`;
-
-        // ROAS
-        document.getElementById('totalROAS').textContent = `${data.kpis.roas.value}x`;
-        document.getElementById('roasChange').textContent = `${data.kpis.roas.change >= 0 ? '+' : ''}${data.kpis.roas.change}%`;
-        document.getElementById('roasChange').className = `kpi-change ${data.kpis.roas.change >= 0 ? 'positive' : 'negative'}`;
-    }
-}
-
-// Load ROI trend chart
-async function loadROITrend() {
-    const days = document.getElementById('dateRange').value;
-    const campaignId = document.getElementById('campaignSelect').value;
-
-    const response = await fetch(`${API_BASE}/roi-trend?days=${days}&campaign_id=${campaignId}`, {
-        headers: getHeaders()
-    });
-    const data = await response.json();
-
-    if (data.trend) {
-        const ctx = document.getElementById('roiChart').getContext('2d');
-
-        // Destroy existing chart
-        if (roiChart) {
-            roiChart.destroy();
-        }
-
-        // Create new chart
-        roiChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.trend.labels,
-                datasets: [{
-                    label: 'ROI %',
-                    data: data.trend.data,
-                    borderColor: '#FF0000',
-                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
+async function loadKPIMetrics(userData) {
+    try {
+        // Fetch real metrics from Netlify Function
+        const response = await fetch('/.netlify/functions/metrics-get', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${userData.session_token}`,
+                'Content-Type': 'application/json'
             }
         });
-    }
-}
 
-// Load revenue vs cost chart
-async function loadRevenueCost() {
-    const days = document.getElementById('dateRange').value;
-    const campaignId = document.getElementById('campaignSelect').value;
-
-    const response = await fetch(`${API_BASE}/revenue-cost?days=${days}&campaign_id=${campaignId}`, {
-        headers: getHeaders()
-    });
-    const result = await response.json();
-
-    if (result.data) {
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-
-        // Destroy existing chart
-        if (revenueChart) {
-            revenueChart.destroy();
+        if (!response.ok) {
+            throw new Error('Failed to fetch metrics');
         }
 
-        // Create new chart
-        revenueChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: result.data.labels,
-                datasets: [
-                    {
-                        label: 'Revenue',
-                        data: result.data.revenue,
-                        backgroundColor: 'rgba(0, 255, 0, 0.6)',
-                        borderColor: '#00FF00',
-                        borderWidth: 2
-                    },
-                    {
-                        label: 'Cost',
-                        data: result.data.cost,
-                        backgroundColor: 'rgba(255, 0, 0, 0.6)',
-                        borderColor: '#FF0000',
-                        borderWidth: 2
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value.toLocaleString();
-                            }
-                        }
-                    }
-                }
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            // Update KPI cards with real summary data
+            updateKPICards(data.data.summary);
+
+            // Update charts with real data if available
+            if (data.data.charts) {
+                updateCharts(data.data.charts);
             }
-        });
-    }
-}
 
-// Load social media metrics
-async function loadSocialMedia() {
-    const days = document.getElementById('dateRange').value;
-    const campaignId = document.getElementById('campaignSelect').value;
-
-    const response = await fetch(`${API_BASE}/social-media?days=${days}&campaign_id=${campaignId}`, {
-        headers: getHeaders()
-    });
-    const data = await response.json();
-
-    if (data.platforms) {
-        // Instagram
-        if (data.platforms.instagram) {
-            document.getElementById('igImpressions').textContent = formatNumber(data.platforms.instagram.impressions);
-            document.getElementById('igEngagement').textContent = formatNumber(data.platforms.instagram.engagement);
-            document.getElementById('igFollowers').textContent = '+' + formatNumber(data.platforms.instagram.followers);
-        }
-
-        // Facebook
-        if (data.platforms.facebook) {
-            document.getElementById('fbImpressions').textContent = formatNumber(data.platforms.facebook.impressions);
-            document.getElementById('fbEngagement').textContent = formatNumber(data.platforms.facebook.engagement);
-            document.getElementById('fbReach').textContent = formatNumber(data.platforms.facebook.reach);
-        }
-
-        // LinkedIn
-        if (data.platforms.linkedin) {
-            document.getElementById('liImpressions').textContent = formatNumber(data.platforms.linkedin.impressions);
-            document.getElementById('liEngagement').textContent = formatNumber(data.platforms.linkedin.engagement);
-            document.getElementById('liClicks').textContent = formatNumber(data.platforms.linkedin.clicks);
-        }
-
-        // TikTok
-        if (data.platforms.tiktok) {
-            document.getElementById('ttViews').textContent = formatNumber(data.platforms.tiktok.impressions);
-            document.getElementById('ttEngagement').textContent = formatNumber(data.platforms.tiktok.engagement);
-            document.getElementById('ttShares').textContent = formatNumber(data.platforms.tiktok.followers);
-        }
-    }
-}
-
-// Load SEO metrics
-async function loadSEOMetrics() {
-    const days = document.getElementById('dateRange').value;
-
-    const response = await fetch(`${API_BASE}/seo-metrics?days=${days}`, {
-        headers: getHeaders()
-    });
-    const data = await response.json();
-
-    if (data.metrics) {
-        // Organic Traffic
-        document.getElementById('organicTraffic').textContent = formatNumber(data.metrics.organic_traffic.value);
-        document.getElementById('trafficChange').textContent = `${data.metrics.organic_traffic.change >= 0 ? '+' : ''}${data.metrics.organic_traffic.change}%`;
-        document.getElementById('trafficChange').className = `metric-change ${data.metrics.organic_traffic.change >= 0 ? 'positive' : 'negative'}`;
-
-        // Keyword Rankings
-        document.getElementById('keywordRankings').textContent = formatNumber(data.metrics.keyword_rankings.value);
-        document.getElementById('keywordsChange').textContent = `${data.metrics.keyword_rankings.change >= 0 ? '+' : ''}${data.metrics.keyword_rankings.change}`;
-        document.getElementById('keywordsChange').className = `metric-change ${data.metrics.keyword_rankings.change >= 0 ? 'positive' : 'negative'}`;
-
-        // Backlinks
-        document.getElementById('backlinks').textContent = formatNumber(data.metrics.backlinks.value);
-        document.getElementById('backlinksChange').textContent = `${data.metrics.backlinks.change >= 0 ? '+' : ''}${data.metrics.backlinks.change}`;
-        document.getElementById('backlinksChange').className = `metric-change ${data.metrics.backlinks.change >= 0 ? 'positive' : 'negative'}`;
-
-        // Domain Authority
-        document.getElementById('domainAuthority').textContent = data.metrics.domain_authority.value;
-        document.getElementById('daChange').textContent = `${data.metrics.domain_authority.change >= 0 ? '+' : ''}${data.metrics.domain_authority.change}`;
-        document.getElementById('daChange').className = `metric-change ${data.metrics.domain_authority.change >= 0 ? 'positive' : 'negative'}`;
-    }
-}
-
-// Load campaigns list for dropdown
-async function loadCampaignsList() {
-    const campaignType = document.getElementById('campaignType').value;
-
-    const response = await fetch(`${API_BASE}/campaigns?type=${campaignType}`, {
-        headers: getHeaders()
-    });
-    const data = await response.json();
-
-    if (data.campaigns) {
-        const select = document.getElementById('campaignSelect');
-        const currentValue = select.value;
-
-        // Clear existing options except "All Campaigns"
-        select.innerHTML = '<option value="all">All Campaigns</option>';
-
-        // Add campaign options
-        data.campaigns.forEach(campaign => {
-            const option = document.createElement('option');
-            option.value = campaign.campaign_id;
-            option.textContent = `${campaign.campaign_name} - ${campaign.client_name}`;
-            select.appendChild(option);
-        });
-
-        // Restore previous selection if possible
-        if (currentValue && select.querySelector(`option[value="${currentValue}"]`)) {
-            select.value = currentValue;
-        }
-    }
-}
-
-// Load campaigns table
-async function loadCampaignsTable() {
-    const campaignType = document.getElementById('campaignType').value;
-
-    const response = await fetch(`${API_BASE}/campaigns?type=${campaignType}`, {
-        headers: getHeaders()
-    });
-    const data = await response.json();
-
-    if (data.campaigns) {
-        const tbody = document.getElementById('campaignsTableBody');
-        tbody.innerHTML = '';
-
-        data.campaigns.forEach(campaign => {
-            const row = document.createElement('tr');
-
-            row.innerHTML = `
-                <td><strong>${campaign.campaign_name}</strong></td>
-                <td>${campaign.client_name}</td>
-                <td>${formatCampaignType(campaign.campaign_type)}</td>
-                <td>$${formatNumber(campaign.budget)}</td>
-                <td>$${formatNumber(campaign.spent)}</td>
-                <td><strong>${campaign.roi.toFixed(2)}%</strong></td>
-                <td><span class="status-badge ${campaign.status}">${campaign.status.toUpperCase()}</span></td>
-                <td>
-                    <button class="action-btn" onclick="viewCampaign(${campaign.campaign_id})">View</button>
-                    <button class="action-btn" onclick="editCampaign(${campaign.campaign_id})">Edit</button>
-                </td>
-            `;
-
-            tbody.appendChild(row);
-        });
-    }
-}
-
-// Export data
-function exportData() {
-    console.log('Exporting data...');
-    window.open(`${API_BASE}/export`, '_blank');
-}
-
-// Open Settings Page
-function openSettings() {
-    console.log('Opening settings page...');
-    window.location.href = 'settings.html';
-}
-
-// Create Settings Modal
-function createSettingsModal() {
-    // Remove existing modal if it exists
-    const existingModal = document.getElementById('settingsModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    // Create modal
-    const modal = document.createElement('div');
-    modal.id = 'settingsModal';
-    modal.className = 'settings-modal';
-    modal.innerHTML = `
-        <div class="settings-content">
-            <div class="settings-header">
-                <h2>⚙️ Settings & Preferences</h2>
-                <button class="close-btn" onclick="closeSettingsModal()">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                </button>
-            </div>
-            
-            <div class="settings-body">
-                <!-- Appearance Settings -->
-                <div class="settings-section">
-                    <h3>🎨 Appearance</h3>
-                    <div class="setting-item">
-                        <label for="themeSelect">Theme</label>
-                        <select id="themeSelect" class="setting-select">
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                            <option value="auto">Auto (System)</option>
-                        </select>
-                    </div>
-                    <div class="setting-item">
-                        <label for="languageSelect">Language</label>
-                        <select id="languageSelect" class="setting-select">
-                            <option value="en">English</option>
-                            <option value="es">Español</option>
-                            <option value="fr">Français</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Dashboard Settings -->
-                <div class="settings-section">
-                    <h3>📊 Dashboard</h3>
-                    <div class="setting-item">
-                        <label for="refreshInterval">Auto-refresh Interval (seconds)</label>
-                        <select id="refreshInterval" class="setting-select">
-                            <option value="30">30 seconds</option>
-                            <option value="60">1 minute</option>
-                            <option value="300">5 minutes</option>
-                            <option value="600">10 minutes</option>
-                            <option value="0">Disabled</option>
-                        </select>
-                    </div>
-                    <div class="setting-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="autoRefresh">
-                            <span>Enable auto-refresh</span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="showAdvanced">
-                            <span>Show advanced metrics</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Notifications -->
-                <div class="settings-section">
-                    <h3>🔔 Notifications</h3>
-                    <div class="setting-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="enableNotifications">
-                            <span>Enable notifications</span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="emailReports">
-                            <span>Email daily reports</span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="alertThresholds">
-                            <span>Alert on performance thresholds</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Social Media Integration -->
-                <div class="settings-section">
-                    <h3>📱 Social Media Integration</h3>
-                    <div class="setting-item">
-                        <button class="btn-social-config" onclick="openSocialMediaConfig()">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M8 1L10.5 5.5L15.5 6L11.75 9.5L12.5 14.5L8 12L3.5 14.5L4.25 9.5L0.5 6L5.5 5.5L8 1Z" stroke="currentColor" stroke-width="1.5" fill="currentColor"/>
-                            </svg>
-                            Configure Social Media Accounts
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Data & Privacy -->
-                <div class="settings-section">
-                    <h3>🔒 Data & Privacy</h3>
-                    <div class="setting-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="dataRetention">
-                            <span>Enable data retention (keep data for 1 year)</span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="analyticsTracking">
-                            <span>Allow analytics tracking</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="settings-footer">
-                <button class="btn-cancel" onclick="closeSettingsModal()">Cancel</button>
-                <button class="btn-save" onclick="saveSettings()">Save Settings</button>
-            </div>
-        </div>
-    `;
-
-    // Add to body
-    document.body.appendChild(modal);
-
-    // Load current settings
-    loadSettings();
-
-    // Add click outside to close
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeSettingsModal();
-        }
-    });
-
-    // Add escape key to close
-    document.addEventListener('keydown', handleEscapeKey);
-}
-
-// Close Settings Modal
-function closeSettingsModal() {
-    const modal = document.getElementById('settingsModal');
-    if (modal) {
-        modal.remove();
-        document.removeEventListener('keydown', handleEscapeKey);
-    }
-}
-
-// Handle Escape Key
-function handleEscapeKey(e) {
-    if (e.key === 'Escape') {
-        closeSettingsModal();
-    }
-}
-
-// Load settings into the modal
-function loadSettings() {
-    // Get settings from localStorage with defaults
-    const settings = {
-        theme: localStorage.getItem('theme') || 'light',
-        language: localStorage.getItem('language') || 'en',
-        refreshInterval: localStorage.getItem('refreshInterval') || '60',
-        autoRefresh: localStorage.getItem('autoRefresh') !== 'false',
-        showAdvanced: localStorage.getItem('showAdvanced') !== 'false',
-        enableNotifications: localStorage.getItem('enableNotifications') !== 'false',
-        emailReports: localStorage.getItem('emailReports') !== 'false',
-        alertThresholds: localStorage.getItem('alertThresholds') !== 'false',
-        dataRetention: localStorage.getItem('dataRetention') !== 'false',
-        analyticsTracking: localStorage.getItem('analyticsTracking') !== 'false'
-    };
-    
-    // Apply settings to form elements
-    const elements = {
-        themeSelect: settings.theme,
-        languageSelect: settings.language,
-        refreshInterval: settings.refreshInterval,
-        autoRefresh: settings.autoRefresh,
-        showAdvanced: settings.showAdvanced,
-        enableNotifications: settings.enableNotifications,
-        emailReports: settings.emailReports,
-        alertThresholds: settings.alertThresholds,
-        dataRetention: settings.dataRetention,
-        analyticsTracking: settings.analyticsTracking
-    };
-    
-    // Set values
-    Object.entries(elements).forEach(([id, value]) => {
-        const element = document.getElementById(id);
-        if (element) {
-            if (element.type === 'checkbox') {
-                element.checked = value;
-            } else {
-                element.value = value;
+            // Update connected accounts display
+            if (data.data.accounts) {
+                updateSocialAccountsUI(data.data.accounts);
             }
+
+            return data.data;
+        } else {
+            console.warn('No metrics data available');
+            // Show empty state or placeholder
+            return null;
+        }
+    } catch (error) {
+        console.error('Error loading metrics:', error);
+        // Fall back to showing empty state
+        showNotification('Unable to load metrics. Please connect your social accounts.', 'info');
+        return null;
+    }
+}
+
+// Update KPI cards
+function updateKPICards(summary) {
+    if (!summary) {
+        console.warn('No summary data to display');
+        return;
+    }
+
+    // Map backend summary data to KPI cards
+    const kpiMapping = {
+        'reach': {
+            value: formatNumber(summary.total_followers || 0),
+            change: formatPercentage(summary.growth_rate || 0),
+            trend: (summary.growth_rate || 0) >= 0 ? 'up' : 'down'
+        },
+        'engagement': {
+            value: `${(summary.avg_engagement || 0).toFixed(1)}%`,
+            change: formatPercentage(summary.engagement_change || 0),
+            trend: (summary.engagement_change || 0) >= 0 ? 'up' : 'down'
+        },
+        'roi': {
+            value: summary.roi ? `${summary.roi.toFixed(1)}x` : 'N/A',
+            change: formatPercentage(summary.roi_change || 0),
+            trend: (summary.roi_change || 0) >= 0 ? 'up' : 'down'
+        },
+        'cac': {
+            value: summary.cac ? `$${summary.cac.toFixed(0)}` : 'N/A',
+            change: formatPercentage(summary.cac_change || 0),
+            trend: (summary.cac_change || 0) <= 0 ? 'up' : 'down' // Lower CAC is better
+        }
+    };
+
+    Object.keys(kpiMapping).forEach(kpiKey => {
+        const card = document.querySelector(`[data-kpi="${kpiKey}"]`);
+        if (!card) return;
+
+        const metric = kpiMapping[kpiKey];
+        const valueElement = card.querySelector('.kpi-value');
+        const changeElement = card.querySelector('.kpi-change');
+
+        if (valueElement) valueElement.textContent = metric.value;
+        if (changeElement) {
+            changeElement.textContent = metric.change;
+            changeElement.className = `kpi-change ${metric.trend}`;
         }
     });
 }
 
-// Save settings
-function saveSettings() {
-    // Get all settings from form elements
-    const settings = {
-        theme: document.getElementById('themeSelect')?.value || 'light',
-        language: document.getElementById('languageSelect')?.value || 'en',
-        refreshInterval: document.getElementById('refreshInterval')?.value || '60',
-        autoRefresh: document.getElementById('autoRefresh')?.checked || false,
-        showAdvanced: document.getElementById('showAdvanced')?.checked || false,
-        enableNotifications: document.getElementById('enableNotifications')?.checked || false,
-        emailReports: document.getElementById('emailReports')?.checked || false,
-        alertThresholds: document.getElementById('alertThresholds')?.checked || false,
-        dataRetention: document.getElementById('dataRetention')?.checked || false,
-        analyticsTracking: document.getElementById('analyticsTracking')?.checked || false
-    };
-    
-    // Save to localStorage
-    Object.entries(settings).forEach(([key, value]) => {
-        localStorage.setItem(key, value);
-    });
-    
-    // Apply theme immediately
-    applyTheme(settings.theme);
-    
-    // Apply auto-refresh settings
-    if (settings.autoRefresh && settings.refreshInterval > 0) {
-        startAutoRefresh(parseInt(settings.refreshInterval) * 1000);
-    } else {
-        stopAutoRefresh();
-    }
-    
-    console.log('✅ Settings saved successfully:', settings);
-    
-    // Show success message
-    showNotification('Settings saved successfully!', 'success');
-    
-    // Close modal
-    closeSettingsModal();
-}
-
-// View campaign details
-function viewCampaign(campaignId) {
-    console.log('Viewing campaign:', campaignId);
-    document.getElementById('campaignSelect').value = campaignId;
-    loadDashboardData();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// Edit campaign (placeholder)
-function editCampaign(campaignId) {
-    alert(`Edit campaign functionality coming soon! Campaign ID: ${campaignId}`);
-}
-
-// Utility: Format number with commas
+// Helper function to format large numbers
 function formatNumber(num) {
     if (num >= 1000000) {
         return (num / 1000000).toFixed(1) + 'M';
@@ -753,207 +306,273 @@ function formatNumber(num) {
     if (num >= 1000) {
         return (num / 1000).toFixed(1) + 'K';
     }
-    return num.toLocaleString();
+    return num.toString();
 }
 
-// Utility: Format campaign type
-function formatCampaignType(type) {
-    const types = {
-        'social_media': 'Social Media',
-        'seo': 'SEO',
-        'email': 'Email',
-        'paid_ads': 'Paid Ads',
-        'content': 'Content'
-    };
-    return types[type] || type;
+// Helper function to format percentage
+function formatPercentage(value) {
+    if (value === 0) return '0%';
+    const sign = value > 0 ? '+' : '';
+    return `${sign}${value.toFixed(1)}%`;
 }
 
-// Open Social Media Configuration Modal
-function openSocialMediaConfig() {
-    // Create a modal for social media configuration
-    const modal = document.createElement('div');
-    modal.className = 'social-config-modal';
-    modal.innerHTML = `
-        <div class="social-config-content">
-            <h2>Social Media Configuration</h2>
-            <div class="config-section">
-                <h3>Platform Credentials</h3>
-                <div class="platform-config">
-                    <label for="instagramToken">Instagram Access Token</label>
-                    <input type="text" id="instagramToken" placeholder="Enter Instagram Token">
-                </div>
-                <div class="platform-config">
-                    <label for="facebookToken">Facebook Access Token</label>
-                    <input type="text" id="facebookToken" placeholder="Enter Facebook Token">
-                </div>
-                <div class="platform-config">
-                    <label for="linkedinToken">LinkedIn Access Token</label>
-                    <input type="text" id="linkedinToken" placeholder="Enter LinkedIn Token">
-                </div>
-                <div class="platform-config">
-                    <label for="tiktokToken">TikTok Access Token</label>
-                    <input type="text" id="tiktokToken" placeholder="Enter TikTok Token">
-                </div>
-            </div>
-            <div class="config-section">
-                <h3>Tracking Settings</h3>
-                <div class="tracking-config">
-                    <label>
-                        <input type="checkbox" id="trackImpressions"> Track Impressions
-                    </label>
-                    <label>
-                        <input type="checkbox" id="trackEngagement"> Track Engagement
-                    </label>
-                    <label>
-                        <input type="checkbox" id="trackFollowers"> Track Followers
-                    </label>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button id="saveSocialConfig">Save Configuration</button>
-                <button id="cancelSocialConfig">Cancel</button>
-            </div>
-        </div>
-    `;
+// Load charts
+async function loadCharts(userData) {
+    // Charts are now loaded as part of loadKPIMetrics()
+    // This function can be used for additional chart customization if needed
+    console.log('Charts loaded with real data');
+}
 
-    // Add to body
-    document.body.appendChild(modal);
+// Update charts with real data
+function updateCharts(chartsData) {
+    if (!chartsData) {
+        console.warn('No charts data available');
+        return;
+    }
 
-    // Add event listeners for save and cancel
-    document.getElementById('saveSocialConfig').addEventListener('click', saveSocialMediaConfig);
-    document.getElementById('cancelSocialConfig').addEventListener('click', () => {
-        document.body.removeChild(modal);
+    // If you're using a charting library (Chart.js, Recharts, etc.),
+    // you would update the charts here with the data from chartsData object
+    // chartsData structure:
+    // {
+    //   dates: ['2024-01-01', '2024-01-02', ...],
+    //   followers: [1000, 1050, ...],
+    //   engagement: [3.2, 3.5, ...],
+    //   reach: [5000, 5500, ...],
+    //   impressions: [10000, 11000, ...]
+    // }
+
+    console.log('Charts data ready:', {
+        dataPoints: chartsData.dates?.length || 0,
+        metrics: Object.keys(chartsData).filter(k => k !== 'dates')
     });
+
+    // Example: If using Chart.js
+    // updateFollowersChart(chartsData.dates, chartsData.followers);
+    // updateEngagementChart(chartsData.dates, chartsData.engagement);
 }
 
-// Save Social Media Configuration
-async function saveSocialMediaConfig() {
-    const config = {
-        instagram: document.getElementById('instagramToken').value,
-        facebook: document.getElementById('facebookToken').value,
-        linkedin: document.getElementById('linkedinToken').value,
-        tiktok: document.getElementById('tiktokToken').value,
-        tracking: {
-            impressions: document.getElementById('trackImpressions').checked,
-            engagement: document.getElementById('trackEngagement').checked,
-            followers: document.getElementById('trackFollowers').checked
-        }
-    };
-
-    try {
-        const response = await fetch(`${API_BASE}/social-config`, {
-            method: 'POST',
-            headers: {
-                ...getHeaders(),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(config)
+// Setup event listeners
+function setupEventListeners(userData) {
+    // Refresh data button
+    const refreshBtn = document.getElementById('refreshData');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', async () => {
+            await loadDashboardData(userData);
+            showNotification('Data refreshed', 'success');
         });
+    }
 
-        const result = await response.json();
+    // Settings button
+    const settingsBtn = document.getElementById('settingsBtn');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            window.location.href = 'settings.html';
+        });
+    }
 
-        if (result.success) {
-            alert('Social Media Configuration Saved Successfully!');
-            document.body.removeChild(document.querySelector('.social-config-modal'));
-            loadDashboardData(); // Refresh data with new configuration
-        } else {
-            alert('Failed to save configuration: ' + result.message);
+    // Export data button
+    const exportBtn = document.getElementById('exportData');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            exportDashboardData(userData);
+        });
+    }
+
+    // Logout button
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            await handleLogout();
+        });
+    }
+
+    // Date range filter
+    const dateRangeSelect = document.getElementById('dateRange');
+    if (dateRangeSelect) {
+        dateRangeSelect.addEventListener('change', async () => {
+            await loadDashboardData(userData);
+        });
+    }
+
+    // Campaign filter
+    const campaignSelect = document.getElementById('campaignSelect');
+    if (campaignSelect) {
+        campaignSelect.addEventListener('change', async () => {
+            await loadDashboardData(userData);
+        });
+    }
+}
+
+// Handle logout
+async function handleLogout() {
+    try {
+        // Sign out from Supabase if available
+        if (supabase) {
+            await supabase.auth.signOut();
         }
+
+        // Clear local storage
+        localStorage.removeItem('session_id');
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('email');
+        localStorage.removeItem('full_name');
+        localStorage.removeItem('role');
+        localStorage.removeItem('supabase_session');
+
+        // Redirect to login
+        window.location.href = 'login.html';
     } catch (error) {
-        console.error('Error saving social media configuration:', error);
-        alert('Error saving configuration. Please try again.');
+        console.error('Logout error:', error);
+        // Even if there's an error, redirect to login
+        window.location.href = 'login.html';
     }
 }
 
-// Auto-refresh functionality
-let autoRefreshInterval = null;
-
-function startAutoRefresh(intervalMs) {
-    stopAutoRefresh(); // Clear existing interval
-    autoRefreshInterval = setInterval(() => {
-        console.log('🔄 Auto-refreshing dashboard data...');
-        loadDashboardData();
-    }, intervalMs);
-    console.log(`✅ Auto-refresh started (${intervalMs/1000}s interval)`);
+// Export dashboard data
+function exportDashboardData(userData) {
+    // TODO: Implement export functionality
+    showNotification('Export feature coming soon', 'info');
 }
 
-function stopAutoRefresh() {
-    if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-        autoRefreshInterval = null;
-        console.log('⏹️ Auto-refresh stopped');
-    }
+// Show/hide loading state
+function showLoadingState(isLoading) {
+    // TODO: Add loading spinner/overlay
+    console.log('Loading:', isLoading);
 }
 
-// Theme application
-function applyTheme(theme) {
-    const body = document.body;
-    
-    // Remove existing theme classes
-    body.classList.remove('theme-light', 'theme-dark');
-    
-    if (theme === 'dark') {
-        body.classList.add('theme-dark');
-    } else if (theme === 'auto') {
-        // Use system preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            body.classList.add('theme-dark');
-        } else {
-            body.classList.add('theme-light');
-        }
-    } else {
-        body.classList.add('theme-light');
-    }
-    
-    console.log(`🎨 Theme applied: ${theme}`);
-}
-
-// Notification system
+// Show notification
 function showNotification(message, type = 'info') {
-    // Remove existing notifications
-    const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(notification => notification.remove());
-    
-    // Create notification
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-message">${message}</span>
-            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
-        </div>
+    // Simple alert for now - could be improved with toast notifications
+    console.log(`[${type.toUpperCase()}] ${message}`);
+
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#DC2626' : type === 'success' ? '#16A34A' : '#3B82F6'};
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
     `;
-    
-    // Add to body
-    document.body.appendChild(notification);
-    
-    // Auto-remove after 3 seconds
+
+    document.body.appendChild(toast);
+
     setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
-// Initialize settings on page load
-function initializeSettings() {
-    const theme = localStorage.getItem('theme') || 'light';
-    const autoRefresh = localStorage.getItem('autoRefresh') !== 'false';
-    const refreshInterval = parseInt(localStorage.getItem('refreshInterval')) || 60;
-    
-    // Apply theme
-    applyTheme(theme);
-    
-    // Start auto-refresh if enabled
-    if (autoRefresh && refreshInterval > 0) {
-        startAutoRefresh(refreshInterval * 1000);
+// Add animation styles
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Connect social account (called from settings page)
+async function connectSocialAccount(platform) {
+    const sessionToken = localStorage.getItem('session_id');
+    if (!sessionToken) {
+        showNotification('Please log in first', 'error');
+        return;
+    }
+
+    try {
+        // Call Netlify Function to initiate OAuth
+        const response = await fetch(`/.netlify/functions/oauth-${platform}-initiate`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.authorization_url) {
+            // Redirect to OAuth provider
+            window.location.href = data.authorization_url;
+        } else {
+            throw new Error(data.message || 'Failed to initiate OAuth');
+        }
+    } catch (error) {
+        console.error(`Error connecting ${platform}:`, error);
+        showNotification(`Failed to connect ${platform}`, 'error');
     }
 }
 
-// Console message
-console.log(`
-╔════════════════════════════════════════════════╗
-║   🎨 PVB Estudio Creativo Campaign Analytics Dashboard    ║
-║   Built with ❤️ by Claude Code                ║
-╚════════════════════════════════════════════════╝
-`);
+// Sync metrics from social platforms
+async function syncMetrics() {
+    const sessionToken = localStorage.getItem('session_id');
+    if (!sessionToken) {
+        showNotification('Please log in first', 'error');
+        return;
+    }
+
+    try {
+        showNotification('Syncing metrics from social platforms...', 'info');
+
+        const response = await fetch('/.netlify/functions/metrics-sync', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({}) // Empty body syncs all accounts
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification(
+                `Metrics synced successfully! ${data.synced} account(s) updated.`,
+                'success'
+            );
+
+            // Reload dashboard to show new metrics
+            const userData = {
+                session_token: sessionToken,
+                user_id: localStorage.getItem('user_id'),
+                email: localStorage.getItem('email'),
+                full_name: localStorage.getItem('full_name')
+            };
+            await loadDashboardData(userData);
+        } else {
+            throw new Error(data.message || 'Failed to sync metrics');
+        }
+    } catch (error) {
+        console.error('Error syncing metrics:', error);
+        showNotification('Failed to sync metrics', 'error');
+    }
+}
+
+// Make functions available globally
+window.connectSocialAccount = connectSocialAccount;
+window.syncMetrics = syncMetrics;

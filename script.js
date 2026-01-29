@@ -502,7 +502,7 @@ function mergeNotionEvents(events) {
     window.notionEvents = events;
 }
 
-function renderAgendaCalendar() {
+async function renderAgendaCalendar() {
     const calendarGrid = document.getElementById('agendaCalendar');
     const monthDisplay = document.getElementById('currentMonth');
     if (!calendarGrid || !monthDisplay) return;
@@ -531,17 +531,53 @@ function renderAgendaCalendar() {
         calendarGrid.appendChild(header);
     });
     
-    // Sample events (in production, fetch from API)
-    const sampleEvents = [
-        { day: 15, month: month, type: 'event' },
-        { day: 20, month: month, type: 'event' },
-        { day: 25, month: month, type: 'event' },
-    ];
+    // Fetch availability from API
+    let availableDays = [];
+    let occupiedDays = [];
+    let appointments = [];
+    
+    try {
+        // Calculate start and end dates for the month
+        const startDate = new Date(year, month, 1);
+        const endDate = new Date(year, month + 1, 0);
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+        
+        const response = await fetch(
+            `http://localhost:8001/api/calendar/availability?start_date=${startDateStr}&end_date=${endDateStr}`
+        );
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                availableDays = data.available_days || [];
+                occupiedDays = data.occupied_days || [];
+                
+                // Extract appointments from occupied days
+                occupiedDays.forEach(day => {
+                    if (day.appointments) {
+                        appointments.push(...day.appointments);
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.log('Calendar API not available, using default display:', error);
+    }
+    
+    // Create a map of day status
+    const dayStatus = {};
+    availableDays.forEach(date => {
+        dayStatus[date] = 'available';
+    });
+    occupiedDays.forEach(day => {
+        dayStatus[day.date] = 'occupied';
+    });
     
     // Add previous month days
     for (let i = firstDay - 1; i >= 0; i--) {
         const day = daysInPrevMonth - i;
-        const dayElement = createAgendaDay(day, 'other-month', false);
+        const dayElement = createAgendaDay(day, 'other-month', false, null, null);
         calendarGrid.appendChild(dayElement);
     }
     
@@ -550,9 +586,17 @@ function renderAgendaCalendar() {
     for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(year, month, day);
         const isToday = date.toDateString() === today.toDateString();
-        const hasEvent = sampleEvents.some(e => e.day === day && e.month === month);
+        const dateStr = date.toISOString().split('T')[0];
+        const status = dayStatus[dateStr] || 'unavailable';
+        const dayAppointments = appointments.filter(apt => apt.date === dateStr);
         
-        const dayElement = createAgendaDay(day, isToday ? 'today' : '', hasEvent);
+        const dayElement = createAgendaDay(
+            day, 
+            isToday ? 'today' : '', 
+            dayAppointments.length > 0,
+            status,
+            dayAppointments
+        );
         calendarGrid.appendChild(dayElement);
     }
     
@@ -560,27 +604,66 @@ function renderAgendaCalendar() {
     const totalCells = 42; // 6 rows * 7 days
     const remainingCells = totalCells - (firstDay + daysInMonth);
     for (let day = 1; day <= remainingCells; day++) {
-        const dayElement = createAgendaDay(day, 'other-month', false);
+        const dayElement = createAgendaDay(day, 'other-month', false, null, null);
         calendarGrid.appendChild(dayElement);
     }
 }
 
-function createAgendaDay(day, className, hasEvent) {
+function createAgendaDay(day, className, hasEvent, status, appointments) {
     const dayElement = document.createElement('div');
-    dayElement.className = `agenda-day ${className} ${hasEvent ? 'has-event' : ''}`;
+    
+    // Build class list
+    let classes = ['agenda-day'];
+    if (className) classes.push(className);
+    if (hasEvent) classes.push('has-event');
+    if (status === 'available') classes.push('day-available');
+    if (status === 'occupied') classes.push('day-occupied');
+    if (status === 'unavailable') classes.push('day-unavailable');
+    
+    dayElement.className = classes.join(' ');
     
     const dayNumber = document.createElement('div');
     dayNumber.className = 'agenda-day-number';
     dayNumber.textContent = day;
     dayElement.appendChild(dayNumber);
     
+    // Add appointment count badge if occupied
+    if (status === 'occupied' && appointments && appointments.length > 0) {
+        const badge = document.createElement('div');
+        badge.className = 'appointment-badge';
+        badge.textContent = appointments.length;
+        dayElement.appendChild(badge);
+    }
+    
+    // Add availability indicator
+    if (status === 'available') {
+        const indicator = document.createElement('div');
+        indicator.className = 'availability-indicator';
+        indicator.title = 'Día disponible';
+        dayElement.appendChild(indicator);
+    }
+    
     // Add click handler to open WhatsApp for booking
     dayElement.addEventListener('click', () => {
         if (!className.includes('other-month')) {
             const date = new Date(currentAgendaMonth.getFullYear(), currentAgendaMonth.getMonth(), day);
             const dateStr = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
-            const whatsappLink = `https://wa.me/56944328662?text=Hola!%20Quiero%20agendar%20una%20consulta%20para%20el%20${encodeURIComponent(dateStr)}`;
-            window.open(whatsappLink, '_blank');
+            
+            // Check if day is available or occupied
+            if (status === 'available') {
+                const whatsappLink = `https://wa.me/56944328662?text=Hola!%20Quiero%20agendar%20una%20consulta%20para%20el%20${encodeURIComponent(dateStr)}`;
+                window.open(whatsappLink, '_blank');
+            } else if (status === 'occupied') {
+                // Show appointments for occupied days
+                const appointmentList = appointments.map(apt => 
+                    `${apt.time} - ${apt.client_name}`
+                ).join('\n');
+                alert(`Appointments for ${dateStr}:\n\n${appointmentList}`);
+            } else {
+                // Unavailable day
+                const whatsappLink = `https://wa.me/56944328662?text=Hola!%20Quiero%20consultar%20disponibilidad%20para%20el%20${encodeURIComponent(dateStr)}`;
+                window.open(whatsappLink, '_blank');
+            }
         }
     });
     
