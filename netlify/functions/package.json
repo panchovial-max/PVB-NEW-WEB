@@ -2,13 +2,11 @@
   "name": "pvb-netlify-functions",
   "version": "1.0.0",
   "description": "Netlify Functions for PVB Client Portal - OAuth and Metrics APIs",
-  "type": "module",
   "scripts": {
     "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.3",
-    "node-fetch": "^3.3.2"
+    "@supabase/supabase-js": "^2.39.3"
   },
   "devDependencies": {
     "@netlify/functions": "^2.4.1"
