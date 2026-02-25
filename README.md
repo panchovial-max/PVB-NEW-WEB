@@ -1,48 +1,88 @@
-# Shotlist Marketing Agency
+# PVB Estudio Creativo
 
-> Agencia creativa boutique especializada en potenciar negocios a través de estrategias de marketing, diseño web, videos, fotografía y gráfica.
+> Agencia boutique de marketing de lujo especializada en marcas equestres, automotrices y de lifestyle.
 
-## 🎯 Sobre Nosotros
+## Sobre Nosotros
 
-Shotlist es una agencia creativa que crea soluciones integrales con un enfoque cercano y personalizado. Transformamos ideas en campañas que conectan y convierten.
+PVB Estudio Creativo es un estudio boutique que potencia marcas premium en los sectores equestre, automotriz y lifestyle. Ofrecemos soluciones integrales de marketing con un enfoque refinado y personalizado — transformando identidades de marca en experiencias visuales que conectan con audiencias de alto poder adquisitivo.
 
-## 🚀 Sitio Web
+## Sitio Web
 
-Sitio web interactivo con más de 40 características:
+Plataforma web completa con dashboard de cliente, analytics y gestión de redes sociales:
 
-- ✅ Diseño minimalista inspirado en Wieden+Kennedy
-- ✅ Animaciones suaves (60fps)
+- ✅ Diseño luxury editorial
+- ✅ Animaciones fluidas (60fps)
 - ✅ Totalmente responsive (Desktop, Tablet, Mobile)
-- ✅ Sistema de colores: Negro, Blanco, Rojo
+- ✅ Sistema de colores: Charcoal, Slate, Gold
 - ✅ Tipografía: Inter (Google Fonts)
+- ✅ Dashboard de cliente con autenticación OAuth
+- ✅ Integración Instagram API
+- ✅ WhatsApp Business API
 
-## 🛠️ Tecnologías
+## Paleta de Colores
 
+| Color | Hex | Uso |
+|-------|-----|-----|
+| Charcoal Black | `#1a1a1a` | Primario |
+| Slate Gray | `#4a4a4a` | Secundario |
+| Warm Gold | `#c9a96e` | Acento |
+| Deep Black | `#0d0d0d` | Background |
+| Off White | `#f5f5f5` | Texto |
+
+## Stack Tecnológico
+
+**Frontend:**
 - HTML5
-- CSS3 (Animaciones y Grid)
-- JavaScript (Vanilla)
+- CSS3 (Grid, Custom Properties, Animaciones)
+- JavaScript Vanilla
 
-## 📱 Características
+**Backend:**
+- Python — `api_server.py`
+- Supabase (PostgreSQL + Auth)
 
-- **Hero animado** con texto secuencial
-- **Scroll progress bar** en rojo
-- **Cards 3D** con efecto de tilt
-- **Counter animado** para estadísticas
-- **Modal de contacto** con validación
-- **Navegación suave** entre secciones
-- **Cursor personalizado**
-- **Responsive** en todos los dispositivos
+**Integraciones:**
+- Instagram Graph API
+- WhatsApp Business API
+- Google OAuth
+- Figma Design Sync
 
-## 🎨 Paleta de Colores
+## Estructura del Proyecto
 
-- Negro: `#000000`
-- Blanco: `#FFFFFF`
-- Rojo (Primario): `#FF0000`
+```
+pvb-new-web/
+├── index.html           ← Sitio principal
+├── dashboard.html       ← Panel de cliente
+├── login.html           ← Autenticación
+├── settings.html        ← Configuración de cuenta
+├── client-login.html    ← Acceso de clientes
+├── api_server.py        ← Backend Python
+├── styles.css           ← Estilos globales
+├── dashboard.css        ← Estilos dashboard
+├── script.js            ← Lógica frontend
+├── dashboard.js         ← Lógica dashboard
+├── auth_schema.sql      ← Schema autenticación
+├── supabase-schema.sql  ← Schema principal
+└── docs/                ← Documentación organizada
+    ├── deployment/
+    ├── figma/
+    ├── auth/
+    ├── social-media/
+    ├── whatsapp/
+    └── setup/
+```
 
-## 📄 Licencia
+## Inicio Rápido
 
-© 2024 Shotlist Marketing Agency. Todos los derechos reservados.
+```bash
+# Iniciar backend
+python api_server.py
+
+# Abrir sitio
+open index.html
+```
+
+Ver [docs/setup/QUICKSTART.md](docs/setup/QUICKSTART.md) para instrucciones completas.
 
 ---
 
-**Creado con ❤️ por Shotlist**
+*© 2025 PVB Estudio Creativo — Todos los derechos reservados*

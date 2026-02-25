@@ -365,7 +365,7 @@ function updatePasswordStrength(password) {
     // Calculate password strength
     let strength = 0;
     let strengthLabel = 'Weak';
-    let strengthColor = '#FF0000';
+    let strengthColor = '#c9a96e';
     
     // Length check
     if (password.length >= 8) strength += 25;
@@ -392,7 +392,7 @@ function updatePasswordStrength(password) {
         strengthColor = '#FF5722';
     } else {
         strengthLabel = 'Very Weak';
-        strengthColor = '#FF0000';
+        strengthColor = '#c9a96e';
     }
     
     // Update UI

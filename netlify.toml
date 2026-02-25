@@ -1,18 +1,15 @@
 # Netlify Configuration for PVB Estudio Creativo
 
 [build]
-  # No build command needed for static site
-  command = "echo 'No build needed'"
-
-  # Publish directory (root of the project)
+  command = "cd netlify/functions && npm install"
   publish = "."
-
-  # Functions directory
   functions = "netlify/functions"
 
 [build.environment]
-  # Node version for functions
   NODE_VERSION = "18"
+
+[functions]
+  node_bundler = "esbuild"
 
 # Redirects and rewrites
 [[redirects]]

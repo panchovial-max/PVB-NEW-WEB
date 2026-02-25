@@ -15,25 +15,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 
-    // Check if user is logged in
-    const sessionToken = localStorage.getItem('session_id');
-    const userId = localStorage.getItem('user_id');
-    const userEmail = localStorage.getItem('email');
-    const fullName = localStorage.getItem('full_name');
+    if (!supabase) {
+        console.error('Supabase client not initialized');
+        window.location.href = 'login.html';
+        return;
+    }
 
-    if (!sessionToken || !userId) {
-        // Not logged in - redirect to login
-        console.warn('No session found, redirecting to login');
+    // Get active Supabase session — JWT used as Bearer for Netlify functions
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error || !session) {
+        console.warn('No active session, redirecting to login');
         window.location.href = 'login.html';
         return;
     }
 
     // User is logged in - initialize dashboard
     await initializeDashboard({
-        session_token: sessionToken,
-        user_id: userId,
-        email: userEmail,
-        full_name: fullName
+        session_token: session.access_token,
+        user_id: session.user.id,
+        email: session.user.email,
+        full_name: session.user.user_metadata?.full_name || session.user.email
     });
 });
 

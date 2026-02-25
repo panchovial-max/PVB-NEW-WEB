@@ -325,7 +325,7 @@ if (window.innerWidth > 768) {
         .cursor-dot {
             width: 20px;
             height: 20px;
-            background: #FF0000;
+            background: #c9a96e;
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
