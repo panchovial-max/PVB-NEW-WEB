@@ -1,4 +1,4 @@
--- SHOTLIST Campaign Analytics - Authentication & User Management
+-- PVB Estudio Creativo - Authentication & User Management
 -- Multi-client system with user authentication
 
 -- Users/Clients Table

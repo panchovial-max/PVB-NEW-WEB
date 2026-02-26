@@ -26,7 +26,7 @@
                 <a href="#agenda" class="nav-link">AGENDA</a>
                 <a href="login.html" class="nav-link">CLIENT LOGIN</a>
                 <a href="#contact" class="nav-link">CONTACTO</a>
-                <button class="btn btn-primary">INICIAR PROYECTO</button>
+                <a href="https://wa.me/56944328662?text=Hola!%20Quiero%20iniciar%20un%20proyecto%20con%20PVB%20Estudio%20Creativo" target="_blank" rel="noopener" class="btn btn-primary">INICIAR PROYECTO</a>
             </div>
             <button class="hamburger" id="hamburger">
                 <span></span>
@@ -45,11 +45,9 @@
 
     <!-- Hero Section -->
     <section class="hero" id="home">
-        <!-- Background Video or Fallback -->
+        <!-- Background Video -->
         <div class="hero-video-container">
-            <video class="hero-video" autoplay muted loop playsinline onerror="this.style.display='none'">
-                <source src="hero-video.mp4" type="video/mp4">
-            </video>
+            <iframe class="hero-video-yt" src="https://www.youtube.com/embed/eMa1KZuYLaE?autoplay=1&mute=1&loop=1&playlist=eMa1KZuYLaE&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1" frameborder="0" allow="autoplay; encrypted-media" title="PVB Estudio Creativo"></iframe>
             <div class="hero-video-overlay"></div>
         </div>
         
@@ -60,7 +58,7 @@
                 <span class="hero-line">CAMPAÑAS</span>
                 <span class="hero-line">QUE FUNCIONAN</span>
             </h1>
-            <button class="btn btn-primary btn-hero pulse">INICIAR PROYECTO</button>
+            <a href="https://wa.me/56944328662?text=Hola!%20Quiero%20iniciar%20un%20proyecto%20con%20PVB%20Estudio%20Creativo" target="_blank" rel="noopener" class="btn btn-primary btn-hero pulse">INICIAR PROYECTO</a>
         </div>
         <div class="scroll-indicator">
             <div class="scroll-arrow"></div>
@@ -85,7 +83,7 @@
                     </div>
                     <h3 class="service-title">FOTOGRAFÍA FINE ART & E-COMMERCE</h3>
                     <p class="service-description">Fotografía de nivel galería para marcas que exigen excelencia visual. Desde sesiones ecuestres y automotrices hasta productos e-commerce con estética premium.</p>
-                    <button class="btn btn-secondary">Ver Portfolio</button>
+                    <button type="button" class="btn btn-secondary" data-service="fotografia">Ver Portfolio</button>
                 </div>
 
                 <!-- Producción Audiovisual Premium -->
@@ -100,7 +98,7 @@
                     </div>
                     <h3 class="service-title">PRODUCCIÓN AUDIOVISUAL PREMIUM</h3>
                     <p class="service-description">Producción audiovisual con credibilidad internacional. Videos comerciales, reels y contenido social con estándares de calidad Super Bowl-level.</p>
-                    <button class="btn btn-secondary">Ver Casos</button>
+                    <button type="button" class="btn btn-secondary" data-service="audiovisual">Ver Casos</button>
                 </div>
 
                 <!-- Social Media Management + Growth -->
@@ -118,7 +116,7 @@
                     </div>
                     <h3 class="service-title">SOCIAL MEDIA GROWTH</h3>
                     <p class="service-description">Crecimiento orgánico medible en Instagram, LinkedIn y TikTok. Estrategia de contenidos, calendario editorial y community management con resultados tangibles.</p>
-                    <button class="btn btn-secondary">Ver Estrategia</button>
+                    <button type="button" class="btn btn-secondary" data-service="socialmedia">Ver Estrategia</button>
                 </div>
 
                 <!-- Marketing de Contenidos + SEO -->
@@ -133,7 +131,7 @@
                     </div>
                     <h3 class="service-title">MARKETING DE CONTENIDOS + SEO</h3>
                     <p class="service-description">Contenido que atrae, educa y convierte. Content marketing estratégico, blog optimizado y posicionamiento orgánico en buscadores.</p>
-                    <button class="btn btn-secondary">Ver Resultados</button>
+                    <button type="button" class="btn btn-secondary" data-service="contenidos">Ver Resultados</button>
                 </div>
 
                 <!-- Estrategia de Ads Pagados -->
@@ -150,7 +148,7 @@
                     </div>
                     <h3 class="service-title">ESTRATEGIA DE ADS PAGADOS</h3>
                     <p class="service-description">Campañas publicitarias con ROI medible en Meta, Google y LinkedIn. Métricas claras: ROAS, CAC, CPL. Dashboards en tiempo real para decisiones basadas en datos.</p>
-                    <button class="btn btn-secondary">Ver Métricas</button>
+                    <button type="button" class="btn btn-secondary" data-service="ads">Ver Métricas</button>
                 </div>
 
                 <!-- Email Marketing + Automatización -->
@@ -164,7 +162,7 @@
                     </div>
                     <h3 class="service-title">EMAIL MARKETING + AUTOMATIZACIÓN</h3>
                     <p class="service-description">Emails que nutren relaciones y generan ventas. Campañas personalizadas, nurturing automatizado y segmentación inteligente para conversión efectiva.</p>
-                    <button class="btn btn-secondary">Ver Casos de Éxito</button>
+                    <button type="button" class="btn btn-secondary" data-service="email">Ver Casos de Éxito</button>
                 </div>
             </div>
         </div>
@@ -242,7 +240,203 @@
     <section class="portfolio" id="work">
         <div class="container">
             <h2 class="section-title">NUESTRO TRABAJO</h2>
-            <p class="section-subtitle">Casos reales con resultados medibles</p>
+            <p class="section-subtitle">Producción audiovisual — casos reales</p>
+
+            <!-- Video Portfolio Grid -->
+            <div class="video-portfolio-grid" data-aos="fade-up">
+                <div class="video-card" data-video-id="eMa1KZuYLaE">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/eMa1KZuYLaE/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="_dQNqxsg3hY">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/_dQNqxsg3hY/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="s8Q1j-P20s8">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/s8Q1j-P20s8/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="Kwe_BnLEIxE">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/Kwe_BnLEIxE/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="jlqf5XuiNU4">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/jlqf5XuiNU4/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="VymsvqjwuaU">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/VymsvqjwuaU/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="2AzoHZzHO0g">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/2AzoHZzHO0g/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="1twjGBBHZ8E">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/1twjGBBHZ8E/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="BrKagH_fQiU">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/BrKagH_fQiU/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="HQseTZOElT4">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/HQseTZOElT4/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="vcf37fV0YPc">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/vcf37fV0YPc/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="G08-9PtCoxU">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/G08-9PtCoxU/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="5EcatXjhuUU">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/5EcatXjhuUU/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="I63g7PS8MAc">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/I63g7PS8MAc/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="CGFAfh1I_Vs">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/CGFAfh1I_Vs/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="avak_KFWKlw">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/avak_KFWKlw/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="sSLVDZvFJTs">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/sSLVDZvFJTs/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="_D98Z3zfQrg">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/_D98Z3zfQrg/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="Tn_S0vs1P5I">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/Tn_S0vs1P5I/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="Wqa9stEpLVs">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/Wqa9stEpLVs/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="_jWvQj3hm8A">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/_jWvQj3hm8A/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="xrrjuROzvEY">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/xrrjuROzvEY/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="NHwbBclAxNI">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/NHwbBclAxNI/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="IIVUEt-9piQ">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/IIVUEt-9piQ/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="pNiPg53jV6o">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/pNiPg53jV6o/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="wr2UxIm9ju8">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/wr2UxIm9ju8/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="ccm8iokghAA">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/ccm8iokghAA/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="oOvdHXF8J1A">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/oOvdHXF8J1A/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="1pnqQQheuFs">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/1pnqQQheuFs/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="gbjnBREVPGY">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/gbjnBREVPGY/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="ty-ta_QfWZw">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/ty-ta_QfWZw/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+                <div class="video-card" data-video-id="T0itOdlMBq8">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/T0itOdlMBq8/hqdefault.jpg" alt="Producción audiovisual PVB" loading="lazy">
+                        <div class="video-play-overlay"><div class="play-circle"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M9 7L20 13L9 19V7Z" fill="white"/></svg></div><span class="ver-video">VER VIDEO</span></div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Featured Project: Client Portal -->
             <div class="featured-project" data-aos="fade-up">
@@ -267,42 +461,6 @@
                             </div>
                         </div>
                         <button class="btn btn-primary" onclick="window.location.href='login.html'">DEMO DEL PORTAL</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Project Grid -->
-            <div class="projects-grid">
-                <div class="project-card" data-aos="fade-up" data-delay="0">
-                    <div class="project-image-placeholder small">
-                        <div class="project-overlay">
-                            <h4>CAMPAÑA GROWTH MARKETING</h4>
-                            <p class="project-metric">ROAS 4.2x en Meta Ads</p>
-                            <p class="project-detail">E-commerce de moda premium. CAC reducido 38% en 3 meses.</p>
-                            <button class="btn btn-primary btn-small">VER CASO</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="project-card" data-aos="fade-up" data-delay="100">
-                    <div class="project-image-placeholder small">
-                        <div class="project-overlay">
-                            <h4>SOCIAL MEDIA GROWTH</h4>
-                            <p class="project-metric">+127% Engagement Rate</p>
-                            <p class="project-detail">Marca ecuestre. De 2.3K a 12.8K followers en 6 meses.</p>
-                            <button class="btn btn-primary btn-small">VER CASO</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="project-card" data-aos="fade-up" data-delay="200">
-                    <div class="project-image-placeholder small">
-                        <div class="project-overlay">
-                            <h4>PRODUCCIÓN AUDIOVISUAL FINE ART</h4>
-                            <p class="project-metric">Exhibido en Galerías Internacionales</p>
-                            <p class="project-detail">Campañas visuales de nivel Super Bowl para marcas premium.</p>
-                            <button class="btn btn-primary btn-small">VER PORTFOLIO</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -589,6 +747,178 @@
     </script>
 
     <script src="script.js"></script>
+
+    <!-- Service Detail Modal -->
+    <div class="svc-modal" id="svcModal" role="dialog" aria-modal="true">
+        <div class="svc-modal-backdrop" id="svcModalBackdrop"></div>
+        <div class="svc-modal-inner">
+            <button type="button" class="svc-modal-close" id="svcModalClose" aria-label="Cerrar">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M17 5L5 17M5 5L17 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </button>
+            <div class="svc-modal-body" id="svcModalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        var services = {
+            fotografia: {
+                title: 'FOTOGRAFÍA FINE ART & E-COMMERCE',
+                description: 'Capturamos la esencia de tu marca con fotografía de nivel galería. Especialistas en fotografía ecuestre, automotriz, productos premium y lifestyle. Cada imagen está diseñada para comunicar excelencia y diferenciación.',
+                deliverables: [
+                    'Dirección creativa completa',
+                    'Sesiones ecuestres y automotrices',
+                    'Productos e-commerce con estética premium',
+                    'Retoque profesional incluido',
+                    'Galería de alta resolución entregada en 5–7 días'
+                ],
+                cta: { text: 'COTIZAR SESIÓN', href: 'https://wa.me/56944328662?text=Hola!%20Me%20interesa%20cotizar%20una%20sesión%20de%20fotografía%20con%20PVB%20Estudio', external: true }
+            },
+            audiovisual: {
+                title: 'PRODUCCIÓN AUDIOVISUAL PREMIUM',
+                description: 'Producimos contenido audiovisual que impacta. Desde spots comerciales hasta documentales de marca, combinamos visión cinematográfica con estrategia de comunicación para crear videos que convierten.',
+                deliverables: [
+                    'Pre-producción y guión creativo',
+                    'Rodaje profesional en 4K',
+                    'Edición y corrección de color cinematográfica',
+                    'Mezcla de audio y música licenciada',
+                    'Versiones optimizadas para cada plataforma'
+                ],
+                cta: { text: 'VER NUESTRO TRABAJO', href: '#work', scroll: true }
+            },
+            socialmedia: {
+                title: 'SOCIAL MEDIA GROWTH',
+                description: 'Construimos presencia digital orgánica y genuina. Desarrollamos la voz de tu marca, creamos contenido estratégico y gestionamos tu comunidad para generar crecimiento real y medible en Instagram, LinkedIn y TikTok.',
+                deliverables: [
+                    'Auditoría y estrategia de contenidos',
+                    'Calendario editorial mensual',
+                    'Creación de contenido visual y copy',
+                    'Community management activo',
+                    'Reporte de métricas con análisis mensual'
+                ],
+                cta: { text: 'CONSULTA GRATUITA', href: 'https://wa.me/56944328662?text=Hola!%20Me%20interesa%20una%20consulta%20sobre%20Social%20Media%20con%20PVB%20Estudio', external: true }
+            },
+            contenidos: {
+                title: 'MARKETING DE CONTENIDOS + SEO',
+                description: 'Creamos contenido que atrae tráfico cualificado y convierte visitantes en clientes. Combinamos SEO técnico, contenido estratégico y copywriting de alto impacto para posicionar tu marca en Google.',
+                deliverables: [
+                    'Auditoría SEO técnica inicial',
+                    'Plan de contenidos trimestral',
+                    'Artículos de blog optimizados para Google',
+                    'Copywriting web y landing pages',
+                    'Reportes de posicionamiento y tráfico orgánico'
+                ],
+                cta: { text: 'SOLICITAR DIAGNÓSTICO SEO', href: 'https://wa.me/56944328662?text=Hola!%20Me%20interesa%20un%20diagnóstico%20SEO%20con%20PVB%20Estudio', external: true }
+            },
+            ads: {
+                title: 'ESTRATEGIA DE ADS PAGADOS',
+                description: 'Gestionamos campañas de publicidad pagada con foco total en el retorno. ROAS, CAC y CPL no son solo métricas: son el idioma en que hablamos con tu equipo financiero. Dashboard en tiempo real incluido.',
+                deliverables: [
+                    'Setup y configuración de campañas Meta / Google / LinkedIn',
+                    'Segmentación y targeting avanzado',
+                    'Optimización semanal basada en datos',
+                    'Dashboard de métricas en tiempo real',
+                    'Reporte mensual: ROAS, CAC, CPL, conversiones'
+                ],
+                cta: { text: 'SOLICITAR PROPUESTA', href: 'https://wa.me/56944328662?text=Hola!%20Me%20interesa%20una%20propuesta%20de%20Ads%20Pagados%20con%20PVB%20Estudio', external: true }
+            },
+            email: {
+                title: 'EMAIL MARKETING + AUTOMATIZACIÓN',
+                description: 'Diseñamos flujos de email que nutren relaciones y generan ventas automáticas. Desde secuencias de bienvenida hasta reactivación de clientes dormidos, automatizamos tu comunicación para que trabaje mientras duermes.',
+                deliverables: [
+                    'Setup y configuración de plataforma',
+                    'Diseño de templates de marca',
+                    'Secuencias de nurturing automatizadas',
+                    'Segmentación inteligente de listas',
+                    'Reportes de apertura, clicks y conversión'
+                ],
+                cta: { text: 'VER CÓMO FUNCIONA', href: 'https://wa.me/56944328662?text=Hola!%20Me%20interesa%20saber%20más%20sobre%20Email%20Marketing%20con%20PVB%20Estudio', external: true }
+            }
+        };
+
+        var svcModal = document.getElementById('svcModal');
+        var svcModalBody = document.getElementById('svcModalBody');
+        var svcModalClose = document.getElementById('svcModalClose');
+        var svcModalBackdrop = document.getElementById('svcModalBackdrop');
+
+        document.querySelectorAll('[data-service]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var key = btn.dataset.service;
+                var svc = services[key];
+                if (!svc) return;
+
+                var items = svc.deliverables.map(function(d) {
+                    return '<li>' + d + '</li>';
+                }).join('');
+
+                var ctaHtml = svc.cta.scroll
+                    ? '<a href="' + svc.cta.href + '" class="btn btn-primary svc-cta" onclick="closeSvcModal()">' + svc.cta.text + '</a>'
+                    : '<a href="' + svc.cta.href + '" class="btn btn-primary svc-cta" target="_blank" rel="noopener">' + svc.cta.text + '</a>';
+
+                svcModalBody.innerHTML =
+                    '<h2 class="svc-modal-title">' + svc.title + '</h2>' +
+                    '<p class="svc-modal-desc">' + svc.description + '</p>' +
+                    '<h4 class="svc-modal-deliverables-title">QUÉ INCLUYE</h4>' +
+                    '<ul class="svc-modal-list">' + items + '</ul>' +
+                    '<div class="svc-modal-cta">' + ctaHtml + '</div>';
+
+                svcModal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        function closeSvcModal() {
+            svcModal.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        svcModalClose.addEventListener('click', closeSvcModal);
+        svcModalBackdrop.addEventListener('click', closeSvcModal);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeSvcModal();
+        });
+    </script>
+
+    <!-- Video Modal -->
+    <div class="pvb-video-modal" id="pvbVideoModal" role="dialog" aria-modal="true" aria-label="Reproductor de video">
+        <div class="pvb-modal-backdrop" id="pvbModalBackdrop"></div>
+        <div class="pvb-modal-inner">
+            <button type="button" class="pvb-modal-close" id="pvbModalClose" aria-label="Cerrar video">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </button>
+            <div class="pvb-embed-wrap">
+                <iframe id="pvbVideoFrame" src="" frameborder="0" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture" title="Video PVB Estudio"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Video portfolio modal
+        const pvbModal = document.getElementById('pvbVideoModal');
+        const pvbModalBackdrop = document.getElementById('pvbModalBackdrop');
+        const pvbModalClose = document.getElementById('pvbModalClose');
+        const pvbVideoFrame = document.getElementById('pvbVideoFrame');
+
+        document.querySelectorAll('.video-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var videoId = card.dataset.videoId;
+                pvbVideoFrame.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0';
+                pvbModal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        function closePvbModal() {
+            pvbModal.classList.remove('open');
+            pvbVideoFrame.src = '';
+            document.body.style.overflow = '';
+        }
+
+        pvbModalClose.addEventListener('click', closePvbModal);
+        pvbModalBackdrop.addEventListener('click', closePvbModal);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePvbModal();
+        });
+    </script>
 </body>
 </html>
 
