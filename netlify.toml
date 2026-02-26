@@ -20,9 +20,23 @@
   force = true
 
 [[redirects]]
-  # SPA fallback (optional - for future client-side routing)
+  from = "/dashboard"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
   from = "/dashboard/*"
   to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/settings"
+  to = "/settings.html"
   status = 200
 
 # Headers for security
