@@ -62,7 +62,7 @@ export const handler = async (event, context) => {
     authUrl.searchParams.append('client_id', process.env.LINKEDIN_CLIENT_ID);
     authUrl.searchParams.append('redirect_uri', redirectUri);
     authUrl.searchParams.append('state', state);
-    authUrl.searchParams.append('scope', 'r_liteprofile r_emailaddress r_organization_social rw_organization_admin');
+    authUrl.searchParams.append('scope', 'openid profile email');
 
     return {
       statusCode: 200,

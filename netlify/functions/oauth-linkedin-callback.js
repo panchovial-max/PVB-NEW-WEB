@@ -113,11 +113,10 @@ export const handler = async (event, context) => {
     const accessToken = tokenData.access_token;
     const expiresIn = tokenData.expires_in || 5184000; // Default 60 days
 
-    // Get LinkedIn user profile
-    const profileResponse = await fetch('https://api.linkedin.com/v2/me', {
+    // Get LinkedIn user profile via OpenID Connect userinfo endpoint
+    const profileResponse = await fetch('https://api.linkedin.com/v2/userinfo', {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'X-Restli-Protocol-Version': '2.0.0'
+        'Authorization': `Bearer ${accessToken}`
       }
     });
 
@@ -135,24 +134,9 @@ export const handler = async (event, context) => {
 
     const profileData = await profileResponse.json();
 
-    // Get LinkedIn email
-    const emailResponse = await fetch('https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'X-Restli-Protocol-Version': '2.0.0'
-      }
-    });
-
-    let email = null;
-    if (emailResponse.ok) {
-      const emailData = await emailResponse.json();
-      email = emailData?.elements?.[0]?.['handle~']?.emailAddress;
-    }
-
-    // Extract profile info
-    const firstName = profileData.localizedFirstName || '';
-    const lastName = profileData.localizedLastName || '';
-    const fullName = `${firstName} ${lastName}`.trim();
+    // OpenID Connect userinfo returns name and email directly
+    const fullName = profileData.name || `${profileData.given_name || ''} ${profileData.family_name || ''}`.trim();
+    const email = profileData.email || null;
 
     // Calculate token expiry date
     const expiresAt = new Date();
@@ -160,13 +144,13 @@ export const handler = async (event, context) => {
 
     // Store account in database
     await storeSocialAccountToken(user.id, 'linkedin', {
-      id: profileData.id,
+      id: profileData.sub,
       name: fullName,
-      username: email || profileData.id,
+      username: email || profileData.sub,
       access_token: accessToken,
-      refresh_token: null, // LinkedIn tokens can be refreshed but no separate refresh_token
+      refresh_token: null,
       expires_at: expiresAt.toISOString(),
-      profile_picture: profileData.profilePicture?.displayImage || null
+      profile_picture: profileData.picture || null
     });
 
     // Redirect to dashboard with success message
