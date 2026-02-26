@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- GSAP + ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 </head>
 <body>
     <!-- Scroll Progress Bar -->
@@ -918,6 +921,76 @@
         pvbModalBackdrop.addEventListener('click', closePvbModal);
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closePvbModal();
+        });
+    </script>
+
+    <!-- GSAP ScrollTrigger Animations -->
+    <script>
+        window.addEventListener('load', function() {
+            if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+            gsap.registerPlugin(ScrollTrigger);
+
+            // Section titles
+            gsap.utils.toArray('.section-title').forEach(function(el) {
+                gsap.from(el, {
+                    y: 60, opacity: 0, duration: 0.9, ease: 'power3.out',
+                    scrollTrigger: { trigger: el, start: 'top 88%', once: true }
+                });
+            });
+
+            // Section subtitles
+            gsap.utils.toArray('.section-subtitle').forEach(function(el) {
+                gsap.from(el, {
+                    y: 40, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power2.out',
+                    scrollTrigger: { trigger: el, start: 'top 88%', once: true }
+                });
+            });
+
+            // Service cards stagger
+            gsap.from('.service-card', {
+                y: 70, opacity: 0, duration: 0.8, stagger: 0.1, ease: 'power2.out',
+                scrollTrigger: { trigger: '.services-grid', start: 'top 85%', once: true }
+            });
+
+            // Hybrid columns: slide from opposite sides
+            gsap.from('.hybrid-column:first-child', {
+                x: -80, opacity: 0, duration: 1, ease: 'power3.out',
+                scrollTrigger: { trigger: '.hybrid-columns', start: 'top 80%', once: true }
+            });
+            gsap.from('.hybrid-column:last-child', {
+                x: 80, opacity: 0, duration: 1, ease: 'power3.out',
+                scrollTrigger: { trigger: '.hybrid-columns', start: 'top 80%', once: true }
+            });
+            gsap.from('.hybrid-result', {
+                y: 50, opacity: 0, duration: 0.9, ease: 'power2.out',
+                scrollTrigger: { trigger: '.hybrid-result', start: 'top 85%', once: true }
+            });
+
+            // Video cards batch stagger
+            ScrollTrigger.batch('.video-card', {
+                onEnter: function(batch) {
+                    gsap.from(batch, { y: 40, opacity: 0, duration: 0.6, stagger: 0.06, ease: 'power2.out' });
+                },
+                start: 'top 92%'
+            });
+
+            // Stats
+            gsap.from('.stat-item', {
+                y: 50, opacity: 0, duration: 0.8, stagger: 0.15, ease: 'power2.out',
+                scrollTrigger: { trigger: '.stats-grid', start: 'top 80%', once: true }
+            });
+
+            // About
+            gsap.from('.about-content', {
+                y: 60, opacity: 0, duration: 0.9, ease: 'power2.out',
+                scrollTrigger: { trigger: '.about-content', start: 'top 85%', once: true }
+            });
+
+            // Contact form
+            gsap.from('.contact-form', {
+                y: 50, opacity: 0, duration: 0.9, ease: 'power2.out',
+                scrollTrigger: { trigger: '.contact-form', start: 'top 85%', once: true }
+            });
         });
     </script>
 </body>
