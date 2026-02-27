@@ -629,30 +629,42 @@ function saveAccountSettings() {
 async function connectAdsPlatform(platform) {
     showLoading();
     showNotification(`Connecting to ${platform}...`, 'info');
-    
-    const sessionId = localStorage.getItem('session_id');
+
     const platformData = getPlatformCredentials(platform);
-    
+
+    // Get Supabase session token
+    let sessionToken = null;
     try {
-        const response = await fetch(`${API_BASE}/ads-platforms/connect`, {
+        const sb = getSupabase();
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) sessionToken = session.access_token;
+    } catch (e) {
+        console.error('Could not get session:', e);
+    }
+
+    if (!sessionToken) {
+        hideLoading();
+        showNotification('Session expired. Please log in again.', 'error');
+        setTimeout(() => window.location.href = 'login.html', 1500);
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/ads-connect`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Session-ID': sessionId
+                'Authorization': `Bearer ${sessionToken}`
             },
-            body: JSON.stringify({
-                platform: platform,
-                ...platformData
-            })
+            body: JSON.stringify({ platform, ...platformData })
         });
-        
+
         const data = await response.json();
         hideLoading();
-        
+
         if (response.ok && data.success) {
-            showNotification(`${platform} connected successfully!`, 'success');
+            showNotification(`${platform} Ads connected successfully!`, 'success');
             updatePlatformStatus(platform, 'connected');
-            loadAdsPlatformStatuses();
         } else {
             showNotification(data.message || `Failed to connect ${platform}`, 'error');
         }
