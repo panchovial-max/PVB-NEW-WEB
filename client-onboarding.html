@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding de Cliente — Pancho Vial Studio</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    .onboarding-wrapper {
+      max-width: 780px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    .onboarding-header {
+      margin-bottom: 2.5rem;
+    }
+
+    .onboarding-header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+
+    .onboarding-header p {
+      color: var(--gray-400);
+      font-size: 0.95rem;
+    }
+
+    .form-section {
+      background: var(--gray-900);
+      border: 1px solid var(--gray-800);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-section-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--red);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--gray-800);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--gray-300);
+    }
+
+    .form-group label .required {
+      color: var(--red);
+      margin-left: 2px;
+    }
+
+    .form-group label .hint {
+      font-weight: 400;
+      color: var(--gray-500);
+      font-size: 0.78rem;
+      margin-left: 4px;
+    }
+
+    .form-control {
+      background: var(--gray-800);
+      border: 1px solid var(--gray-700);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      color: var(--white);
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.12);
+    }
+
+    .form-control::placeholder {
+      color: var(--gray-600);
+    }
+
+    select.form-control {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      padding-right: 2.5rem;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.5;
+    }
+
+    .progress-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .progress-step {
+      flex: 1;
+      height: 4px;
+      background: var(--gray-800);
+      border-radius: 2px;
+      transition: background 0.3s;
+    }
+
+    .progress-step.active {
+      background: var(--red);
+    }
+
+    .progress-step.done {
+      background: #16A34A;
+    }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      gap: 0.5rem;
+    }
+
+    .progress-label {
+      font-size: 0.72rem;
+      color: var(--gray-500);
+      text-align: center;
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .progress-label.active {
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    .step-content {
+      display: none;
+    }
+
+    .step-content.active {
+      display: block;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      gap: 1rem;
+    }
+
+    .btn-primary {
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.75rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--gray-400);
+      border: 1px solid var(--gray-700);
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--gray-500);
+      color: var(--white);
+    }
+
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      color: var(--gray-500);
+      background: var(--gray-800);
+      border-radius: 20px;
+      padding: 0.3rem 0.75rem;
+    }
+
+    .sync-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gray-600);
+    }
+
+    .sync-badge.syncing .dot {
+      background: #F59E0B;
+      animation: pulse 1s infinite;
+    }
+
+    .sync-badge.synced .dot { background: #16A34A; }
+    .sync-badge.error .dot  { background: #EF4444; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .success-screen.visible { display: block; }
+
+    .success-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .success-screen h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.75rem;
+    }
+
+    .success-screen p {
+      color: var(--gray-400);
+      margin-bottom: 2rem;
+    }
+
+    .notion-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--red);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .form-group.full { grid-column: 1; }
+      .progress-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav (igual al dashboard) -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-name">Pancho Vial Studio</span>
+    </div>
+    <div class="nav-actions">
+      <span id="userEmail" class="nav-user"></span>
+      <button class="btn-secondary" onclick="window.location.href='dashboard.html'">← Dashboard</button>
+    </div>
+  </nav>
+
+  <div class="onboarding-wrapper">
+
+    <!-- Header -->
+    <div class="onboarding-header">
+      <h1>Onboarding de Cliente</h1>
+      <p>Completa el contexto del cliente para activar los Skills de Claude Code. La información se guarda en Supabase y se sincroniza automáticamente a Notion.</p>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-bar">
+      <div class="progress-step active" id="step-bar-1"></div>
+      <div class="progress-step"        id="step-bar-2"></div>
+      <div class="progress-step"        id="step-bar-3"></div>
+      <div class="progress-step"        id="step-bar-4"></div>
+    </div>
+    <div class="progress-labels">
+      <span class="progress-label active" onclick="goToStep(1)">Negocio</span>
+      <span class="progress-label"        onclick="goToStep(2)">Audiencia</span>
+      <span class="progress-label"        onclick="goToStep(3)">Posicionamiento</span>
+      <span class="progress-label"        onclick="goToStep(4)">Objetivos</span>
+    </div>
+
+    <!-- Form -->
+    <form id="contextForm">
+
+      <!-- Step 1: Negocio -->
+      <div class="step-content active" id="step-1">
+        <div class="form-section">
+          <div class="form-section-title">Información del Negocio</div>
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Nombre del Cliente <span class="required">*</span></label>
+              <input type="text" class="form-control" id="cliente" placeholder="Ej: Playa Estaquilla" required>
+            </div>
+            <div class="form-group">
+              <label>Email de Contacto</label>
+              <input type="email" class="form-control" id="email_contacto" placeholder="contacto@cliente.com">
+            </div>
+            <div class="form-group">
+              <label>Industria</label>
+              <select class="form-control" id="industria">
+                <option value="">Seleccionar...</option>
+                <option>E-commerce</option>
+                <option>SaaS</option>
+                <option>Servicios</option>
+                <option>Salud</option>
+                <option>Educación</option>
+                <option>Inmobiliaria</option>
+                <option>Gastronomía</option>
+                <option>Otro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Modelo de Negocio</label>
+              <select class="form-control" id="modelo">
+                <option value="">Seleccionar...</option>
+                <option>Suscripción</option>
+                <option>Servicio</option>
+                <option>Producto</option>
+                <option>Marketplace</option>
+                <option>Consultoría</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Precio Promedio <span class="hint">rango o ticket</span></label>
+              <input type="text" class="form-control" id="precio" placeholder="Ej: $50.000 – $200.000 CLP">
+            </div>
+            <div class="form-group full">
+              <label>Descripción del Negocio <span class="hint">1-2 oraciones como lo diría el cliente</span></label>
+              <textarea class="form-control" id="descripcion" placeholder="Ej: Somos un resort boutique en la costa chilena especializado en experiencias de desconexión para familias y parejas."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Audiencia -->
+      <div class="step-content" id="step-2">
+        <div class="form-section">
+          <div class="form-section-title">Audiencia y Problema</div>
+          <div class="form-grid single">
+            <div class="form-group">
+              <label>Cliente Ideal (ICP) <span class="hint">cargo, industria, edad si aplica</span></label>
+              <textarea class="form-control" id="cliente_ideal" placeholder="Ej: Parejas profesionales de 30-45 años, doble ingreso, sin hijos o con hijos pequeños, que buscan escapadas de fin de semana desde Santiago."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Problema Principal que Resuelven</label>
+              <textarea class="form-control" id="problema" placeholder="Ej: El estrés laboral y la falta de desconexión real. Sus clientes necesitan alejarse de la ciudad sin sacrificar comodidad."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Alternativas Actuales <span class="hint">¿qué hacen hoy sin este producto?</span></label>
+              <textarea class="form-control" id="alternativas" placeholder="Ej: Hoteles estándar en Viña del Mar, Airbnbs sin experiencia curada, o simplemente no se escapan."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Objeciones Principales <span class="hint">¿por qué no comprarían?</span></label>
+              <textarea class="form-control" id="objeciones" placeholder="Ej: Precio alto comparado con alternativas. Distancia (4h desde Santiago). Incertidumbre sobre qué incluye el precio."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Posicionamiento -->
+      <div class="step-content" id="step-3">
+        <div class="form-section">
+          <div class="form-section-title">Posicionamiento y Diferenciación</div>
+          <div class="form-grid single">
+            <div class="form-group">
+              <label>Competidores Principales <span class="hint">máx. 3</span></label>
+              <textarea class="form-control" id="competidores" placeholder="Ej: Hotel Antumalal (Pucón), Tierra Chiloé, Airbnbs de lujo en la costa."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Diferenciación <span class="hint">¿qué los hace únicos o mejores?</span></label>
+              <textarea class="form-control" id="diferenciacion" placeholder="Ej: Única playa privada en la zona. Paquetes all-inclusive con experiencias curadas (kayak, fogata, chef privado). Arquitectura que integra el entorno."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Resultado Clave para el Cliente</label>
+              <textarea class="form-control" id="resultado_clave" placeholder="Ej: Vuelven sintiéndose realmente recargados. Muchos mencionan que fue 'la mejor escapada que han tenido'."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Prueba Social <span class="hint">testimonios, métricas, premios</span></label>
+              <textarea class="form-control" id="prueba_social" placeholder="Ej: 4.9 estrellas en Google (47 reseñas). 85% de clientes repiten. Mencionados en Lonely Planet Chile 2024."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Tono y Objetivos -->
+      <div class="step-content" id="step-4">
+        <div class="form-section">
+          <div class="form-section-title">Tono de Marca</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Tono de Comunicación</label>
+              <select class="form-control" id="tono">
+                <option value="">Seleccionar...</option>
+                <option>Profesional</option>
+                <option>Cercano</option>
+                <option>Técnico</option>
+                <option>Aspiracional</option>
+                <option>Urgente</option>
+                <option>Educativo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Palabras a Evitar</label>
+              <input type="text" class="form-control" id="palabras_evitar" placeholder="Ej: barato, oferta, robusto, solución integral">
+            </div>
+            <div class="form-group full">
+              <label>Referencias de Copy <span class="hint">marcas o ejemplos que les gusten</span></label>
+              <textarea class="form-control" id="referencias" placeholder="Ej: El tono de Airbnb (cercano, aspiracional). La precisión de Apple. Evitar el tono corporativo de hoteles de cadena."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Objetivos del Proyecto</div>
+          <div class="form-grid single">
+            <div class="form-group">
+              <label>Objetivo Principal</label>
+              <textarea class="form-control" id="objetivo" placeholder="Ej: Aumentar las reservas directas (sin intermediarios) en un 30% para la temporada de verano 2026."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Métrica de Éxito</label>
+              <input type="text" class="form-control" id="metrica" placeholder="Ej: Tasa de conversión web, costo por reserva, reservas directas vs. OTA">
+            </div>
+            <div class="form-group">
+              <label>Plazo <span class="hint">fecha de lanzamiento o milestone</span></label>
+              <input type="text" class="form-control" id="plazo" placeholder="Ej: Landing lista para el 15 de marzo. Campaña Meta en abril.">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" id="btnBack" onclick="prevStep()" style="display:none">← Atrás</button>
+        <div style="display:flex; align-items:center; gap:1rem; margin-left:auto">
+          <span class="sync-badge" id="syncBadge">
+            <span class="dot"></span>
+            Sin guardar
+          </span>
+          <button type="button" class="btn-primary" id="btnNext" onclick="nextStep()">Siguiente →</button>
+          <button type="submit" class="btn-primary" id="btnSubmit" style="display:none">Guardar y Sincronizar a Notion</button>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Success screen -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">✅</div>
+      <h2>Contexto guardado correctamente</h2>
+      <p>La información del cliente fue guardada en Supabase y sincronizada a Notion.<br>Claude Code ya puede usar el contexto de este cliente con todos los skills.</p>
+      <a href="#" id="notionLink" class="notion-link" target="_blank" style="display:none">
+        Ver en Notion →
+      </a>
+      <br>
+      <button class="btn-primary" onclick="resetForm()">+ Agregar otro cliente</button>
+      <button class="btn-secondary" style="margin-left:1rem" onclick="window.location.href='dashboard.html'">Ir al dashboard</button>
+    </div>
+
+  </div>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://htkzpktnaladabovakwc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0a3pwa3RuYWxhZGFib3Zha3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4MDg4NDYsImV4cCI6MjA1MjM4NDg0Nn0.O4oZkH0iVGj3WfgDVg5aIvOEqEPMjYMpM4ZnFpHvVjQ';
+
+    let supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let sessionToken = null;
+    let currentStep = 1;
+    const totalSteps = 4;
+
+    // Auth check
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      sessionToken = session.access_token;
+      document.getElementById('userEmail').textContent = session.user.email;
+    });
+
+    // Step navigation
+    function updateStepUI() {
+      for (let i = 1; i <= totalSteps; i++) {
+        const content = document.getElementById(`step-${i}`);
+        const bar = document.getElementById(`step-bar-${i}`);
+        const label = document.querySelectorAll('.progress-label')[i - 1];
+
+        content.classList.toggle('active', i === currentStep);
+        label.classList.toggle('active', i === currentStep);
+
+        if (i < currentStep)       { bar.classList.add('done');   bar.classList.remove('active'); }
+        else if (i === currentStep) { bar.classList.add('active'); bar.classList.remove('done');   }
+        else                        { bar.classList.remove('done', 'active'); }
+      }
+
+      document.getElementById('btnBack').style.display = currentStep > 1 ? 'block' : 'none';
+      document.getElementById('btnNext').style.display = currentStep < totalSteps ? 'block' : 'none';
+      document.getElementById('btnSubmit').style.display = currentStep === totalSteps ? 'block' : 'none';
+    }
+
+    function goToStep(n) {
+      if (n >= 1 && n <= totalSteps) {
+        currentStep = n;
+        updateStepUI();
+      }
+    }
+
+    function nextStep() {
+      if (currentStep === 1 && !document.getElementById('cliente').value.trim()) {
+        document.getElementById('cliente').focus();
+        return;
+      }
+      if (currentStep < totalSteps) {
+        currentStep++;
+        updateStepUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateStepUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Form submit
+    document.getElementById('contextForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const badge = document.getElementById('syncBadge');
+      badge.className = 'sync-badge syncing';
+      badge.innerHTML = '<span class="dot"></span> Sincronizando...';
+      document.getElementById('btnSubmit').disabled = true;
+
+      const payload = {
+        cliente:         document.getElementById('cliente').value.trim(),
+        email_contacto:  document.getElementById('email_contacto').value.trim(),
+        industria:       document.getElementById('industria').value,
+        modelo:          document.getElementById('modelo').value,
+        precio:          document.getElementById('precio').value.trim(),
+        descripcion:     document.getElementById('descripcion').value.trim(),
+        cliente_ideal:   document.getElementById('cliente_ideal').value.trim(),
+        problema:        document.getElementById('problema').value.trim(),
+        alternativas:    document.getElementById('alternativas').value.trim(),
+        objeciones:      document.getElementById('objeciones').value.trim(),
+        competidores:    document.getElementById('competidores').value.trim(),
+        diferenciacion:  document.getElementById('diferenciacion').value.trim(),
+        resultado_clave: document.getElementById('resultado_clave').value.trim(),
+        prueba_social:   document.getElementById('prueba_social').value.trim(),
+        tono:            document.getElementById('tono').value,
+        palabras_evitar: document.getElementById('palabras_evitar').value.trim(),
+        referencias:     document.getElementById('referencias').value.trim(),
+        objetivo:        document.getElementById('objetivo').value.trim(),
+        metrica:         document.getElementById('metrica').value.trim(),
+        plazo:           document.getElementById('plazo').value.trim(),
+      };
+
+      try {
+        const res = await fetch('/.netlify/functions/client-context-save', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${sessionToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          badge.className = 'sync-badge synced';
+          badge.innerHTML = '<span class="dot"></span> Sincronizado';
+
+          document.getElementById('contextForm').style.display = 'none';
+          document.getElementById('successScreen').classList.add('visible');
+
+          if (data.data?.notion_url) {
+            const notionLink = document.getElementById('notionLink');
+            notionLink.href = data.data.notion_url;
+            notionLink.style.display = 'inline-flex';
+          }
+        } else {
+          throw new Error(data.message || 'Error desconocido');
+        }
+      } catch (err) {
+        badge.className = 'sync-badge error';
+        badge.innerHTML = '<span class="dot"></span> Error al guardar';
+        document.getElementById('btnSubmit').disabled = false;
+        alert('Error: ' + err.message);
+      }
+    });
+
+    function resetForm() {
+      document.getElementById('contextForm').reset();
+      document.getElementById('contextForm').style.display = 'block';
+      document.getElementById('successScreen').classList.remove('visible');
+      currentStep = 1;
+      updateStepUI();
+      const badge = document.getElementById('syncBadge');
+      badge.className = 'sync-badge';
+      badge.innerHTML = '<span class="dot"></span> Sin guardar';
+      document.getElementById('btnSubmit').disabled = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
