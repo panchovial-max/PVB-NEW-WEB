@@ -67,10 +67,36 @@ export async function validateUserSession(sessionToken) {
 }
 
 /**
+ * Ensures user_profiles row exists for the user (FK requirement for social_accounts)
+ */
+export async function ensureUserProfile(userId, userData = {}) {
+  const supabase = getSupabaseAdmin();
+
+  const { error } = await supabase
+    .from('user_profiles')
+    .upsert({
+      id: userId,
+      ...userData,
+      updated_at: new Date().toISOString()
+    }, {
+      onConflict: 'id',
+      ignoreDuplicates: false
+    });
+
+  if (error) {
+    console.error('ensureUserProfile error:', error);
+    // Don't throw — profile might already exist with more complete data
+  }
+}
+
+/**
  * Stores OAuth token for a social media account
  */
 export async function storeSocialAccountToken(userId, platform, accountData) {
   const supabase = getSupabaseAdmin();
+
+  // Ensure user_profiles row exists (social_accounts FK requires it)
+  await ensureUserProfile(userId);
 
   const { data, error } = await supabase
     .from('social_accounts')
