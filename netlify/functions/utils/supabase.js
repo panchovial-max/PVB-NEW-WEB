@@ -105,12 +105,14 @@ export async function storeSocialAccountToken(userId, platform, accountData) {
       platform: platform,
       account_id: accountData.id,
       account_name: accountData.name,
-      account_username: accountData.username,
       access_token: accountData.access_token,
-      refresh_token: accountData.refresh_token,
-      token_expires_at: accountData.expires_at,
-      profile_picture_url: accountData.profile_picture,
-      last_sync_at: new Date().toISOString()
+      refresh_token: accountData.refresh_token || null,
+      token_expires_at: accountData.expires_at || null,
+      last_sync_at: new Date().toISOString(),
+      metadata: {
+        username: accountData.username || null,
+        profile_picture: accountData.profile_picture || null
+      }
     }, {
       onConflict: 'user_id,platform,account_id'
     });
