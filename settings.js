@@ -544,31 +544,20 @@ function setupAccountSettings() {
 
 // Load account data from user info
 async function loadAccountData() {
-    const sessionId = localStorage.getItem('session_id');
-    
     try {
-        const response = await fetch(`${API_BASE}/user-info`, {
-            headers: {
-                'X-Session-ID': sessionId
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.user) {
-            const user = data.user;
-            
-            // Set form values
+        const sb = getSupabase();
+        const { data: { session } } = await sb.auth.getSession();
+        const user = session?.user;
+
+        if (user) {
             const fullName = document.getElementById('fullName');
             const email = document.getElementById('email');
             const username = document.getElementById('username');
-            const company = document.getElementById('company');
-            
-            if (fullName) fullName.value = user.full_name || '';
+
+            if (fullName) fullName.value = user.user_metadata?.full_name || '';
             if (email) email.value = user.email || '';
-            if (username) username.value = user.username || '';
-            
-            // Load saved account settings from localStorage
+            if (username) username.value = user.user_metadata?.username || '';
+
             loadAccountFormData();
         }
     } catch (error) {
@@ -742,13 +731,9 @@ function updatePlatformStatus(platform, status) {
 
 // Load ads platform connection statuses
 async function loadAdsPlatformStatuses() {
-    const sessionId = localStorage.getItem('session_id');
-    
     try {
-        const response = await fetch(`${API_BASE}/ads-platforms/status`, {
-            headers: {
-                'X-Session-ID': sessionId
-            }
+        const response = await fetch(`${API_BASE}/metrics-get`, {
+            headers: { 'Content-Type': 'application/json' }
         });
         
         if (response.ok) {
@@ -869,14 +854,9 @@ async function testNotionConnection() {
 
 // Load Notion configuration
 async function loadNotionConfig() {
-    const sessionId = localStorage.getItem('session_id');
-    
     try {
-        const response = await fetch(`${API_BASE}/notion/config`, {
-            headers: {
-                'X-Session-ID': sessionId
-            }
-        });
+        // Notion config not yet implemented in Netlify functions — skip silently
+        const response = { ok: false };
         
         if (response.ok) {
             const data = await response.json();
