@@ -284,14 +284,44 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Connect social media platform
-function connectPlatform(platform) {
+// Connect social media platform — real OAuth flow
+async function connectPlatform(platform) {
     showNotification(`Connecting to ${platform}...`, 'info');
-    
-    // In a real implementation, this would open OAuth flow
-    setTimeout(() => {
-        showNotification(`${platform} connection coming soon!`, 'info');
-    }, 1000);
+
+    // Get Supabase JWT session token
+    let sessionToken = null;
+    try {
+        const supabaseClient = window.supabase.createClient(
+            'https://htkzpktnaladabovakwc.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0a3pwa3RuYWxhZGFib3Zha3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MjI2ODYsImV4cCI6MjA4NTE5ODY4Nn0.uFjYQ5vesDpscJGaDHW7bQ-PJsNeTtqeeyCl0NZoRUA'
+        );
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) sessionToken = session.access_token;
+    } catch (e) {
+        console.error('Could not get Supabase session:', e);
+    }
+
+    if (!sessionToken) {
+        showNotification('Session expired. Please log in again.', 'error');
+        setTimeout(() => window.location.href = 'login.html', 1500);
+        return;
+    }
+
+    try {
+        const response = await fetch(`/.netlify/functions/oauth-${platform}-initiate`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${sessionToken}` }
+        });
+        const data = await response.json();
+        if (data.success && data.authorization_url) {
+            window.location.href = data.authorization_url;
+        } else {
+            showNotification(data.message || `Failed to connect ${platform}`, 'error');
+        }
+    } catch (error) {
+        console.error(`Error connecting ${platform}:`, error);
+        showNotification(`Error connecting to ${platform}. Please try again.`, 'error');
+    }
 }
 
 // Export all data
