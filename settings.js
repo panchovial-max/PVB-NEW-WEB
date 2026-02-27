@@ -1,6 +1,18 @@
 // PVB Estudio Creativo Settings Page - JavaScript
 
-const API_BASE = 'http://localhost:8001/api';
+const API_BASE = '/.netlify/functions';
+
+// Supabase client for settings page
+const SUPABASE_URL = 'https://htkzpktnaladabovakwc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0a3pwa3RuYWxhZGFib3Zha3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MjI2ODYsImV4cCI6MjA4NTE5ODY4Nn0.uFjYQ5vesDpscJGaDHW7bQ-PJsNeTtqeeyCl0NZoRUA';
+let _supabase = null;
+
+function getSupabase() {
+    if (!_supabase && window.supabase) {
+        _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    return _supabase;
+}
 
 // Initialize settings page
 document.addEventListener('DOMContentLoaded', async () => {
@@ -31,56 +43,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupAccountSettings();
 });
 
-// Check if user is authenticated
+// Check if user is authenticated via Supabase
 async function checkAuthentication() {
-    const sessionId = localStorage.getItem('session_id');
-    
-    if (!sessionId) {
+    const sb = getSupabase();
+    if (!sb) {
         window.location.href = 'login.html';
         return;
     }
-    
+
     try {
-        const response = await fetch(`${API_BASE}/verify-session`, {
-            headers: {
-                'X-Session-ID': sessionId
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (!data.valid) {
-            localStorage.clear();
+        const { data: { session }, error } = await sb.auth.getSession();
+
+        if (error || !session) {
             window.location.href = 'login.html';
             return;
         }
-        
-        // Load user info
-        await loadUserInfo();
-        
+
+        await loadUserInfo(session.user);
+
     } catch (error) {
         console.error('Authentication error:', error);
-        alert('Error connecting to server. Please make sure the API server is running.');
+        window.location.href = 'login.html';
     }
 }
 
-// Load user information
-async function loadUserInfo() {
-    const sessionId = localStorage.getItem('session_id');
-    
+// Load user information from Supabase session
+async function loadUserInfo(user) {
     try {
-        const response = await fetch(`${API_BASE}/user-info`, {
-            headers: {
-                'X-Session-ID': sessionId
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.user) {
+        if (!user) {
+            const sb = getSupabase();
+            const { data: { session } } = await sb.auth.getSession();
+            user = session?.user;
+        }
+
+        if (user) {
             const greeting = document.getElementById('userGreeting');
             if (greeting) {
-                greeting.textContent = `${data.user.full_name}'s Settings`;
+                const name = user.user_metadata?.full_name || user.email || 'User';
+                greeting.textContent = `${name}'s Settings`;
             }
         }
     } catch (error) {
