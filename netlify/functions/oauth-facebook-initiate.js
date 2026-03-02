@@ -1,6 +1,5 @@
-// Instagram OAuth Initiate - Netlify Function
-// Uses Meta Graph API (Facebook Login) — Instagram Basic Display API deprecated Dec 2024
-// URL: /.netlify/functions/oauth-instagram-initiate
+// Facebook OAuth Initiate - Netlify Function
+// URL: /.netlify/functions/oauth-facebook-initiate
 
 import { validateUserSession } from './utils/supabase.js';
 
@@ -31,17 +30,16 @@ export const handler = async (event, context) => {
     const state = Buffer.from(JSON.stringify({
       session_token: sessionToken,
       user_id: user.id,
-      platform: 'instagram',
+      platform: 'facebook',
       timestamp: Date.now()
     })).toString('base64');
 
-    const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-instagram-callback`;
+    const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-facebook-callback`;
 
-    // Meta Graph API (Facebook Login) — required for Instagram Business accounts
     const authUrl = new URL('https://www.facebook.com/dialog/oauth');
     authUrl.searchParams.append('client_id', process.env.META_APP_ID);
     authUrl.searchParams.append('redirect_uri', redirectUri);
-    authUrl.searchParams.append('scope', 'instagram_basic,pages_show_list,pages_read_engagement,instagram_manage_insights');
+    authUrl.searchParams.append('scope', 'pages_show_list,pages_read_engagement,ads_read');
     authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('state', state);
 
@@ -52,7 +50,7 @@ export const handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('Instagram OAuth initiate error:', error);
+    console.error('Facebook OAuth initiate error:', error);
     return { statusCode: 500, headers, body: JSON.stringify({ success: false, message: 'Internal server error' }) };
   }
 };

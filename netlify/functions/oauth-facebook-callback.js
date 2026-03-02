@@ -1,6 +1,5 @@
-// Instagram OAuth Callback - Netlify Function
-// Handles Meta Graph API callback to get Instagram Business Account
-// URL: /.netlify/functions/oauth-instagram-callback
+// Facebook OAuth Callback - Netlify Function
+// URL: /.netlify/functions/oauth-facebook-callback
 
 import { validateUserSession, storeSocialAccountToken } from './utils/supabase.js';
 
@@ -23,7 +22,7 @@ export const handler = async (event, context) => {
     const { code, state, error, error_description } = params;
 
     if (error) {
-      console.error('Instagram OAuth error:', error, error_description);
+      console.error('Facebook OAuth error:', error, error_description);
       return {
         statusCode: 302,
         headers: { Location: `/settings.html?error=${encodeURIComponent(error_description || error)}` }
@@ -48,9 +47,9 @@ export const handler = async (event, context) => {
       return { statusCode: 401, headers, body: JSON.stringify({ success: false, message: 'Invalid or expired session' }) };
     }
 
-    const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-instagram-callback`;
+    const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-facebook-callback`;
 
-    // 1. Exchange code for short-lived access token
+    // 1. Exchange code for short-lived token
     const tokenRes = await fetch(`${META_API}/oauth/access_token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -79,58 +78,30 @@ export const handler = async (event, context) => {
     const accessToken = longTokenData.access_token || shortToken;
     const expiresIn = longTokenData.expires_in || 5184000;
 
-    // 3. Get Facebook Pages managed by user
-    const pagesRes = await fetch(`${META_API}/me/accounts?access_token=${accessToken}`);
-    const pagesData = await pagesRes.json();
-    const pages = pagesData.data || [];
+    // 3. Get Facebook user info
+    const meRes = await fetch(`${META_API}/me?fields=id,name,email,picture&access_token=${accessToken}`);
+    const meData = await meRes.json();
 
-    if (pages.length === 0) {
-      return {
-        statusCode: 302,
-        headers: { Location: '/settings.html?error=no_pages&error_description=No+Facebook+Pages+found.+Connect+a+Facebook+Page+linked+to+your+Instagram+Business+account.' }
-      };
-    }
-
-    // 4. For each page, get linked Instagram Business Account
-    let instagramConnected = 0;
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
 
-    for (const page of pages) {
-      const igRes = await fetch(
-        `${META_API}/${page.id}?fields=instagram_business_account{id,name,username,profile_picture_url}&access_token=${page.access_token || accessToken}`
-      );
-      const igData = await igRes.json();
-
-      if (igData.instagram_business_account) {
-        const igAccount = igData.instagram_business_account;
-        await storeSocialAccountToken(user.id, 'instagram', {
-          id: igAccount.id,
-          name: igAccount.name || igAccount.username || 'Instagram Business',
-          username: igAccount.username || null,
-          access_token: page.access_token || accessToken,
-          refresh_token: null,
-          expires_at: expiresAt.toISOString(),
-          profile_picture: igAccount.profile_picture_url || null
-        });
-        instagramConnected++;
-      }
-    }
-
-    if (instagramConnected === 0) {
-      return {
-        statusCode: 302,
-        headers: { Location: '/settings.html?error=no_instagram&error_description=No+Instagram+Business+account+linked+to+your+Facebook+Pages' }
-      };
-    }
+    await storeSocialAccountToken(user.id, 'facebook', {
+      id: meData.id,
+      name: meData.name || 'Facebook Account',
+      username: meData.email || null,
+      access_token: accessToken,
+      refresh_token: null,
+      expires_at: expiresAt.toISOString(),
+      profile_picture: meData.picture?.data?.url || null
+    });
 
     return {
       statusCode: 302,
-      headers: { Location: '/dashboard.html?oauth_success=instagram' }
+      headers: { Location: '/dashboard.html?oauth_success=facebook' }
     };
 
   } catch (error) {
-    console.error('Instagram OAuth callback error:', error);
+    console.error('Facebook OAuth callback error:', error);
     return { statusCode: 500, headers, body: JSON.stringify({ success: false, message: 'Internal server error', error: error.message }) };
   }
 };
