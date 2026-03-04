@@ -2,8 +2,8 @@
 // Handles authentication, data loading, and dashboard interactions
 
 // Supabase Configuration
-const SUPABASE_URL = 'https://htkzpktnaladabovakwc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0a3pwa3RuYWxhZGFib3Zha3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MjI2ODYsImV4cCI6MjA4NTE5ODY4Nn0.uFjYQ5vesDpscJGaDHW7bQ-PJsNeTtqeeyCl0NZoRUA';
+const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_siFuszUIw5ibS-2Y15O4-Q_k484kZ8i';
 
 // Initialize Supabase client
 let supabase = null;
