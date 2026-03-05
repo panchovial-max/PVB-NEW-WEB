@@ -80,6 +80,9 @@ async function loadDashboardData(userData) {
         // Load social accounts
         await loadSocialAccounts(userData);
 
+        // Load real social stats from Meta Graph API
+        await loadSocialStats(userData);
+
         // Load campaigns (if any)
         await loadCampaigns(userData);
 
@@ -578,3 +581,44 @@ async function syncMetrics() {
 // Make functions available globally
 window.connectSocialAccount = connectSocialAccount;
 window.syncMetrics = syncMetrics;
+
+// Load real social stats from Meta Graph API via Netlify function
+async function loadSocialStats(userData) {
+    const sessionToken = localStorage.getItem('session_id');
+    if (!sessionToken) return;
+
+    const platforms = ['instagram', 'facebook'];
+
+    for (const platform of platforms) {
+        try {
+            const res = await fetch(`/.netlify/functions/social-stats?platform=${platform}`, {
+                headers: { 'Authorization': `Bearer ${sessionToken}` }
+            });
+
+            if (!res.ok) continue;
+            const { stats } = await res.json();
+            if (!stats) continue;
+
+            if (platform === 'instagram') {
+                const fmt = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n);
+                const el = id => document.getElementById(id);
+                if (el('igFollowers')) el('igFollowers').textContent = fmt(stats.followers);
+                if (el('igImpressions')) el('igImpressions').textContent = fmt(stats.impressions);
+                if (el('igEngagement')) el('igEngagement').textContent = stats.engagement_rate + '%';
+                // Show username on the card header if element exists
+                const igHeader = document.querySelector('.social-card.instagram h4');
+                if (igHeader && stats.username) igHeader.textContent = `@${stats.username}`;
+            }
+
+            if (platform === 'facebook') {
+                const fmt = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n);
+                const el = id => document.getElementById(id);
+                if (el('fbImpressions')) el('fbImpressions').textContent = fmt(stats.impressions);
+                if (el('fbEngagement')) el('fbEngagement').textContent = fmt(stats.engaged_users);
+                if (el('fbReach')) el('fbReach').textContent = fmt(stats.reach);
+            }
+        } catch (err) {
+            console.log(`Could not load ${platform} stats:`, err.message);
+        }
+    }
+}
