@@ -593,6 +593,19 @@
                 if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
                     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                     console.log('✅ Supabase initialized with URL:', SUPABASE_URL);
+                    // Listen for OAuth callbacks (fires when Supabase detects session from URL fragment)
+                    supabase.auth.onAuthStateChange((event, session) => {
+                        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+                            console.log('✅ Auth state change: SIGNED_IN, redirecting to dashboard');
+                            localStorage.setItem('supabase_session', JSON.stringify(session));
+                            localStorage.setItem('session_id', session.access_token);
+                            localStorage.setItem('user_id', session.user.id);
+                            localStorage.setItem('email', session.user.email);
+                            localStorage.setItem('full_name', session.user.user_metadata?.full_name || session.user.email);
+                            localStorage.setItem('role', session.user.role || 'client');
+                            window.location.href = 'dashboard.html';
+                        }
+                    });
                     return true;
                 }
                 console.warn('⚠️ Supabase library not found. Authentication will use custom API.');
