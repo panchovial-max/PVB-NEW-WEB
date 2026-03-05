@@ -41,7 +41,7 @@ export const handler = async (event, context) => {
     const authUrl = new URL('https://www.facebook.com/dialog/oauth');
     authUrl.searchParams.append('client_id', process.env.META_APP_ID);
     authUrl.searchParams.append('redirect_uri', redirectUri);
-    authUrl.searchParams.append('scope', 'instagram_basic,pages_show_list,pages_read_engagement,instagram_manage_insights');
+    authUrl.searchParams.append('scope', 'email,public_profile,instagram_basic,pages_show_list,pages_read_engagement,instagram_manage_insights');
     authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('state', state);
 
