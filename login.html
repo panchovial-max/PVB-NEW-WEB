@@ -1205,14 +1205,14 @@
                 newSignupForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
 
-                    const fullName = document.getElementById('fullName').value.trim();
+                    const fullName = document.getElementById('signupName').value.trim();
                     const email = document.getElementById('signupEmail').value.trim();
                     const password = document.getElementById('signupPassword').value;
                     const confirmPassword = document.getElementById('confirmPassword').value;
                     const agreeTerms = document.getElementById('agreeTerms').checked;
 
-                    const errorAlert = document.getElementById('signupError');
-                    const successAlert = document.getElementById('signupSuccess');
+                    const errorAlert = document.getElementById('errorAlert');
+                    const successAlert = document.getElementById('successAlert');
                     const signupBtn = this.querySelector('button[type="submit"]');
 
                     errorAlert.classList.remove('show');
@@ -1294,7 +1294,7 @@
                     const email = document.getElementById('email').value.trim();
                     const password = document.getElementById('password').value;
 
-                    const errorAlert = document.getElementById('loginError');
+                    const errorAlert = document.getElementById('errorAlert');
                     const loginBtn = this.querySelector('button[type="submit"]');
 
                     errorAlert.classList.remove('show');
