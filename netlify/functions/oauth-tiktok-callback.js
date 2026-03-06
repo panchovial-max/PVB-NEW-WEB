@@ -95,7 +95,8 @@ export const handler = async (event, context) => {
         client_secret: process.env.TIKTOK_CLIENT_SECRET,
         code: code,
         grant_type: 'authorization_code',
-        redirect_uri: `${process.env.BASE_URL}/.netlify/functions/oauth-tiktok-callback`
+        redirect_uri: `${process.env.BASE_URL}/.netlify/functions/oauth-tiktok-callback`,
+        code_verifier: codeVerifier
       })
     });
 

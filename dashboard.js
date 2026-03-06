@@ -687,7 +687,7 @@ function renderInbox(messages) {
             <div class="inbox-body">
                 <div class="inbox-meta">
                     <span class="inbox-sender">${escapeHtml(msg.from.name)}</span>
-                    <span class="inbox-platform-badge ${msg.platform}">${msg.platform === 'instagram' ? 'IG' : 'FB'}</span>
+                    <span class="inbox-platform-badge ${msg.platform}">${{instagram:'IG',facebook:'FB',tiktok:'TT',youtube:'YT'}[msg.platform] || msg.platform}</span>
                     <span class="inbox-type-badge">${typeLabel}</span>
                     <span class="inbox-time">${time}</span>
                 </div>

@@ -54,12 +54,10 @@ export const handler = async (event, context) => {
       timestamp: Date.now()
     })).toString('base64');
 
-    // Generate code_verifier and code_challenge for PKCE (TikTok requires this)
-    const codeVerifier = generateRandomString(43);
+        // Generate PKCE code_verifier and code_challenge (SHA256 / S256)
+    const codeVerifier = generateRandomString(64);
     const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-    // Store code_verifier temporarily (you'd want to use a cache/database in production)
-    // For simplicity, we'll include it in the state (not ideal for production)
     const stateWithVerifier = Buffer.from(JSON.stringify({
       session_token: sessionToken,
       user_id: user.id,
@@ -67,7 +65,6 @@ export const handler = async (event, context) => {
       code_verifier: codeVerifier
     })).toString('base64');
 
-    // Build TikTok OAuth authorization URL
     const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-tiktok-callback`;
 
     const authUrl = new URL('https://www.tiktok.com/v2/auth/authorize/');
@@ -76,6 +73,8 @@ export const handler = async (event, context) => {
     authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('redirect_uri', redirectUri);
     authUrl.searchParams.append('state', stateWithVerifier);
+    authUrl.searchParams.append('code_challenge', codeChallenge);
+    authUrl.searchParams.append('code_challenge_method', 'S256');
 
     return {
       statusCode: 200,
@@ -111,12 +110,8 @@ function generateRandomString(length) {
   return text;
 }
 
-// Helper function to generate code challenge (for PKCE)
+// Generate PKCE code_challenge using SHA256 (S256 method)
 async function generateCodeChallenge(codeVerifier) {
-  // For serverless environment, we'll use a simpler approach
-  // In production, you'd want to use proper SHA256 hashing
-  return Buffer.from(codeVerifier).toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  const { createHash } = await import('crypto');
+  return createHash('sha256').update(codeVerifier).digest('base64url');
 }

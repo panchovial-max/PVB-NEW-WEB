@@ -606,6 +606,8 @@ body {
 
 .inbox-avatar.instagram { background: linear-gradient(135deg, #833AB4, #FD1D1D, #FCB045); }
 .inbox-avatar.facebook { background: #1877F2; }
+.inbox-avatar.tiktok { background: #010101; }
+.inbox-avatar.youtube { background: #FF0000; }
 
 .inbox-body {
     flex: 1;
@@ -637,6 +639,8 @@ body {
 
 .inbox-platform-badge.instagram { background: #FCE4EC; color: #AD1457; }
 .inbox-platform-badge.facebook { background: #E3F2FD; color: #1565C0; }
+.inbox-platform-badge.tiktok { background: #F3E5F5; color: #6A1B9A; }
+.inbox-platform-badge.youtube { background: #FFEBEE; color: #C62828; }
 
 .inbox-type-badge {
     font-size: 11px;

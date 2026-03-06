@@ -59,6 +59,12 @@ export const handler = async (event) => {
         } else if (account.platform === 'facebook') {
           const msgs = await fetchFacebookMessages(account.access_token, account.account_id, type, limit);
           allMessages.push(...msgs);
+        } else if (account.platform === 'tiktok') {
+          const msgs = await fetchTikTokComments(account.access_token, account.account_id, limit);
+          allMessages.push(...msgs);
+        } else if (account.platform === 'youtube') {
+          const msgs = await fetchYouTubeComments(account.access_token, account.account_id, limit);
+          allMessages.push(...msgs);
         }
       } catch (err) {
         console.error(`Error fetching ${account.platform} messages:`, err.message);
@@ -244,6 +250,84 @@ async function fetchFacebookMessages(accessToken, pageId, type, limit) {
     } catch (err) {
       console.error('Facebook comments fetch error:', err.message);
     }
+  }
+
+  return messages;
+}
+
+async function fetchTikTokComments(accessToken, openId, limit) {
+  const messages = [];
+
+  try {
+    const videosRes = await fetch('https://open.tiktokapis.com/v2/video/list/?fields=id,title,create_time', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_count: 5 })
+    });
+    const videosData = await videosRes.json();
+    const videos = videosData.data?.videos || [];
+
+    for (const video of videos) {
+      const commentsRes = await fetch('https://open.tiktokapis.com/v2/video/comment/list/?fields=id,text,create_time', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ video_id: video.id, max_count: 10 })
+      });
+      const commentsData = await commentsRes.json();
+      for (const comment of (commentsData.data?.comments || [])) {
+        messages.push({
+          id: comment.id,
+          platform: 'tiktok',
+          type: 'comment',
+          from: { name: 'TikTok User', id: null },
+          message: comment.text,
+          timestamp: new Date(comment.create_time * 1000).toISOString(),
+          read: false,
+          video_id: video.id,
+          media_caption: video.title ? video.title.substring(0, 60) : null
+        });
+      }
+    }
+  } catch (err) {
+    console.error('TikTok comments fetch error:', err.message);
+  }
+
+  return messages;
+}
+
+async function fetchYouTubeComments(accessToken, channelId, limit) {
+  const messages = [];
+
+  try {
+    const videosRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=date&maxResults=5&access_token=${accessToken}`
+    );
+    const videosData = await videosRes.json();
+
+    for (const video of (videosData.items || [])) {
+      const videoId = video.id.videoId;
+      const commentsRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=10&access_token=${accessToken}`
+      );
+      const commentsData = await commentsRes.json();
+
+      for (const thread of (commentsData.items || [])) {
+        const comment = thread.snippet.topLevelComment.snippet;
+        messages.push({
+          id: thread.id,
+          platform: 'youtube',
+          type: 'comment',
+          from: { name: comment.authorDisplayName || 'YouTube User', id: null },
+          message: comment.textDisplay,
+          timestamp: comment.publishedAt,
+          read: false,
+          video_id: videoId,
+          media_caption: video.snippet.title ? video.snippet.title.substring(0, 60) : null
+        });
+      }
+    }
+  } catch (err) {
+    console.error('YouTube comments fetch error:', err.message);
   }
 
   return messages;
