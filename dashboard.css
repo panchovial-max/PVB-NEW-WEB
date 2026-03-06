@@ -2029,6 +2029,24 @@ html {
     transform: scale(1.05);
 }
 
+.btn-platform.connected {
+    background: #00C853;
+    cursor: default;
+}
+
+.btn-platform.connected:hover {
+    background: #00B348;
+    transform: none;
+}
+
+.social-account-name {
+    color: #00C853;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: block;
+    margin-top: 2px;
+}
+
 .btn-export-data {
     display: flex;
     align-items: center;

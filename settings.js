@@ -35,6 +35,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Handle hash navigation (e.g., settings.html#social)
     handleHashNavigation();
+
+    // Check OAuth callback result in URL
+    handleOAuthCallback();
+
+    // Load social account connection statuses
+    loadSocialConnectionStatuses();
     
     // Setup password strength indicator
     setupPasswordStrengthIndicator();
@@ -894,6 +900,103 @@ async function loadNotionConfig() {
     }
 }
 
+
+// Handle OAuth callback result in URL params
+function handleOAuthCallback() {
+    const params = new URLSearchParams(window.location.search);
+    const oauthSuccess = params.get('oauth_success');
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+
+    const socialTab = document.querySelector('[data-tab="social"]');
+
+    if (oauthSuccess) {
+        const name = oauthSuccess.charAt(0).toUpperCase() + oauthSuccess.slice(1);
+        showNotification(`${name} connected successfully!`, 'success');
+        if (socialTab) socialTab.click();
+        window.history.replaceState({}, '', window.location.pathname + '#social');
+    } else if (error) {
+        const friendlyMessages = {
+            no_instagram: 'No Instagram Business account found. You need to convert your Instagram to a Business/Creator account and link it to a Facebook Page. Go to Instagram Settings → Account → Switch to Professional Account.',
+            no_pages: 'No Facebook Pages found. You need to have a Facebook Page to connect Instagram Business. Create a Page at facebook.com/pages/create.',
+            access_denied: 'Permission was denied. Please try again and accept all requested permissions.',
+            session_expired: 'Your session expired. Please log in again.'
+        };
+        const message = friendlyMessages[error] || (errorDescription ? decodeURIComponent(errorDescription) : `Connection failed: ${error}`);
+        showOAuthError(message);
+        if (socialTab) socialTab.click();
+        window.history.replaceState({}, '', window.location.pathname + '#social');
+    }
+}
+
+// Show a persistent OAuth error banner (not auto-dismissing)
+function showOAuthError(message) {
+    const existing = document.getElementById('oauth-error-banner');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.id = 'oauth-error-banner';
+    banner.style.cssText = `
+        background: #FFF3CD; border: 1px solid #FFC107; border-radius: 8px;
+        padding: 1rem 1.25rem; margin-bottom: 1rem; color: #856404;
+        font-size: 0.875rem; line-height: 1.5; position: relative;
+    `;
+    banner.innerHTML = `
+        <strong>Connection failed</strong><br>${message}
+        <button onclick="this.parentElement.remove()" style="position:absolute;top:0.5rem;right:0.75rem;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#856404;">×</button>
+    `;
+
+    const socialContent = document.getElementById('social');
+    if (socialContent) {
+        const form = socialContent.querySelector('.settings-form');
+        if (form) form.insertBefore(banner, form.firstChild);
+    }
+}
+
+// Load social account connection statuses from Supabase
+async function loadSocialConnectionStatuses() {
+    try {
+        const sb = getSupabase();
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) return;
+
+        const { data: accounts, error } = await sb
+            .from('social_accounts')
+            .select('platform, account_name, account_username, is_active')
+            .eq('user_id', session.user.id)
+            .neq('is_active', false);
+
+        if (error) throw error;
+
+        const platforms = ['instagram', 'facebook', 'linkedin', 'tiktok', 'twitter', 'youtube'];
+        platforms.forEach(p => updateSocialButton(p, null));
+
+        if (accounts) {
+            accounts.forEach(account => updateSocialButton(account.platform, account));
+        }
+    } catch (error) {
+        console.error('Error loading social statuses:', error);
+    }
+}
+
+// Update a social platform button to show connected/disconnected state
+function updateSocialButton(platform, account) {
+    const btn = document.getElementById(`btn-social-${platform}`);
+    const nameEl = document.getElementById(`social-name-${platform}`);
+    if (!btn) return;
+
+    if (account) {
+        btn.textContent = '✓ Connected';
+        btn.classList.add('connected');
+        if (nameEl) {
+            nameEl.textContent = account.account_name || account.account_username || '';
+        }
+    } else {
+        btn.textContent = 'Connect';
+        btn.classList.remove('connected');
+        if (nameEl) nameEl.textContent = '';
+    }
+}
 
 // Console message
 console.log(`
