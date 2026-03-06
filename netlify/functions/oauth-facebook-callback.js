@@ -30,7 +30,8 @@ export const handler = async (event, context) => {
     }
 
     if (!code) {
-      return { statusCode: 400, headers, body: JSON.stringify({ success: false, message: 'Missing authorization code' }) };
+      console.error('Missing code. Full query params:', JSON.stringify(params));
+      return { statusCode: 302, headers: { Location: `/settings.html?error=missing_code&error_description=${encodeURIComponent('No authorization code received from Meta. Params: ' + JSON.stringify(params))}` } };
     }
 
     // Decode state
@@ -39,7 +40,7 @@ export const handler = async (event, context) => {
       const stateData = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
       userSession = stateData.session_token;
     } catch {
-      return { statusCode: 400, headers, body: JSON.stringify({ success: false, message: 'Invalid state parameter' }) };
+      return { statusCode: 302, headers: { Location: '/settings.html?error=invalid_state&error_description=Invalid+state+parameter' } };
     }
 
     const user = await validateUserSession(userSession);
