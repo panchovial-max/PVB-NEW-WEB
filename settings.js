@@ -962,7 +962,7 @@ async function loadSocialConnectionStatuses() {
 
         const { data: accounts, error } = await sb
             .from('social_accounts')
-            .select('platform, account_name, account_username, is_active')
+            .select('platform, account_name, is_active')
             .eq('user_id', session.user.id)
             .neq('is_active', false);
 
@@ -989,7 +989,7 @@ function updateSocialButton(platform, account) {
         btn.textContent = '✓ Connected';
         btn.classList.add('connected');
         if (nameEl) {
-            nameEl.textContent = account.account_name || account.account_username || '';
+            nameEl.textContent = account.account_name || '';
         }
     } else {
         btn.textContent = 'Connect';
