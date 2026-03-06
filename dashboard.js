@@ -99,7 +99,6 @@ async function loadDashboardData(userData) {
     } catch (error) {
         console.error('Error loading dashboard data:', error);
         showLoadingState(false);
-        showNotification('Failed to load some data', 'error');
     }
 }
 
@@ -252,9 +251,7 @@ async function loadKPIMetrics(userData) {
             return null;
         }
     } catch (error) {
-        console.error('Error loading metrics:', error);
-        // Fall back to showing empty state
-        showNotification('Unable to load metrics. Please connect your social accounts.', 'info');
+        console.log('No metrics available yet:', error.message);
         return null;
     }
 }
