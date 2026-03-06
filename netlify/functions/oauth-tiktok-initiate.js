@@ -69,7 +69,8 @@ export const handler = async (event, context) => {
 
     const authUrl = new URL('https://www.tiktok.com/v2/auth/authorize/');
     authUrl.searchParams.append('client_key', process.env.TIKTOK_CLIENT_KEY);
-    authUrl.searchParams.append('scope', 'user.info.basic,video.list');
+    // Scopes: perfil básico + stats + lista de videos + comentarios
+    authUrl.searchParams.append('scope', 'user.info.basic,user.info.profile,user.info.stats,video.list,comment.list');
     authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('redirect_uri', redirectUri);
     authUrl.searchParams.append('state', stateWithVerifier);

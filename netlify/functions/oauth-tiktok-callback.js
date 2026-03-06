@@ -135,7 +135,7 @@ export const handler = async (event, context) => {
     // Get TikTok user info
     const userInfoUrl = 'https://open.tiktokapis.com/v2/user/info/';
     const userInfoQuery = new URLSearchParams({
-      fields: 'open_id,union_id,avatar_url,display_name,username'
+      fields: 'open_id,union_id,avatar_url,display_name,username,follower_count,following_count,likes_count,video_count,profile_deep_link'
     });
 
     const userInfoResponse = await fetch(`${userInfoUrl}?${userInfoQuery}`, {
