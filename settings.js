@@ -962,9 +962,8 @@ async function loadSocialConnectionStatuses() {
 
         const { data: accounts, error } = await sb
             .from('social_accounts')
-            .select('platform, account_name, is_active')
-            .eq('user_id', session.user.id)
-            .neq('is_active', false);
+            .select('platform, account_name')
+            .eq('user_id', session.user.id);
 
         if (error) throw error;
 

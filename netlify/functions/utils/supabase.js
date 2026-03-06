@@ -108,7 +108,6 @@ export async function storeSocialAccountToken(userId, platform, accountData) {
       access_token: accountData.access_token,
       refresh_token: accountData.refresh_token || null,
       token_expires_at: accountData.expires_at || null,
-      is_active: true,
       last_sync_at: new Date().toISOString(),
       metadata: {
         username: accountData.username || null,
