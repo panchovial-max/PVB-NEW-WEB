@@ -51,6 +51,10 @@ export const handler = async (event) => {
       stats = await fetchInstagramStats(account.access_token, account.account_id);
     } else if (platform === 'facebook') {
       stats = await fetchFacebookStats(account.access_token, account.account_id);
+    } else if (platform === 'tiktok') {
+      stats = await fetchTikTokStats(account.access_token);
+    } else if (platform === 'youtube') {
+      stats = await fetchYouTubeStats(account.access_token, account.account_id);
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ success: true, platform, stats }) };
@@ -98,6 +102,39 @@ async function fetchInstagramStats(accessToken, igAccountId) {
     engagement_rate: profile.followers_count > 0
       ? ((reach / profile.followers_count) * 100).toFixed(2)
       : 0
+  };
+}
+
+async function fetchTikTokStats(accessToken) {
+  const res = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=follower_count,following_count,likes_count,video_count,display_name,username,avatar_url', {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  });
+  const data = await res.json();
+  const user = data.data?.user || {};
+  return {
+    followers: user.follower_count || 0,
+    following: user.following_count || 0,
+    likes: user.likes_count || 0,
+    video_count: user.video_count || 0,
+    username: user.username || user.display_name || '',
+    profile_picture: user.avatar_url || ''
+  };
+}
+
+async function fetchYouTubeStats(accessToken, channelId) {
+  const idParam = channelId ? `&id=${channelId}` : '&mine=true';
+  const res = await fetch(
+    `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics${idParam}&access_token=${accessToken}`
+  );
+  const data = await res.json();
+  const channel = data.items?.[0];
+  if (!channel) throw new Error('No YouTube channel found');
+  return {
+    subscribers: parseInt(channel.statistics?.subscriberCount || 0),
+    views: parseInt(channel.statistics?.viewCount || 0),
+    video_count: parseInt(channel.statistics?.videoCount || 0),
+    title: channel.snippet?.title || '',
+    profile_picture: channel.snippet?.thumbnails?.default?.url || ''
   };
 }
 

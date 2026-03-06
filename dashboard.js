@@ -589,7 +589,9 @@ async function loadSocialStats(userData) {
     const sessionToken = localStorage.getItem('session_id');
     if (!sessionToken) return;
 
-    const platforms = ['instagram', 'facebook'];
+    const platforms = ['instagram', 'facebook', 'tiktok', 'youtube'];
+    const fmt = n => n >= 1000000 ? (n / 1000000).toFixed(1) + 'M' : n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n);
+    const el = id => document.getElementById(id);
 
     for (const platform of platforms) {
         try {
@@ -602,22 +604,33 @@ async function loadSocialStats(userData) {
             if (!stats) continue;
 
             if (platform === 'instagram') {
-                const fmt = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n);
-                const el = id => document.getElementById(id);
                 if (el('igFollowers')) el('igFollowers').textContent = fmt(stats.followers);
                 if (el('igImpressions')) el('igImpressions').textContent = fmt(stats.impressions);
                 if (el('igEngagement')) el('igEngagement').textContent = stats.engagement_rate + '%';
-                // Show username on the card header if element exists
                 const igHeader = document.querySelector('.social-card.instagram h4');
                 if (igHeader && stats.username) igHeader.textContent = `@${stats.username}`;
             }
 
             if (platform === 'facebook') {
-                const fmt = n => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n);
-                const el = id => document.getElementById(id);
                 if (el('fbImpressions')) el('fbImpressions').textContent = fmt(stats.impressions);
                 if (el('fbEngagement')) el('fbEngagement').textContent = fmt(stats.engaged_users);
                 if (el('fbReach')) el('fbReach').textContent = fmt(stats.reach);
+            }
+
+            if (platform === 'tiktok') {
+                if (el('ttFollowers')) el('ttFollowers').textContent = fmt(stats.followers);
+                if (el('ttLikes')) el('ttLikes').textContent = fmt(stats.likes);
+                if (el('ttVideos')) el('ttVideos').textContent = fmt(stats.video_count);
+                const ttHeader = document.querySelector('.social-card.tiktok h4');
+                if (ttHeader && stats.username) ttHeader.textContent = `@${stats.username}`;
+            }
+
+            if (platform === 'youtube') {
+                if (el('ytSubscribers')) el('ytSubscribers').textContent = fmt(stats.subscribers);
+                if (el('ytViews')) el('ytViews').textContent = fmt(stats.views);
+                if (el('ytVideos')) el('ytVideos').textContent = fmt(stats.video_count);
+                const ytHeader = document.querySelector('.social-card.youtube h4');
+                if (ytHeader && stats.title) ytHeader.textContent = stats.title;
             }
         } catch (err) {
             console.log(`Could not load ${platform} stats:`, err.message);
