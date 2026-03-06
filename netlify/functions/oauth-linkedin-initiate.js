@@ -54,6 +54,15 @@ export const handler = async (event, context) => {
       timestamp: Date.now()
     })).toString('base64');
 
+    // Check credentials are configured
+    if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
+      return {
+        statusCode: 503,
+        headers,
+        body: JSON.stringify({ success: false, message: 'LinkedIn integration not configured yet' })
+      };
+    }
+
     // Build LinkedIn OAuth authorization URL
     const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-linkedin-callback`;
 
