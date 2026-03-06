@@ -83,6 +83,9 @@ async function loadDashboardData(userData) {
         // Load real social stats from Meta Graph API
         await loadSocialStats(userData);
 
+        // Load inbox messages
+        loadInbox();
+
         // Load campaigns (if any)
         await loadCampaigns(userData);
 
@@ -581,6 +584,8 @@ async function syncMetrics() {
 // Make functions available globally
 window.connectSocialAccount = connectSocialAccount;
 window.syncMetrics = syncMetrics;
+window.filterInbox = filterInbox;
+window.refreshInbox = refreshInbox;
 
 // Load real social stats from Meta Graph API via Netlify function
 async function loadSocialStats(userData) {
@@ -621,4 +626,109 @@ async function loadSocialStats(userData) {
             console.log(`Could not load ${platform} stats:`, err.message);
         }
     }
+}
+
+// ─── Inbox Centralizado ────────────────────────────────────────────────────
+
+let _inboxMessages = [];
+
+async function loadInbox() {
+    const sessionToken = localStorage.getItem('session_id');
+    if (!sessionToken) return;
+
+    const loading = document.getElementById('inboxLoading');
+    const empty = document.getElementById('inboxEmpty');
+    const list = document.getElementById('inboxList');
+    if (!loading) return;
+
+    loading.classList.remove('hidden');
+    empty.classList.add('hidden');
+    list.classList.add('hidden');
+
+    try {
+        const platform = document.getElementById('inboxPlatformFilter')?.value || 'all';
+        const type = document.getElementById('inboxTypeFilter')?.value || 'all';
+
+        const res = await fetch(
+            `/.netlify/functions/inbox-messages?platform=${platform}&type=${type}&limit=30`,
+            { headers: { 'Authorization': `Bearer ${sessionToken}` } }
+        );
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        _inboxMessages = data.messages || [];
+
+        renderInbox(_inboxMessages);
+    } catch (err) {
+        console.log('Could not load inbox:', err.message);
+        _inboxMessages = [];
+        renderInbox([]);
+    } finally {
+        loading.classList.add('hidden');
+    }
+}
+
+function renderInbox(messages) {
+    const empty = document.getElementById('inboxEmpty');
+    const list = document.getElementById('inboxList');
+    if (!list) return;
+
+    if (!messages.length) {
+        empty.classList.remove('hidden');
+        list.classList.add('hidden');
+        return;
+    }
+
+    list.innerHTML = messages.map(msg => {
+        const initials = (msg.from.name || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        const time = formatInboxTime(msg.timestamp);
+        const typeLabel = msg.type === 'dm' || msg.type === 'message' ? 'DM' : 'Comentario';
+        const context = msg.media_caption || msg.post_preview || '';
+
+        return `<div class="inbox-message">
+            <div class="inbox-avatar ${msg.platform}">${initials}</div>
+            <div class="inbox-body">
+                <div class="inbox-meta">
+                    <span class="inbox-sender">${escapeHtml(msg.from.name)}</span>
+                    <span class="inbox-platform-badge ${msg.platform}">${msg.platform === 'instagram' ? 'IG' : 'FB'}</span>
+                    <span class="inbox-type-badge">${typeLabel}</span>
+                    <span class="inbox-time">${time}</span>
+                </div>
+                <div class="inbox-text">${escapeHtml(msg.message)}</div>
+                ${context ? `<div class="inbox-context">En: ${escapeHtml(context)}</div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+
+    empty.classList.add('hidden');
+    list.classList.remove('hidden');
+}
+
+function filterInbox() {
+    loadInbox();
+}
+
+function refreshInbox() {
+    loadInbox();
+}
+
+function formatInboxTime(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    if (diffMin < 1) return 'Ahora';
+    if (diffMin < 60) return `hace ${diffMin}m`;
+    if (diffHr < 24) return `hace ${diffHr}h`;
+    if (diffDay < 7) return `hace ${diffDay}d`;
+    return date.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
