@@ -98,12 +98,15 @@ export const handler = async (event, context) => {
     let instagramConnected = 0;
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
+    const debugInfo = [];
 
     for (const page of pages) {
       const igRes = await fetch(
         `${META_API}/${page.id}?fields=instagram_business_account{id,name,username,profile_picture_url}&access_token=${page.access_token || accessToken}`
       );
       const igData = await igRes.json();
+      debugInfo.push({ page_id: page.id, page_name: page.name, ig_response: igData });
+      console.log(`Page ${page.name} (${page.id}) IG data:`, JSON.stringify(igData));
 
       if (igData.instagram_business_account) {
         const igAccount = igData.instagram_business_account;
@@ -121,9 +124,10 @@ export const handler = async (event, context) => {
     }
 
     if (instagramConnected === 0) {
+      const debugStr = debugInfo.map(d => `Page "${d.page_name}": ${JSON.stringify(d.ig_response)}`).join(' | ');
       return {
         statusCode: 302,
-        headers: { Location: '/settings.html?error=no_instagram&error_description=No+Instagram+Business+account+linked+to+your+Facebook+Pages' }
+        headers: { Location: `/settings.html?error=no_instagram&error_description=${encodeURIComponent('No Instagram Business account found. Debug: ' + debugStr)}`}
       };
     }
 
