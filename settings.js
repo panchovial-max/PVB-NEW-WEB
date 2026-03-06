@@ -290,6 +290,16 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
+// Logout
+async function handleLogout() {
+    try {
+        const sb = getSupabase();
+        if (sb) await sb.auth.signOut();
+    } catch (e) { /* ignore */ }
+    localStorage.clear();
+    window.location.href = 'login.html';
+}
+
 // Connect social media platform — real OAuth flow
 async function connectPlatform(platform) {
     showNotification(`Connecting to ${platform}...`, 'info');
