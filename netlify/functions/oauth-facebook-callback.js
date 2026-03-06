@@ -65,7 +65,10 @@ export const handler = async (event, context) => {
     if (!tokenRes.ok) {
       const err = await tokenRes.text();
       console.error('Meta token exchange failed:', err);
-      return { statusCode: 500, headers, body: JSON.stringify({ success: false, message: 'Failed to exchange authorization code' }) };
+      return {
+        statusCode: 302,
+        headers: { Location: `/settings.html?error=token_exchange&error_description=${encodeURIComponent('Meta rejected the authorization. Check that the app Redirect URI matches the Netlify URL. Details: ' + err)}` }
+      };
     }
 
     const { access_token: shortToken } = await tokenRes.json();
