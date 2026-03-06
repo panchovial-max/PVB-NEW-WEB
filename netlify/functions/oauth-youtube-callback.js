@@ -62,11 +62,16 @@ export const handler = async (event) => {
     });
 
     if (!tokenRes.ok) {
-      const err = await tokenRes.text();
-      console.error('YouTube token exchange failed:', err);
+      const errText = await tokenRes.text();
+      console.error('YouTube token exchange failed. redirect_uri used:', redirectUri, 'Error:', errText);
+      let errCode = 'token_exchange_failed';
+      try {
+        const errJson = JSON.parse(errText);
+        if (errJson.error) errCode = errJson.error;
+      } catch {}
       return {
         statusCode: 302,
-        headers: { Location: '/settings.html?error=token_exchange_failed' }
+        headers: { Location: `/settings.html?error=${encodeURIComponent(errCode)}&detail=${encodeURIComponent(errText.substring(0, 300))}` }
       };
     }
 
