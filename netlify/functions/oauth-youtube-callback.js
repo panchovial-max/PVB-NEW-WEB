@@ -43,7 +43,7 @@ export const handler = async (event) => {
 
     const user = await validateUserSession(userSession);
     if (!user) {
-      return { statusCode: 401, headers, body: JSON.stringify({ success: false, message: 'Invalid or expired session' }) };
+      return { statusCode: 302, headers: { Location: '/login.html?error=session_expired&redirect=settings' } };
     }
 
     const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-youtube-callback`;

@@ -71,12 +71,8 @@ export const handler = async (event, context) => {
     const user = await validateUserSession(userSession);
     if (!user) {
       return {
-        statusCode: 401,
-        headers,
-        body: JSON.stringify({
-          success: false,
-          message: 'Invalid or expired session'
-        })
+        statusCode: 302,
+        headers: { Location: '/login.html?error=session_expired&redirect=settings' }
       };
     }
 
