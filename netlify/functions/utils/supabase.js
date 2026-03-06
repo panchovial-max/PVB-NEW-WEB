@@ -108,6 +108,7 @@ export async function storeSocialAccountToken(userId, platform, accountData) {
       access_token: accountData.access_token,
       refresh_token: accountData.refresh_token || null,
       token_expires_at: accountData.expires_at || null,
+      connected_at: new Date().toISOString(),
       last_sync_at: new Date().toISOString(),
       metadata: {
         username: accountData.username || null,
@@ -133,8 +134,7 @@ export async function getUserSocialAccounts(userId) {
   const { data, error } = await supabase
     .from('social_accounts')
     .select('*')
-    .eq('user_id', userId)
-    .eq('is_active', true);
+    .eq('user_id', userId);
 
   if (error) {
     throw new Error(`Failed to get social accounts: ${error.message}`);
