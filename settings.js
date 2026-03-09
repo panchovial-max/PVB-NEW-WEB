@@ -927,12 +927,11 @@ function handleOAuthCallback() {
         window.history.replaceState({}, '', window.location.pathname + '#social');
     } else if (error) {
         const friendlyMessages = {
-            no_instagram: 'No Instagram Business account found. You need to convert your Instagram to a Business/Creator account and link it to a Facebook Page. Go to Instagram Settings → Account → Switch to Professional Account.',
             no_pages: 'No Facebook Pages found. You need to have a Facebook Page to connect Instagram Business. Create a Page at facebook.com/pages/create.',
             access_denied: 'Permission was denied. Please try again and accept all requested permissions.',
             session_expired: 'Your session expired. Please log in again.'
         };
-        const message = friendlyMessages[error] || (errorDescription ? decodeURIComponent(errorDescription) : `Connection failed: ${error}`);
+        const message = errorDescription ? decodeURIComponent(errorDescription) : (friendlyMessages[error] || `Connection failed: ${error}`);
         showOAuthError(message);
         if (socialTab) socialTab.click();
         window.history.replaceState({}, '', window.location.pathname + '#social');
