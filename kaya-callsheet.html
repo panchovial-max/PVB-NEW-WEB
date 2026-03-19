@@ -321,6 +321,9 @@
     tr.is-done td { opacity: 0.4; text-decoration: line-through; }
     tr.is-done td .done-btn { text-decoration: none; opacity: 1; }
 
+    /* ── Client role: hide done buttons ── */
+    body[data-role="client"] .done-btn { display: none; }
+
     /* ── Editable spans ── */
     .editable {
       outline: none;
@@ -1031,13 +1034,16 @@ function attemptLogin() {
 function showApp(role) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  document.body.dataset.role = role;
 
   if (role === 'ad') enableEditMode();
 
-  // Wire done buttons (both roles can toggle done)
-  document.querySelectorAll('.done-btn').forEach(btn => {
-    btn.addEventListener('click', () => handleDoneClick(btn));
-  });
+  // Wire done buttons (AD only)
+  if (role === 'ad') {
+    document.querySelectorAll('.done-btn').forEach(btn => {
+      btn.addEventListener('click', () => handleDoneClick(btn));
+    });
+  }
 
   // Load remote data
   loadData();
