@@ -1,521 +1,1072 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>KAYA UNITE — Call Sheet Completo</title>
-<script>
-  (function() {
-    var key = 'kaya-auth';
-    if (sessionStorage.getItem(key) !== '1') {
-      var pw = prompt('🎬 KAYA UNITE — Ingresa la clave de acceso:');
-      if (pw !== 'kayacampa\u00f1ainvierno2026') {
-        document.documentElement.innerHTML = '<body style="font-family:Helvetica,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#111;color:#fff;"><div style="text-align:center"><div style="font-size:28pt;margin-bottom:12px;">🔒</div><div style="font-size:14pt;font-weight:700;">Acceso denegado</div><div style="font-size:10pt;color:#888;margin-top:8px;">Contacta al equipo PVB Estudio Creativo</div></div></body>';
-        return;
-      }
-      sessionStorage.setItem(key, '1');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Call Sheet — KAYA UNITE / INVIERNO 2026</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #0d0d0d;
+      color: #e8e8e8;
+      min-height: 100vh;
     }
-  })();
-</script>
-<style>
-  @page { size: A4 landscape; margin: 12mm 15mm; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 9.5pt; color: #111; background: #fff; }
+    a { color: #74b563; text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
-  .page { width: 100%; page-break-after: always; }
-  .page:last-child { page-break-after: auto; }
+    /* ── Login Screen ── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      background: #0d0d0d;
+    }
+    #login-screen .logo-text {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: #74b563;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+    #login-screen .logo-sub {
+      font-size: 0.85rem;
+      letter-spacing: 0.3em;
+      color: #777;
+      text-transform: uppercase;
+      margin-bottom: 2.8rem;
+    }
+    #login-screen .login-box {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 2.2rem 2.6rem;
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    #login-screen label {
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #888;
+    }
+    #login-screen input[type="password"] {
+      width: 100%;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #e8e8e8;
+      padding: 0.65rem 0.85rem;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #login-screen input[type="password"]:focus {
+      border-color: #74b563;
+    }
+    #login-screen button {
+      margin-top: 0.4rem;
+      background: #74b563;
+      color: #0d0d0d;
+      border: none;
+      border-radius: 6px;
+      padding: 0.72rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #login-screen button:hover { background: #5fa34e; }
+    #login-error {
+      color: #e53935;
+      font-size: 0.82rem;
+      text-align: center;
+      min-height: 1.2em;
+    }
 
-  .header { display: flex; justify-content: space-between; align-items: center; background: #0d0d0d; border-bottom: 2.5px solid #74b563; padding: 8px 12px; margin-bottom: 8px; }
-  .header-left { display: flex; align-items: baseline; gap: 14px; }
-  .header-left h1 { font-size: 28pt; font-weight: 900; letter-spacing: -0.5px; line-height: 1; color: #ffffff; }
-  .header-left .sub { font-size: 8pt; color: #d0be9c; text-transform: uppercase; letter-spacing: 0.8px; }
-  .header-right { text-align: right; font-size: 8pt; color: #5a5a5a; line-height: 1.7; }
-  .header-right strong { color: #d0be9c; font-size: 9pt; }
+    /* ── Main App ── */
+    #app { display: none; padding-bottom: 3rem; }
 
-  .meta { display: flex; gap: 7px; margin-bottom: 8px; flex-wrap: wrap; }
-  .badge { padding: 2px 9px; border-radius: 3px; font-size: 7pt; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
-  .b-green { background: #5a9e4a; color: #fff; }
-  .b-blue  { background: #4878b8; color: #fff; }
-  .b-tan   { background: #b8963c; color: #fff; }
-  .b-pur   { background: #8855aa; color: #fff; }
-  .b-dark  { background: #222; color: #ccc; }
+    /* ── AD Toolbar ── */
+    #ad-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #141414;
+      border-bottom: 2px solid #74b563;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.55rem 1.2rem;
+      font-size: 0.82rem;
+    }
+    #ad-toolbar .tb-label {
+      font-weight: 700;
+      color: #74b563;
+      letter-spacing: 0.08em;
+    }
+    #ad-toolbar .tb-save {
+      margin-left: auto;
+      color: #aaa;
+      font-size: 0.76rem;
+      font-style: italic;
+    }
+    #ad-toolbar .tb-logout {
+      background: transparent;
+      border: 1px solid #444;
+      color: #aaa;
+      border-radius: 4px;
+      padding: 0.28rem 0.7rem;
+      cursor: pointer;
+      font-size: 0.76rem;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #ad-toolbar .tb-logout:hover { border-color: #e53935; color: #e53935; }
 
-  table { width: 100%; border-collapse: collapse; font-size: 10.5pt; table-layout: fixed; }
-  thead tr { background: #1c1c1c; color: #999; text-transform: uppercase; font-size: 6.5pt; letter-spacing: 0.7px; }
-  thead th { padding: 3px 2px; text-align: left; font-weight: 600; border: 1px solid #333; white-space: nowrap; overflow: hidden; }
-  thead th.ac { text-align: center; }
+    /* ── Header ── */
+    .sheet-header {
+      padding: 2rem 1.4rem 1.2rem;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .sheet-title {
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: #74b563;
+      text-transform: uppercase;
+    }
+    .sheet-sub {
+      font-size: 0.82rem;
+      letter-spacing: 0.25em;
+      color: #666;
+      text-transform: uppercase;
+      margin-top: 0.2rem;
+    }
 
-  tbody tr { border-bottom: 1px solid #ddd; }
-  tbody tr:nth-child(even) { background: #f6f6f6; }
-  tbody tr.brk  { background: #fdecea; color: #c62828; }
-  tbody tr.brk strong { color: #c62828; }
-  tbody tr.prep { background: #f0f0f8; }
+    /* ── Day Section ── */
+    .day-section { padding: 1.6rem 1.4rem 0.5rem; }
+    .day-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 1.1rem;
+      flex-wrap: wrap;
+    }
+    .day-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #e8e8e8;
+    }
+    .day-date {
+      font-size: 0.8rem;
+      color: #666;
+      letter-spacing: 0.08em;
+    }
 
-  tbody td { padding: 1px 1px; vertical-align: middle; border-right: 1px solid #e8e8e8; overflow: hidden; }
-  tbody td:last-child { border-right: none; }
+    /* ── Actor Badges ── */
+    .actor-badges {
+      display: flex;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.2rem;
+    }
+    .badge {
+      border-radius: 20px;
+      padding: 0.3rem 0.85rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .badge .call-time {
+      font-weight: 400;
+      opacity: 0.85;
+      font-size: 0.7rem;
+    }
 
-  .t-hora { font-size: 8.5pt; color: #444; white-space: nowrap; }
-  .t-esc  { font-weight: 800; color: #b88840; font-size: 10.5pt; white-space: nowrap; }
-  .t-loc  { font-weight: 600; font-size: 9pt; }
-  .t-addr { display: block; font-weight: 400; font-size: 7.5pt; color: #888; margin-top: 2px; }
-  .t-addr a { color: #4a90d9; text-decoration: none; }
-  .t-addr a:hover { text-decoration: underline; }
-  .t-note { font-size: 7pt; color: #888; font-style: italic; }
+    /* ── Schedule Table ── */
+    .sched-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #111;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #222;
+    }
+    .sched-table thead th {
+      background: #181818;
+      color: #666;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #222;
+    }
+    .sched-table tbody tr {
+      border-bottom: 1px solid #1c1c1c;
+      transition: background 0.15s;
+    }
+    .sched-table tbody tr:last-child { border-bottom: none; }
+    .sched-table tbody tr:hover:not(.row-break):not(.row-prep) {
+      background: #161616;
+    }
+    .sched-table td {
+      padding: 0.7rem 0.75rem;
+      vertical-align: top;
+      font-size: 0.82rem;
+      color: #ccc;
+    }
 
-  .tipo { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 6pt; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
-  .nat { background: #55aa55; color: #fff; }
-  .urb { background: #5a82c0; color: #fff; }
-  .ind { background: #c07830; color: #fff; }
-  .brk { background: #e53935; color: #fff; }
-  .pre { background: #6666aa; color: #fff; }
+    /* ── Row Types ── */
+    .row-break td {
+      background: #1a0e0e;
+      color: #e57373;
+    }
+    .row-break .type-tag { background: #e53935; color: #fff; }
+    .row-prep td {
+      background: #12121e;
+      color: #aaa;
+    }
+    .row-prep .type-tag { background: #6666aa; color: #fff; }
 
-  .ac-cell { text-align: center; border-left: 1px solid #ddd; }
-  .dot { display: inline-block; width: 24px; height: 24px; border-radius: 50%; line-height: 24px; font-size: 8pt; font-weight: 900; color: #fff; text-align: center; }
-  .dim { color: #ddd; font-size: 10pt; }
+    /* ── Type Tags ── */
+    .type-tag {
+      display: inline-block;
+      border-radius: 4px;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .type-nat { background: #2a4a22; color: #74b563; }
+    .type-urb { background: #1e2e4a; color: #7aabff; }
+    .type-ind { background: #3a2010; color: #e09050; }
 
-  .c-agu { background: #5a9e4a; }
-  .c-san { background: #4878b8; }
-  .c-cla { background: #b8963c; }
-  .c-ger { background: #5a9e4a; }
-  .c-pet { background: #4878b8; }
-  .c-val { background: #8855aa; }
+    /* ── Scene Number ── */
+    .scene-num {
+      font-size: 0.72rem;
+      color: #666;
+      white-space: nowrap;
+    }
 
-  .actor-summary { margin-top: 10px; border-top: 2px solid #74b563; padding-top: 8px; display: flex; gap: 0; }
-  .a-block { flex: 1; padding: 6px 10px; border-right: 1px solid #e0e0e0; }
-  .a-block:last-child { border-right: none; }
-  .a-block.notes { background: #fafafa; border-radius: 3px; flex: 1.2; }
+    /* ── Time cell ── */
+    .time-cell {
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.8rem;
+      color: #aaa;
+      min-width: 100px;
+    }
 
-  .a-id { font-size: 12pt; font-weight: 900; margin-bottom: 2px; }
-  .a-role { font-size: 6pt; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 3px; }
-  .a-meta { font-size: 7pt; color: #555; line-height: 1.9; }
-  .a-meta span { color: #111; font-weight: 700; }
-  .a-scenes { font-size: 6.5pt; color: #888; margin-top: 2px; }
+    /* ── Location ── */
+    .location-cell { font-size: 0.8rem; min-width: 130px; }
+    .location-cell a { font-size: 0.72rem; display: block; color: #74b563; margin-top: 0.15rem; }
 
-  .note-lbl { font-size: 6.5pt; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
-  .note-line { border-bottom: 1px solid #bbb; height: 18px; margin-bottom: 5px; }
+    /* ── Description ── */
+    .desc-cell { min-width: 200px; color: #ddd; }
 
-  .footer { margin-top: 8px; border-top: 1px solid #ccc; padding-top: 4px; display: flex; justify-content: space-between; font-size: 6.5pt; color: #999; }
+    /* ── Actors cell ── */
+    .actors-cell {
+      white-space: nowrap;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #bbb;
+      letter-spacing: 0.05em;
+    }
 
-  @media print { .no-print { display: none; } }
-</style>
+    /* ── Done Button ── */
+    .done-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid #444;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: #444;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+    .done-btn:hover { border-color: #74b563; color: #74b563; }
+    .done-btn.is-done {
+      border-color: #74b563;
+      background: #74b563;
+      color: #0d0d0d;
+    }
+
+    /* ── Done row state ── */
+    tr.is-done td { opacity: 0.4; text-decoration: line-through; }
+    tr.is-done td .done-btn { text-decoration: none; opacity: 1; }
+
+    /* ── Editable spans ── */
+    .editable {
+      outline: none;
+      border-radius: 3px;
+      padding: 1px 2px;
+    }
+    [data-edit-mode="true"] .editable[contenteditable="true"] {
+      background: #fffbe6;
+      color: #111;
+      outline: 1px solid #f0c060;
+    }
+    [data-edit-mode="true"] .editable[contenteditable="true"]:focus {
+      outline: 2px solid #f0a020;
+    }
+
+    /* ── Notes Area ── */
+    .notes-section {
+      margin: 1rem 0 0;
+      padding: 0 1.4rem;
+    }
+    .notes-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 0.4rem;
+    }
+    .notes-area {
+      width: 100%;
+      min-height: 80px;
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      color: #bbb;
+      font-size: 0.82rem;
+      padding: 0.65rem 0.85rem;
+      resize: vertical;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .notes-area:disabled {
+      cursor: default;
+      color: #888;
+    }
+    .notes-area:not(:disabled):focus {
+      border-color: #74b563;
+      background: #1a1a10;
+    }
+
+    /* ── Actor Summary ── */
+    .actor-summary {
+      margin: 1rem 0 0;
+      padding: 0 1.4rem;
+    }
+    .actor-summary-title {
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 0.6rem;
+    }
+    .actor-summary-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .actor-card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 0.55rem 0.85rem;
+      font-size: 0.78rem;
+      min-width: 200px;
+    }
+    .actor-card .ac-name {
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+    .actor-card .ac-detail {
+      color: #777;
+      font-size: 0.72rem;
+      line-height: 1.5;
+    }
+
+    /* ── Divider ── */
+    .day-divider {
+      border: none;
+      border-top: 2px solid #1e1e1e;
+      margin: 2rem 1.4rem 0;
+    }
+
+    /* ── Extra note pill ── */
+    .extra-note {
+      display: inline-block;
+      background: #2a1a0a;
+      color: #c07830;
+      border-radius: 4px;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.72rem;
+      margin-top: 0.4rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .sched-table thead th:nth-child(3),
+      .sched-table tbody td:nth-child(3) { display: none; }
+      .sheet-title { font-size: 1.3rem; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ═══════════════════ DÍA 1 ═══════════════════ -->
-<div class="page">
-  <div class="header">
-    <div class="header-left">
-      <h1>DÍA 1</h1>
-      <div class="sub">KAYA UNITE / INVIERNO 2026 &nbsp;·&nbsp; NATURALEZA + URBANO EXTERIOR</div>
-    </div>
-    <div class="header-right">
-      <strong>CALL GENERAL &nbsp;09:30</strong><br>
-      Prep / Make-up &nbsp;09:30 – 10:00<br>
-      Fecha: ___________________________
-    </div>
-  </div>
-
-  <div class="meta">
-    <span class="badge b-green">Agustín · 09:30</span>
-    <span class="badge b-blue">Santiago · 12:45</span>
-    <span class="badge b-tan">Claire · 09:30</span>
-    <span class="badge b-pur">Vale · 12:30</span>
-    <span class="badge b-dark">4 modelos · 2H + 2M</span>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th style="width:65px">Hora</th>
-        <th style="width:42px">Tipo</th>
-        <th style="width:20px">Esc</th>
-        <th style="width:88px">Locación</th>
-        <th style="width:128px">Título / Acción</th>
-        <th class="ac" style="width:46px">AGUSTÍN</th>
-        <th class="ac" style="width:46px">SANTIAGO</th>
-        <th class="ac" style="width:46px">CLAIRE</th>
-        <th class="ac" style="width:46px">VALE</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr class="prep">
-        <td class="t-hora">09:30 – 10:00</td>
-        <td><span class="tipo pre">Prep</span></td>
-        <td class="t-esc" style="color:#888">—</td>
-        <td class="t-loc">Base — Maquillaje<span class="t-addr"><a href="https://maps.app.goo.gl/GqSqSk5D42CLBvbC6" target="_blank">Panorámica Sur 10407, Lo Barnechea</a></span></td>
-        <td>Make-up · Wardrobe — Agustín + Claire</td>
-        <td class="ac-cell"><span class="dot c-agu">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-cla">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">10:00 – 11:00</td>
-        <td><span class="tipo nat">Naturaleza</span></td>
-        <td class="t-esc">15·16</td>
-        <td class="t-loc">Sendero / Cerro<span class="t-addr"><a href="https://maps.app.goo.gl/GqSqSk5D42CLBvbC6" target="_blank">Panorámica Sur 10407, Lo Barnechea</a></span></td>
-        <td>Corre al mirador, recupera el aire · Quiere foto, celular sin batería — Claire + Agustín</td>
-        <td class="ac-cell"><span class="dot c-agu">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-cla">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">11:00 – 12:00</td>
-        <td><span class="tipo nat">Naturaleza</span></td>
-        <td class="t-esc">19</td>
-        <td class="t-loc">Cerro / Mirador<span class="t-addr"><a href="https://maps.app.goo.gl/GqSqSk5D42CLBvbC6" target="_blank">Panorámica Sur 10407, Lo Barnechea</a></span></td>
-        <td>Tropieza con piedra y sigue el ascenso sin dramatizar — Agustín</td>
-        <td class="ac-cell"><span class="dot c-agu">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">12:00 – 13:00</td>
-        <td><span class="tipo nat">Naturaleza</span></td>
-        <td class="t-esc">20</td>
-        <td class="t-loc">Cerro Esculturas<span class="t-addr"><a href="https://maps.app.goo.gl/wvsTvnS3L8wULGWf8" target="_blank">Parque Cerro del Medio</a></span></td>
-        <td>Arma escultura con piedras y ramas, ordena el paisaje — Santiago</td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-san">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">13:00 – 13:50</td>
-        <td><span class="tipo urb">Urbano</span></td>
-        <td class="t-esc">01</td>
-        <td class="t-loc">Florería<span class="t-addr"><a href="https://maps.app.goo.gl/JqGnFCNixtsRGEZg8" target="_blank">Flores Bachos</a></span></td>
-        <td>Oler ramo, al salir el agua le gotea entre las manos — Vale &nbsp;<span class="t-note">(call 12:30)</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-val">●</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">13:50 – 14:35</td>
-        <td><span class="tipo urb">Urbano</span></td>
-        <td class="t-esc">07</td>
-        <td class="t-loc">Bar<span class="t-addr"><a href="https://maps.app.goo.gl/LJXJxadxt7UYQ7bR7" target="_blank">Taberna Satira Bar</a></span></td>
-        <td>Observa alrededor, anota idea y deja marca en servilleta — Santiago &nbsp;<span class="t-note">(45 min · al fondo: Agustín + Santiago conversan)</span></td>
-        <td class="ac-cell"><span class="dot c-agu">●</span></td>
-        <td class="ac-cell"><span class="dot c-san">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr class="brk">
-        <td class="t-hora">14:35 – 15:20</td>
-        <td><span class="tipo brk">Break</span></td>
-        <td class="t-esc">—</td>
-        <td class="t-loc">—</td>
-        <td><strong>ALMUERZO</strong></td>
-        <td class="ac-cell"><span class="dot c-agu">●</span></td>
-        <td class="ac-cell"><span class="dot c-san">●</span></td>
-        <td class="ac-cell"></td>
-        <td class="ac-cell"></td>
-      </tr>
-      <tr>
-        <td class="t-hora">15:20 – 15:50</td>
-        <td><span class="tipo urb">Urbano</span></td>
-        <td class="t-esc">02</td>
-        <td class="t-loc">Pumptrack Parque Las Rosas<span class="t-addr">Parque Las Rosas, Colina</span></td>
-        <td>Prueba truco, cae, se frustra y saca polerón — Agustín</td>
-        <td class="ac-cell"><span class="dot c-agu">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">15:50 – 16:40</td>
-        <td><span class="tipo urb">Urbano</span></td>
-        <td class="t-esc">06</td>
-        <td class="t-loc">Almacén<span class="t-addr"><a href="https://maps.app.goo.gl/LJXJxadxt7UYQ7bR7" target="_blank">Taberna Satira · a pie</a></span></td>
-        <td>Sale del almacén, la bolsa se rompe y todo cae al suelo — Claire</td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-cla">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">16:40 – 17:30</td>
-        <td><span class="tipo urb">Urbano</span></td>
-        <td class="t-esc">04</td>
-        <td class="t-loc">Paradero<span class="t-addr"><a href="https://maps.app.goo.gl/LJXJxadxt7UYQ7bR7" target="_blank">Taberna Satira · a pie</a></span></td>
-        <td>Audífonos en paradero; mujer pasa bailando, le sigue la vibra — Agustín + Claire</td>
-        <td class="ac-cell"><span class="dot c-agu">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-cla">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">17:30 – 18:20</td>
-        <td><span class="tipo nat">Naturaleza</span></td>
-        <td class="t-esc">17·18</td>
-        <td class="t-loc">Vivero<span class="t-addr"><a href="https://maps.app.goo.gl/LJXJxadxt7UYQ7bR7" target="_blank">Taberna Satira · a pie</a></span></td>
-        <td>Queda bajo la luz, cuerpo respira · Carga plantas, casi se le caen — Claire + Santiago</td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-san">●</span></td>
-        <td class="ac-cell"><span class="dot c-cla">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">18:20 – 19:20</td>
-        <td><span class="tipo urb">Urbano</span></td>
-        <td class="t-esc">03</td>
-        <td class="t-loc">Ciclovía<span class="t-addr"><a href="https://maps.app.goo.gl/LJXJxadxt7UYQ7bR7" target="_blank">Taberna Satira · a pie</a></span></td>
-        <td>Dobla en bici, casi choca, ambos se disculpan con sonrisa — Santiago + Vale &nbsp;<span class="t-note">→ WRAP</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-san">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-val">●</span></td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="actor-summary">
-    <div class="a-block">
-      <div class="a-id" style="color:#5a9e4a">Agustín</div>
-      <div class="a-role">Naturaleza + Skate + Paradero</div>
-      <div class="a-meta">CALL &nbsp;<span>09:30</span> &nbsp;·&nbsp; WRAP &nbsp;<span>15:50</span></div>
-      <div class="a-scenes">Esc 15/16 · 19 · 20 · 02 · 04</div>
-    </div>
-    <div class="a-block">
-      <div class="a-id" style="color:#4878b8">Santiago</div>
-      <div class="a-role">Bar · Vivero · Ciclovía</div>
-      <div class="a-meta">CALL &nbsp;<span>12:45</span> &nbsp;·&nbsp; WRAP &nbsp;<span>19:20</span></div>
-      <div class="a-scenes">Esc 07 · 18 · 03</div>
-    </div>
-    <div class="a-block">
-      <div class="a-id" style="color:#b8963c">Claire</div>
-      <div class="a-role">Naturaleza · Almacén · Vivero</div>
-      <div class="a-meta">CALL &nbsp;<span>09:30</span> &nbsp;·&nbsp; WRAP &nbsp;<span>18:20</span></div>
-      <div class="a-scenes">Esc 15 · 04 · 06 · 17</div>
-    </div>
-    <div class="a-block">
-      <div class="a-id" style="color:#8855aa">Vale</div>
-      <div class="a-role">Florería · Ciclovía</div>
-      <div class="a-meta">CALL &nbsp;<span>12:30</span> &nbsp;·&nbsp; WRAP &nbsp;<span>19:20</span> &nbsp;·&nbsp; 6h50</div>
-      <div class="a-scenes">Esc 01 · 03</div>
-    </div>
-    <div class="a-block notes">
-      <div class="note-lbl">Notas</div>
-      <div class="note-line"></div>
-      <div class="note-line"></div>
-      <div class="note-line"></div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <span>KAYA UNITE / INVIERNO 2026 &nbsp;·&nbsp; Call Sheet DÍA 1 &nbsp;·&nbsp; Confidencial PVB Estudio Creativo</span>
-    <span>1 / 2</span>
+<!-- ═══════════════════════════════════════════════════════ LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="logo-text">Kaya Unite</div>
+  <div class="logo-sub">Invierno 2026 — Call Sheet</div>
+  <div class="login-box">
+    <label for="pw-input">Contraseña de acceso</label>
+    <input type="password" id="pw-input" placeholder="••••••••••••" autocomplete="current-password" />
+    <div id="login-error"></div>
+    <button id="login-btn">Entrar</button>
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════ MAIN APP -->
+<div id="app">
 
-<!-- ═══════════════════ DÍA 2 ═══════════════════ -->
-<div class="page">
-  <div class="header">
-    <div class="header-left">
-      <h1>DÍA 2</h1>
-      <div class="sub">KAYA UNITE / INVIERNO 2026 &nbsp;·&nbsp; INTERIOR + TIENDA DE VINILOS</div>
+  <!-- AD toolbar (hidden for client) -->
+  <div id="ad-toolbar" style="display:none;">
+    <span class="tb-label">✏️ Modo Edición — AD</span>
+    <span class="tb-save" id="save-status">Todos los cambios guardados</span>
+    <button class="tb-logout" id="logout-btn">Cerrar sesión</button>
+  </div>
+
+  <!-- Sheet header -->
+  <div class="sheet-header">
+    <div class="sheet-title">Kaya Unite — Invierno 2026</div>
+    <div class="sheet-sub">Hoja de Llamado · Producción</div>
+  </div>
+
+  <!-- ═══ DÍA 1 ═══ -->
+  <div class="day-section">
+    <div class="day-header">
+      <span class="day-title">Día 1</span>
+      <span class="day-date" id="d1-date-display">—</span>
     </div>
-    <div class="header-right">
-      <strong>CALL GENERAL &nbsp;09:30</strong><br>
-      Prep / Make-up &nbsp;09:30 – 10:00<br>
-      Fecha: ___________________________
+
+    <!-- Actor badges D1 -->
+    <div class="actor-badges">
+      <span class="badge" style="background:#5a9e4a;">Agustín <span class="call-time">· 09:30</span></span>
+      <span class="badge" style="background:#4878b8;">Santiago <span class="call-time">· 12:45</span></span>
+      <span class="badge" style="background:#b8963c;">Claire <span class="call-time">· 09:30</span></span>
+      <span class="badge" style="background:#8855aa;">Vale <span class="call-time">· 12:30</span></span>
+    </div>
+
+    <!-- Schedule table D1 -->
+    <table class="sched-table">
+      <thead>
+        <tr>
+          <th style="width:28px;"></th>
+          <th>Horario</th>
+          <th>Tipo</th>
+          <th>Esc.</th>
+          <th>Locación</th>
+          <th>Descripción</th>
+          <th>Actores</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- Row 0: Prep -->
+        <tr class="row-prep" id="tr-done-d1-0" data-done-id="done-d1-0">
+          <td><button class="done-btn" data-done="done-d1-0" title="Marcar listo">✓</button></td>
+          <td class="time-cell">09:30 – 10:00</td>
+          <td><span class="type-tag" style="background:#6666aa;color:#fff;">Prep</span></td>
+          <td class="scene-num">—</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r0-loc">Base — Maquillaje</span><br>
+            <a href="https://maps.app.goo.gl/GqSqSk5D42CLBvbC6" target="_blank" rel="noopener">Panorámica Sur 10407, Lo Barnechea ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r0-desc">Make-up · Wardrobe — Agustín + Claire</span></td>
+          <td class="actors-cell" style="color:#5a9e4a;">AGU <span style="color:#b8963c;">CLA</span></td>
+        </tr>
+
+        <!-- Row 1 -->
+        <tr id="tr-done-d1-1" data-done-id="done-d1-1">
+          <td><button class="done-btn" data-done="done-d1-1" title="Marcar listo">✓</button></td>
+          <td class="time-cell">10:00 – 11:00</td>
+          <td><span class="type-tag type-nat">Naturaleza</span></td>
+          <td class="scene-num">15 · 16</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r1-loc">Sendero / Cerro</span><br>
+            <a href="https://maps.app.goo.gl/GqSqSk5D42CLBvbC6" target="_blank" rel="noopener">Panorámica Sur 10407, Lo Barnechea ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r1-desc">Corre al mirador, recupera el aire · Quiere foto, celular sin batería — Claire + Agustín</span></td>
+          <td class="actors-cell"><span style="color:#5a9e4a;">AGU</span> <span style="color:#b8963c;">CLA</span></td>
+        </tr>
+
+        <!-- Row 2 -->
+        <tr id="tr-done-d1-2" data-done-id="done-d1-2">
+          <td><button class="done-btn" data-done="done-d1-2" title="Marcar listo">✓</button></td>
+          <td class="time-cell">11:00 – 12:00</td>
+          <td><span class="type-tag type-nat">Naturaleza</span></td>
+          <td class="scene-num">19</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r2-loc">Cerro / Mirador</span><br>
+            <a href="https://maps.app.goo.gl/GqSqSk5D42CLBvbC6" target="_blank" rel="noopener">Panorámica Sur 10407, Lo Barnechea ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r2-desc">Tropieza con piedra y sigue el ascenso sin dramatizar — Agustín</span></td>
+          <td class="actors-cell" style="color:#5a9e4a;">AGU</td>
+        </tr>
+
+        <!-- Row 3 -->
+        <tr id="tr-done-d1-3" data-done-id="done-d1-3">
+          <td><button class="done-btn" data-done="done-d1-3" title="Marcar listo">✓</button></td>
+          <td class="time-cell">12:00 – 13:00</td>
+          <td><span class="type-tag type-nat">Naturaleza</span></td>
+          <td class="scene-num">20</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r3-loc">Cerro Esculturas</span><br>
+            <a href="https://maps.app.goo.gl/wvsTvnS3L8wULGWf8" target="_blank" rel="noopener">Parque Cerro del Medio ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r3-desc">Arma escultura con piedras y ramas, ordena el paisaje — Santiago</span></td>
+          <td class="actors-cell" style="color:#4878b8;">SAN</td>
+        </tr>
+
+        <!-- Row 4 -->
+        <tr id="tr-done-d1-4" data-done-id="done-d1-4">
+          <td><button class="done-btn" data-done="done-d1-4" title="Marcar listo">✓</button></td>
+          <td class="time-cell">13:00 – 13:50</td>
+          <td><span class="type-tag type-urb">Urbano</span></td>
+          <td class="scene-num">01</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r4-loc">Florería</span><br>
+            <a href="https://maps.app.goo.gl/JqGnFCNixtsRGEZg8" target="_blank" rel="noopener">Flores Bachos ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r4-desc">Oler ramo, al salir el agua le gotea entre las manos — Vale (call 12:30)</span></td>
+          <td class="actors-cell" style="color:#8855aa;">VALE</td>
+        </tr>
+
+        <!-- Row 5 -->
+        <tr id="tr-done-d1-5" data-done-id="done-d1-5">
+          <td><button class="done-btn" data-done="done-d1-5" title="Marcar listo">✓</button></td>
+          <td class="time-cell">13:50 – 14:35</td>
+          <td><span class="type-tag type-urb">Urbano</span></td>
+          <td class="scene-num">07</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r5-loc">Bar</span><br>
+            <a href="https://maps.app.goo.gl/LJXJxadxt7UYQ7bR7" target="_blank" rel="noopener">Taberna Satira Bar ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r5-desc">Observa alrededor, anota idea y deja marca en servilleta — Santiago (45 min)</span></td>
+          <td class="actors-cell"><span style="color:#5a9e4a;">AGU</span> <span style="color:#4878b8;">SAN</span></td>
+        </tr>
+
+        <!-- Break -->
+        <tr class="row-break">
+          <td></td>
+          <td class="time-cell">14:35 – 15:20</td>
+          <td><span class="type-tag" style="background:#e53935;color:#fff;">Break</span></td>
+          <td class="scene-num">—</td>
+          <td class="location-cell">—</td>
+          <td class="desc-cell" style="font-weight:700;letter-spacing:0.08em;">ALMUERZO</td>
+          <td class="actors-cell"><span style="color:#5a9e4a;">AGU</span> <span style="color:#4878b8;">SAN</span></td>
+        </tr>
+
+        <!-- Row 7 -->
+        <tr id="tr-done-d1-7" data-done-id="done-d1-7">
+          <td><button class="done-btn" data-done="done-d1-7" title="Marcar listo">✓</button></td>
+          <td class="time-cell">15:20 – 15:50</td>
+          <td><span class="type-tag type-urb">Urbano</span></td>
+          <td class="scene-num">02</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r7-loc">Pumptrack</span><br>
+            <span style="color:#555;font-size:0.72rem;">Parque Las Rosas, Colina</span>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r7-desc">Prueba truco, cae, se frustra y saca polerón — Agustín</span></td>
+          <td class="actors-cell" style="color:#5a9e4a;">AGU</td>
+        </tr>
+
+        <!-- Row 8 -->
+        <tr id="tr-done-d1-8" data-done-id="done-d1-8">
+          <td><button class="done-btn" data-done="done-d1-8" title="Marcar listo">✓</button></td>
+          <td class="time-cell">15:50 – 16:40</td>
+          <td><span class="type-tag type-urb">Urbano</span></td>
+          <td class="scene-num">06</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r8-loc">Almacén</span><br>
+            <a href="https://maps.app.goo.gl/LJXJxadxt7UYQ7bR7" target="_blank" rel="noopener">Taberna Satira · a pie ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r8-desc">Sale del almacén, la bolsa se rompe y todo cae al suelo — Claire</span></td>
+          <td class="actors-cell" style="color:#b8963c;">CLA</td>
+        </tr>
+
+        <!-- Row 9 -->
+        <tr id="tr-done-d1-9" data-done-id="done-d1-9">
+          <td><button class="done-btn" data-done="done-d1-9" title="Marcar listo">✓</button></td>
+          <td class="time-cell">16:40 – 17:30</td>
+          <td><span class="type-tag type-urb">Urbano</span></td>
+          <td class="scene-num">04</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r9-loc">Paradero</span><br>
+            <a href="https://maps.app.goo.gl/LJXJxadxt7UYQ7bR7" target="_blank" rel="noopener">Taberna Satira ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r9-desc">Audífonos en paradero; mujer pasa bailando, le sigue la vibra — Agustín + Claire</span></td>
+          <td class="actors-cell"><span style="color:#5a9e4a;">AGU</span> <span style="color:#b8963c;">CLA</span></td>
+        </tr>
+
+        <!-- Row 10 -->
+        <tr id="tr-done-d1-10" data-done-id="done-d1-10">
+          <td><button class="done-btn" data-done="done-d1-10" title="Marcar listo">✓</button></td>
+          <td class="time-cell">17:30 – 18:20</td>
+          <td><span class="type-tag type-nat">Naturaleza</span></td>
+          <td class="scene-num">17 · 18</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r10-loc">Vivero</span><br>
+            <a href="https://maps.app.goo.gl/LJXJxadxt7UYQ7bR7" target="_blank" rel="noopener">Taberna Satira ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r10-desc">Queda bajo la luz, cuerpo respira · Carga plantas, casi se le caen — Claire + Santiago</span></td>
+          <td class="actors-cell"><span style="color:#4878b8;">SAN</span> <span style="color:#b8963c;">CLA</span></td>
+        </tr>
+
+        <!-- Row 11 -->
+        <tr id="tr-done-d1-11" data-done-id="done-d1-11">
+          <td><button class="done-btn" data-done="done-d1-11" title="Marcar listo">✓</button></td>
+          <td class="time-cell">18:20 – 19:20</td>
+          <td><span class="type-tag type-urb">Urbano</span></td>
+          <td class="scene-num">03</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d1-r11-loc">Ciclovía</span><br>
+            <a href="https://maps.app.goo.gl/LJXJxadxt7UYQ7bR7" target="_blank" rel="noopener">Taberna Satira ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d1-r11-desc">Dobla en bici, casi choca, ambos se disculpan con sonrisa — Santiago + Vale → WRAP</span></td>
+          <td class="actors-cell"><span style="color:#4878b8;">SAN</span> <span style="color:#8855aa;">VALE</span></td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <!-- Actor summary D1 -->
+    <div class="actor-summary">
+      <div class="actor-summary-title">Resumen de actores — Día 1</div>
+      <div class="actor-summary-grid">
+        <div class="actor-card">
+          <div class="ac-name" style="color:#5a9e4a;">Agustín</div>
+          <div class="ac-detail">09:30 → 16:40<br>Esc. 15 · 16 · 19 · 02 · 06 · 04</div>
+        </div>
+        <div class="actor-card">
+          <div class="ac-name" style="color:#4878b8;">Santiago</div>
+          <div class="ac-detail">12:45 → 19:20<br>Esc. 20 · 07 · 17 · 18 · 03</div>
+        </div>
+        <div class="actor-card">
+          <div class="ac-name" style="color:#b8963c;">Claire</div>
+          <div class="ac-detail">09:30 → 18:20<br>Esc. 15 · 16 · 06 · 04 · 17 · 18</div>
+        </div>
+        <div class="actor-card">
+          <div class="ac-name" style="color:#8855aa;">Vale</div>
+          <div class="ac-detail">12:30 → 19:20 · 6h 50m<br>Esc. 01 · 03</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes D1 -->
+    <div class="notes-section" style="margin-top:1.2rem;">
+      <div class="notes-label">Notas del día 1</div>
+      <textarea class="notes-area" data-id="d1-notes" disabled placeholder="Sin notas aún…"></textarea>
     </div>
   </div>
 
-  <div class="meta">
-    <span class="badge b-green">Germán · 09:30 · wrap 13:30</span>
-    <span class="badge b-blue">Peter · 13:00 · wrap 18:00</span>
-    <span class="badge b-pur">Vale · 11:00 · wrap 16:00</span>
-    <span class="badge b-dark">3 modelos · 2H + 1M</span>
+  <hr class="day-divider" />
+
+  <!-- ═══ DÍA 2 ═══ -->
+  <div class="day-section">
+    <div class="day-header">
+      <span class="day-title">Día 2</span>
+      <span class="day-date" id="d2-date-display">—</span>
+    </div>
+
+    <!-- Actor badges D2 -->
+    <div class="actor-badges">
+      <span class="badge" style="background:#5a9e4a;">Germán <span class="call-time">· 09:30 · wrap 13:30</span></span>
+      <span class="badge" style="background:#4878b8;">Peter <span class="call-time">· 13:00 · wrap 18:00</span></span>
+      <span class="badge" style="background:#8855aa;">Vale <span class="call-time">· 11:00 · wrap 18:00</span></span>
+    </div>
+
+    <!-- Schedule table D2 -->
+    <table class="sched-table">
+      <thead>
+        <tr>
+          <th style="width:28px;"></th>
+          <th>Horario</th>
+          <th>Tipo</th>
+          <th>Esc.</th>
+          <th>Locación</th>
+          <th>Descripción</th>
+          <th>Actores</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- Row 0: Prep D2 -->
+        <tr class="row-prep" id="tr-done-d2-0" data-done-id="done-d2-0">
+          <td><button class="done-btn" data-done="done-d2-0" title="Marcar listo">✓</button></td>
+          <td class="time-cell">09:30 – 10:00</td>
+          <td><span class="type-tag" style="background:#6666aa;color:#fff;">Prep</span></td>
+          <td class="scene-num">—</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d2-r0-loc">Base — Maquillaje</span><br>
+            <a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank" rel="noopener">Martín de Zamora 3240, Las Condes ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d2-r0-desc">Make-up · Wardrobe — Germán</span></td>
+          <td class="actors-cell" style="color:#5a9e4a;">GER</td>
+        </tr>
+
+        <!-- Row 1 D2 -->
+        <tr id="tr-done-d2-1" data-done-id="done-d2-1">
+          <td><button class="done-btn" data-done="done-d2-1" title="Marcar listo">✓</button></td>
+          <td class="time-cell">10:00 – 11:00</td>
+          <td><span class="type-tag type-ind">Indoor</span></td>
+          <td class="scene-num">11</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d2-r1-loc">Depto / Escritorio</span><br>
+            <a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank" rel="noopener">Martín de Zamora 3240 ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d2-r1-desc">Revuelve papeles, halla encendedor; respira y baja el ritmo — Germán</span></td>
+          <td class="actors-cell" style="color:#5a9e4a;">GER</td>
+        </tr>
+
+        <!-- Row 2 D2 -->
+        <tr id="tr-done-d2-2" data-done-id="done-d2-2">
+          <td><button class="done-btn" data-done="done-d2-2" title="Marcar listo">✓</button></td>
+          <td class="time-cell">11:00 – 12:00</td>
+          <td><span class="type-tag type-ind">Indoor</span></td>
+          <td class="scene-num">10</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d2-r2-loc">Depto / Cocina</span><br>
+            <a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank" rel="noopener">Martín de Zamora 3240 ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d2-r2-desc">Lava platos, cuchara lo salpica y sigue aunque terminó — Germán (Vale llega 11:00)</span></td>
+          <td class="actors-cell" style="color:#5a9e4a;">GER</td>
+        </tr>
+
+        <!-- Row 3 D2 -->
+        <tr id="tr-done-d2-3" data-done-id="done-d2-3">
+          <td><button class="done-btn" data-done="done-d2-3" title="Marcar listo">✓</button></td>
+          <td class="time-cell">12:00 – 13:00</td>
+          <td><span class="type-tag type-ind">Indoor</span></td>
+          <td class="scene-num">14</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d2-r3-loc">Ascensor</span><br>
+            <a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank" rel="noopener">Martín de Zamora 3240 ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d2-r3-desc">Se mira en espejo del ascensor, quieta, sin posar — Valé</span></td>
+          <td class="actors-cell" style="color:#8855aa;">VALE</td>
+        </tr>
+
+        <!-- Row 4 D2 -->
+        <tr id="tr-done-d2-4" data-done-id="done-d2-4">
+          <td><button class="done-btn" data-done="done-d2-4" title="Marcar listo">✓</button></td>
+          <td class="time-cell">12:30 – 13:30</td>
+          <td><span class="type-tag type-ind">Indoor</span></td>
+          <td class="scene-num">08</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d2-r4-loc">Departamento</span><br>
+            <a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank" rel="noopener">Martín de Zamora 3240 ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d2-r4-desc">Reunión eterna, deja de escuchar y dibuja en cuaderno — Germán → WRAP 13:30</span></td>
+          <td class="actors-cell" style="color:#5a9e4a;">GER</td>
+        </tr>
+
+        <!-- Row 5 D2 -->
+        <tr id="tr-done-d2-5" data-done-id="done-d2-5">
+          <td><button class="done-btn" data-done="done-d2-5" title="Marcar listo">✓</button></td>
+          <td class="time-cell">13:00 – 14:00</td>
+          <td><span class="type-tag type-urb">Urbano</span></td>
+          <td class="scene-num">05</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d2-r5-loc">Tienda de Vinilos</span><br>
+            <a href="https://maps.app.goo.gl/RHFnRjTLGFATK38J8" target="_blank" rel="noopener">Blue Bird Cafe ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d2-r5-desc">Revisa vinilos, encuentra uno, lo pone y se sirve un café — Peter (call 13:00)</span></td>
+          <td class="actors-cell" style="color:#4878b8;">PETER</td>
+        </tr>
+
+        <!-- Break D2 -->
+        <tr class="row-break">
+          <td></td>
+          <td class="time-cell">14:00 – 15:00</td>
+          <td><span class="type-tag" style="background:#e53935;color:#fff;">Break</span></td>
+          <td class="scene-num">—</td>
+          <td class="location-cell">
+            <span>Tienda de Vinilos</span><br>
+            <a href="https://maps.app.goo.gl/RHFnRjTLGFATK38J8" target="_blank" rel="noopener">Blue Bird Cafe ↗</a>
+          </td>
+          <td class="desc-cell" style="font-weight:700;letter-spacing:0.08em;">ALMUERZO</td>
+          <td class="actors-cell"></td>
+        </tr>
+
+        <!-- Row 7 D2 -->
+        <tr id="tr-done-d2-7" data-done-id="done-d2-7">
+          <td><button class="done-btn" data-done="done-d2-7" title="Marcar listo">✓</button></td>
+          <td class="time-cell">15:00 – 16:00</td>
+          <td><span class="type-tag type-ind">Indoor</span></td>
+          <td class="scene-num">09</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d2-r7-loc">Depto / Pieza</span><br>
+            <a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank" rel="noopener">Martín de Zamora 3240 ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d2-r7-desc">Deja ropa en silla y se deja caer en la cama — Valé</span></td>
+          <td class="actors-cell" style="color:#8855aa;">VALE</td>
+        </tr>
+
+        <!-- Row 8 D2 -->
+        <tr id="tr-done-d2-8" data-done-id="done-d2-8">
+          <td><button class="done-btn" data-done="done-d2-8" title="Marcar listo">✓</button></td>
+          <td class="time-cell">16:00 – 17:00</td>
+          <td><span class="type-tag type-ind">Indoor</span></td>
+          <td class="scene-num">13</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d2-r8-loc">Departamento</span><br>
+            <a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank" rel="noopener">Martín de Zamora 3240 ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d2-r8-desc">Intenta abrir frasco una y otra vez; cuando cede, salpica todo — Peter</span></td>
+          <td class="actors-cell" style="color:#4878b8;">PETER</td>
+        </tr>
+
+        <!-- Row 9 D2 -->
+        <tr id="tr-done-d2-9" data-done-id="done-d2-9">
+          <td><button class="done-btn" data-done="done-d2-9" title="Marcar listo">✓</button></td>
+          <td class="time-cell">17:00 – 18:00</td>
+          <td><span class="type-tag type-ind">Indoor</span></td>
+          <td class="scene-num">12</td>
+          <td class="location-cell">
+            <span class="editable" data-id="d2-r9-loc">Depto / Sofá</span><br>
+            <a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank" rel="noopener">Martín de Zamora 3240 ↗</a>
+          </td>
+          <td class="desc-cell"><span class="editable" data-id="d2-r9-desc">Ve el sol entrar por ventana, se entrega a ese calor de invierno — Peter + Valé → WRAP 18:00</span></td>
+          <td class="actors-cell"><span style="color:#4878b8;">PETER</span> <span style="color:#8855aa;">VALE</span></td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <!-- Actor summary D2 -->
+    <div class="actor-summary">
+      <div class="actor-summary-title">Resumen de actores — Día 2</div>
+      <div class="actor-summary-grid">
+        <div class="actor-card">
+          <div class="ac-name" style="color:#5a9e4a;">Germán</div>
+          <div class="ac-detail">09:30 → 13:30 · 4h<br>Esc. 11 · 10 · 08</div>
+        </div>
+        <div class="actor-card">
+          <div class="ac-name" style="color:#4878b8;">Peter</div>
+          <div class="ac-detail">13:00 → 18:00 · 5h<br>Esc. 05 · 13 · 12</div>
+        </div>
+        <div class="actor-card">
+          <div class="ac-name" style="color:#8855aa;">Valé</div>
+          <div class="ac-detail">11:00 → 18:00 · 7h<br>Esc. 14 · 09 · 12</div>
+        </div>
+      </div>
+      <div class="extra-note">Germán — pescetariano</div>
+    </div>
+
+    <!-- Notes D2 -->
+    <div class="notes-section" style="margin-top:1.2rem;">
+      <div class="notes-label">Notas del día 2</div>
+      <textarea class="notes-area" data-id="d2-notes" disabled placeholder="Sin notas aún…"></textarea>
+    </div>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th style="width:65px">Hora</th>
-        <th style="width:42px">Tipo</th>
-        <th style="width:20px">Esc</th>
-        <th style="width:88px">Locación</th>
-        <th style="width:148px">Título / Acción</th>
-        <th class="ac" style="width:52px">GERMÁN</th>
-        <th class="ac" style="width:52px">PETER</th>
-        <th class="ac" style="width:52px">VALE</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr class="prep">
-        <td class="t-hora">09:30 – 10:00</td>
-        <td><span class="tipo pre">Prep</span></td>
-        <td class="t-esc" style="color:#888">—</td>
-        <td class="t-loc">Base — Maquillaje<span class="t-addr"><a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank">Martín de Zamora 3240, Las Condes</a></span></td>
-        <td>Make-up · Wardrobe — Germán</td>
-        <td class="ac-cell"><span class="dot c-ger">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">10:00 – 11:00</td>
-        <td><span class="tipo ind">Indoor</span></td>
-        <td class="t-esc">11</td>
-        <td class="t-loc">Depto / Escritorio<span class="t-addr"><a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank">Martín de Zamora 3240, Las Condes</a></span></td>
-        <td>Revuelve papeles, halla encendedor; respira y baja el ritmo — Germán</td>
-        <td class="ac-cell"><span class="dot c-ger">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">11:00 – 12:00</td>
-        <td><span class="tipo ind">Indoor</span></td>
-        <td class="t-esc">10</td>
-        <td class="t-loc">Depto / Cocina<span class="t-addr"><a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank">Martín de Zamora 3240, Las Condes</a></span></td>
-        <td>Lava platos, cuchara lo salpica y sigue aunque terminó — Germán &nbsp;<span class="t-note">(Vale llega 11:00)</span></td>
-        <td class="ac-cell"><span class="dot c-ger">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">12:00 – 13:00</td>
-        <td><span class="tipo ind">Indoor</span></td>
-        <td class="t-esc">14</td>
-        <td class="t-loc">Ascensor<span class="t-addr"><a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank">Martín de Zamora 3240, Las Condes</a></span></td>
-        <td>Se mira en espejo del ascensor, quieta, sin posar — Valé</td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-val">●</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">12:30 – 13:30</td>
-        <td><span class="tipo ind">Indoor</span></td>
-        <td class="t-esc">08</td>
-        <td class="t-loc">Departamento<span class="t-addr"><a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank">Martín de Zamora 3240, Las Condes</a></span></td>
-        <td>Reunión eterna, deja de escuchar y dibuja en cuaderno — Germán &nbsp;<span class="t-note">→ WRAP 13:30</span></td>
-        <td class="ac-cell"><span class="dot c-ger">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">13:00 – 14:00</td>
-        <td><span class="tipo urb">Urbano</span></td>
-        <td class="t-esc">05</td>
-        <td class="t-loc">Tienda de Vinilos<span class="t-addr"><a href="https://maps.app.goo.gl/RHFnRjTLGFATK38J8" target="_blank">Blue Bird Cafe</a></span></td>
-        <td>Revisa vinilos, encuentra uno, lo pone y se sirve un café — Peter &nbsp;<span class="t-note">(call 13:00)</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-pet">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr class="brk">
-        <td class="t-hora">14:00 – 15:00</td>
-        <td><span class="tipo brk">Break</span></td>
-        <td class="t-esc" style="color:#888">—</td>
-        <td class="t-loc">Tienda de Vinilos<span class="t-addr"><a href="https://maps.app.goo.gl/RHFnRjTLGFATK38J8" target="_blank">Blue Bird Cafe</a></span></td>
-        <td style="font-weight:700">ALMUERZO</td>
-        <td class="ac-cell"></td><td class="ac-cell"></td><td class="ac-cell"></td>
-      </tr>
-      <tr>
-        <td class="t-hora">15:00 – 16:00</td>
-        <td><span class="tipo ind">Indoor</span></td>
-        <td class="t-esc">09</td>
-        <td class="t-loc">Depto / Pieza<span class="t-addr"><a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank">Martín de Zamora 3240, Las Condes</a></span></td>
-        <td>Deja ropa en silla y se deja caer en la cama — Valé</td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-val">●</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">16:00 – 17:00</td>
-        <td><span class="tipo ind">Indoor</span></td>
-        <td class="t-esc">13</td>
-        <td class="t-loc">Departamento<span class="t-addr"><a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank">Martín de Zamora 3240, Las Condes</a></span></td>
-        <td>Intenta abrir frasco una y otra vez; cuando cede, salpica todo — Peter</td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-pet">●</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-      </tr>
-      <tr>
-        <td class="t-hora">17:00 – 18:00</td>
-        <td><span class="tipo ind">Indoor</span></td>
-        <td class="t-esc">12</td>
-        <td class="t-loc">Depto / Sofá<span class="t-addr"><a href="https://maps.app.goo.gl/AmLRX1ngHHezucX56" target="_blank">Martín de Zamora 3240, Las Condes</a></span></td>
-        <td>Ve el sol entrar por ventana, se entrega a ese calor de invierno — Peter + Valé &nbsp;<span class="t-note">→ WRAP 18:00</span></td>
-        <td class="ac-cell"><span class="dim">—</span></td>
-        <td class="ac-cell"><span class="dot c-pet">●</span></td>
-        <td class="ac-cell"><span class="dot c-val">●</span></td>
-      </tr>
-    </tbody>
-  </table>
+</div><!-- /#app -->
 
-  <div class="actor-summary">
-    <div class="a-block">
-      <div class="a-id" style="color:#5a9e4a">Germán</div>
-      <div class="a-role">Escritorio · Lava loza · Reunión online</div>
-      <div class="a-meta">CALL &nbsp;<span>09:30</span> &nbsp;·&nbsp; WRAP &nbsp;<span>13:30</span> &nbsp;·&nbsp; <span>4h</span></div>
-      <div class="a-scenes">Esc 11 · 10 · 08</div>
-    </div>
-    <div class="a-block">
-      <div class="a-id" style="color:#4878b8">Peter</div>
-      <div class="a-role">Vinilos · Frasco · Sofá / Sol</div>
-      <div class="a-meta">CALL &nbsp;<span>13:00</span> &nbsp;·&nbsp; WRAP &nbsp;<span>18:00</span> &nbsp;·&nbsp; <span>5h</span></div>
-      <div class="a-scenes">Esc 05 · 13 · 12</div>
-    </div>
-    <div class="a-block">
-      <div class="a-id" style="color:#8855aa">Valé</div>
-      <div class="a-role">Ascensor · Pieza · Sofá / Sol</div>
-      <div class="a-meta">CALL &nbsp;<span>11:00</span> &nbsp;·&nbsp; WRAP &nbsp;<span>18:00</span> &nbsp;·&nbsp; <span>7h</span></div>
-      <div class="a-scenes">Esc 14 · 09 · 12</div>
-    </div>
-    <div class="a-block notes" style="flex: 1.6">
-      <div class="note-lbl">Notas generales</div>
-      <div style="font-size:7.5pt; margin-bottom:4px;"><strong>Germán</strong> — pescetariano</div>
-      <div class="note-line"></div>
-      <div class="note-line"></div>
-      <div class="note-line"></div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <span>KAYA UNITE / INVIERNO 2026 &nbsp;·&nbsp; Call Sheet DÍA 2 &nbsp;·&nbsp; Confidencial PVB Estudio Creativo</span>
-    <span>2 / 2</span>
-  </div>
-</div>
-
-<div class="no-print" style="margin-top:24px; text-align:center;">
-  <button onclick="window.print()"
-    style="padding:10px 32px; font-size:11pt; background:#74b563; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:700;">
-    Imprimir / Guardar PDF — 2 páginas A4 horizontal
-  </button>
-</div>
 <script>
-  // Mark scenes as done — click any row to toggle
-  document.querySelectorAll('tbody tr').forEach(function(row, i) {
-    var key = 'kaya-row-' + i;
-    if (localStorage.getItem(key) === 'done') markDone(row);
-    row.style.cursor = 'pointer';
-    row.addEventListener('click', function() {
-      if (row.classList.contains('done')) {
-        row.classList.remove('done');
-        row.style.opacity = '';
-        row.style.textDecoration = '';
-        row.style.background = '';
-        localStorage.removeItem(key);
-      } else {
-        markDone(row);
-        localStorage.setItem(key, 'done');
-      }
+/* ════════════════════════════════════════════════════
+   KAYA UNITE — Call Sheet
+   Roles: AD (edit) / client (read-only)
+   Sync: /.netlify/functions/kaya-callsheet
+   ════════════════════════════════════════════════════ */
+
+const PASSWORDS = {
+  ad:     'kayacampañainvierno2026',
+  client: 'kayainvierno'
+};
+const API_URL = '/.netlify/functions/kaya-callsheet';
+
+/* ── Debounce helper ── */
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+/* ── Save status helper ── */
+function setSaveStatus(msg, color) {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color || '#aaa';
+}
+
+/* ── API: load all fields ── */
+async function loadData() {
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = await res.json(); // [{field_id, value}, ...]
+    rows.forEach(({ field_id, value }) => applyField(field_id, value));
+  } catch (e) {
+    console.warn('Load error:', e);
+  }
+}
+
+/* ── API: save one field ── */
+const saveField = debounce(async (field_id, value) => {
+  setSaveStatus('Guardando…', '#f0c060');
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ field_id, value })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    setSaveStatus('Guardado ✓', '#74b563');
+    setTimeout(() => setSaveStatus('Todos los cambios guardados', '#aaa'), 2500);
+  } catch (e) {
+    setSaveStatus('Error al guardar', '#e53935');
+    console.error('Save error:', e, field_id);
+  }
+}, 600);
+
+/* ── Apply a field_id→value pair to the DOM ── */
+function applyField(field_id, value) {
+  // Done state: field_id like "done-d1-0"
+  if (field_id.startsWith('done-')) {
+    const tr = document.getElementById('tr-' + field_id);
+    const btn = document.querySelector('.done-btn[data-done="' + field_id + '"]');
+    const isDone = value === 'true' || value === true;
+    if (tr)  tr.classList.toggle('is-done', isDone);
+    if (btn) btn.classList.toggle('is-done', isDone);
+    return;
+  }
+  // Notes textarea
+  if (field_id === 'd1-notes' || field_id === 'd2-notes') {
+    const ta = document.querySelector('textarea[data-id="' + field_id + '"]');
+    if (ta) ta.value = value;
+    return;
+  }
+  // Editable span
+  const el = document.querySelector('[data-id="' + field_id + '"]');
+  if (el) el.textContent = value;
+}
+
+/* ── Toggle done state ── */
+function handleDoneClick(btn) {
+  const field_id = btn.dataset.done;
+  const tr = document.getElementById('tr-' + field_id);
+  const wasDone = btn.classList.contains('is-done');
+  const nowDone = !wasDone;
+
+  btn.classList.toggle('is-done', nowDone);
+  if (tr) tr.classList.toggle('is-done', nowDone);
+
+  saveField(field_id, String(nowDone));
+}
+
+/* ── Enable edit mode (AD only) ── */
+function enableEditMode() {
+  document.body.dataset.editMode = 'true';
+
+  // Make editable spans contenteditable
+  document.querySelectorAll('.editable').forEach(el => {
+    el.contentEditable = 'true';
+    el.setAttribute('spellcheck', 'false');
+    el.addEventListener('input', function () {
+      saveField(this.dataset.id, this.textContent);
     });
   });
 
-  function markDone(row) {
-    row.classList.add('done');
-    row.style.opacity = '0.45';
-    row.style.textDecoration = 'line-through';
-    if (!row.classList.contains('brk') && !row.classList.contains('prep')) {
-      row.style.background = '#e8f5e2';
-    }
+  // Enable note textareas
+  document.querySelectorAll('.notes-area').forEach(ta => {
+    ta.disabled = false;
+    ta.addEventListener('input', function () {
+      saveField(this.dataset.id, this.value);
+    });
+  });
+
+  // Show AD toolbar
+  document.getElementById('ad-toolbar').style.display = 'flex';
+}
+
+/* ── Login logic ── */
+function attemptLogin() {
+  const pw = document.getElementById('pw-input').value;
+  const errEl = document.getElementById('login-error');
+
+  if (pw === PASSWORDS.ad) {
+    sessionStorage.setItem('kaya-role', 'ad');
+    showApp('ad');
+  } else if (pw === PASSWORDS.client) {
+    sessionStorage.setItem('kaya-role', 'client');
+    showApp('client');
+  } else {
+    errEl.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
+    document.getElementById('pw-input').select();
   }
+}
+
+/* ── Show app after login ── */
+function showApp(role) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  if (role === 'ad') enableEditMode();
+
+  // Wire done buttons (both roles can toggle done)
+  document.querySelectorAll('.done-btn').forEach(btn => {
+    btn.addEventListener('click', () => handleDoneClick(btn));
+  });
+
+  // Load remote data
+  loadData();
+}
+
+/* ── Logout ── */
+function logout() {
+  sessionStorage.removeItem('kaya-role');
+  location.reload();
+}
+
+/* ── Bootstrap ── */
+document.addEventListener('DOMContentLoaded', () => {
+  // Login button
+  document.getElementById('login-btn').addEventListener('click', attemptLogin);
+  document.getElementById('pw-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') attemptLogin();
+  });
+
+  // Logout button
+  document.getElementById('logout-btn').addEventListener('click', logout);
+
+  // Check sessionStorage for existing role
+  const savedRole = sessionStorage.getItem('kaya-role');
+  if (savedRole === 'ad' || savedRole === 'client') {
+    showApp(savedRole);
+  }
+});
 </script>
+
 </body>
 </html>
