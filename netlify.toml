@@ -20,6 +20,11 @@
   force = true
 
 [[redirects]]
+  from = "/kayashoot"
+  to = "https://cheerful-tiramisu-b5dc32.netlify.app/kaya-callsheet"
+  status = 301
+
+[[redirects]]
   from = "/kaya-callsheet"
   to = "/kaya-callsheet.html"
   status = 200
