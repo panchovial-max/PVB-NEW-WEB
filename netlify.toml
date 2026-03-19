@@ -27,7 +27,7 @@
 [[redirects]]
   from = "/kaya-callsheet"
   to = "/kaya-callsheet.html"
-  status = 200
+  status = 301
 
 [[redirects]]
   from = "/dashboard"
