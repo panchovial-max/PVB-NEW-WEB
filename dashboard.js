@@ -48,6 +48,9 @@ async function initializeDashboard(userData) {
             userGreeting.textContent = `Welcome, ${userData.full_name.split(' ')[0]}!`;
         }
 
+        // Expose userData for calendar.js and other modules
+        window._pvbUserData = userData;
+
         // Load dashboard data
         await loadDashboardData(userData);
 

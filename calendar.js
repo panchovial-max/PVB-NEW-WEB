@@ -1,7 +1,8 @@
-// Campaign Calendar JavaScript
+// Campaign Calendar JavaScript — Google Calendar Integration
 
 let currentMonth = new Date();
 let calendarEvents = [];
+let calendarConnected = false;
 
 // Initialize calendar
 function initializeCalendar() {
@@ -15,8 +16,8 @@ function renderCalendar() {
     const month = currentMonth.getMonth();
 
     // Update month display
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     document.getElementById('calendarMonth').textContent = `${monthNames[month]} ${year}`;
 
     // Get first day of month and number of days
@@ -28,7 +29,7 @@ function renderCalendar() {
     calendarGrid.innerHTML = '';
 
     // Add day headers
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     dayNames.forEach(day => {
         const header = document.createElement('div');
         header.className = 'calendar-day-header';
@@ -58,7 +59,7 @@ function renderCalendar() {
             const eventsContainer = document.createElement('div');
             eventsContainer.className = 'calendar-events';
 
-            dayEvents.slice(0, 3).forEach(event => {  // Show max 3 events
+            dayEvents.slice(0, 3).forEach(event => {
                 const eventElement = document.createElement('div');
                 eventElement.className = `calendar-event ${event.event_type}`;
                 eventElement.textContent = event.event_title;
@@ -70,7 +71,7 @@ function renderCalendar() {
             if (dayEvents.length > 3) {
                 const moreElement = document.createElement('div');
                 moreElement.className = 'calendar-event';
-                moreElement.textContent = `+${dayEvents.length - 3} more`;
+                moreElement.textContent = `+${dayEvents.length - 3} más`;
                 moreElement.style.background = '#F5F5F5';
                 moreElement.style.color = '#737373';
                 eventsContainer.appendChild(moreElement);
@@ -83,7 +84,7 @@ function renderCalendar() {
     }
 
     // Add next month days
-    const remainingCells = 42 - (firstDay + daysInMonth); // 6 rows * 7 days
+    const remainingCells = 42 - (firstDay + daysInMonth);
     for (let day = 1; day <= remainingCells; day++) {
         const dayElement = createDayElement(day, 'other-month');
         calendarGrid.appendChild(dayElement);
@@ -103,23 +104,45 @@ function createDayElement(day, className) {
     return dayElement;
 }
 
-// Load calendar events from API
+// Get session token from Supabase or localStorage
+function getSessionToken() {
+    // Try userData stored by dashboard.js
+    if (window._pvbUserData?.session_token) return window._pvbUserData.session_token;
+    // Fallback to localStorage
+    return localStorage.getItem('session_id');
+}
+
+// Load calendar events from Google Calendar via Netlify function
 async function loadCalendarEvents() {
-    const sessionId = localStorage.getItem('session_id');
-    if (!sessionId) return;
+    const sessionToken = getSessionToken();
+    if (!sessionToken) {
+        showCalendarConnectPrompt('Inicia sesión para ver tu calendario');
+        return;
+    }
 
     const year = currentMonth.getFullYear();
     const month = String(currentMonth.getMonth() + 1).padStart(2, '0');
     const monthString = `${year}-${month}`;
 
     try {
-        const response = await fetch(`${API_BASE}/calendar?month=${monthString}`, {
-            headers: {
-                'X-Session-ID': sessionId
-            }
+        const response = await fetch(`/.netlify/functions/calendar-events?month=${monthString}`, {
+            headers: { 'Authorization': `Bearer ${sessionToken}` }
         });
 
         const data = await response.json();
+
+        if (data.needs_reauth) {
+            showCalendarConnectPrompt('Tu sesión de Google Calendar expiró. Reconéctalo en Configuración.');
+            return;
+        }
+
+        if (!data.connected) {
+            showCalendarConnectPrompt();
+            return;
+        }
+
+        calendarConnected = true;
+        hideCalendarConnectPrompt();
 
         if (data.events) {
             calendarEvents = data.events;
@@ -129,6 +152,40 @@ async function loadCalendarEvents() {
     } catch (error) {
         console.error('Error loading calendar events:', error);
     }
+}
+
+// Show connect prompt when Google Calendar is not linked
+function showCalendarConnectPrompt(message) {
+    const grid = document.getElementById('calendarGrid');
+    if (!grid) return;
+
+    // Check if prompt already exists
+    if (document.getElementById('calendarConnectPrompt')) return;
+
+    const prompt = document.createElement('div');
+    prompt.id = 'calendarConnectPrompt';
+    prompt.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 3rem 1.5rem; color: #737373;';
+    prompt.innerHTML = `
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">📅</div>
+        <p style="font-size: 1rem; margin-bottom: 0.5rem; color: #333; font-weight: 600;">
+            ${message || 'Conecta tu Google Calendar'}
+        </p>
+        <p style="font-size: 0.85rem; margin-bottom: 1.5rem; color: #888;">
+            Visualiza tus reuniones, deadlines y eventos de producción directamente aquí.
+        </p>
+        <a href="settings.html#integrations"
+           style="display: inline-block; padding: 10px 24px; background: #1a1a1a; color: white; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: opacity 0.2s;"
+           onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+            Conectar Google Calendar
+        </a>
+    `;
+
+    grid.appendChild(prompt);
+}
+
+function hideCalendarConnectPrompt() {
+    const prompt = document.getElementById('calendarConnectPrompt');
+    if (prompt) prompt.remove();
 }
 
 // Navigate calendar
@@ -155,15 +212,26 @@ function showEventModal(event) {
     const modal = document.getElementById('eventModal');
 
     document.getElementById('modalEventTitle').textContent = event.event_title;
-    document.getElementById('modalEventDescription').textContent = event.event_description || 'No description';
+    document.getElementById('modalEventDescription').textContent = event.event_description || 'Sin descripción';
     document.getElementById('modalEventDate').textContent = formatDate(event.event_date);
-    document.getElementById('modalEventTime').textContent = event.event_time || 'All day';
+    document.getElementById('modalEventTime').textContent = event.event_time || 'Todo el día';
     document.getElementById('modalEventType').textContent = formatEventType(event.event_type);
     document.getElementById('modalEventCampaign').textContent = event.campaign_name || 'General';
 
     const priorityBadge = document.getElementById('modalEventPriority');
     priorityBadge.textContent = event.priority.toUpperCase();
     priorityBadge.className = `event-badge ${event.priority}`;
+
+    // Add Google Calendar link if available
+    const modalActions = document.getElementById('modalEventActions');
+    if (modalActions && event.google_link) {
+        modalActions.innerHTML = `<a href="${event.google_link}" target="_blank" rel="noopener"
+            style="display: inline-block; padding: 8px 16px; background: #1a73e8; color: white; border-radius: 6px; text-decoration: none; font-size: 0.8rem;">
+            Abrir en Google Calendar ↗
+        </a>`;
+    } else if (modalActions) {
+        modalActions.innerHTML = '';
+    }
 
     modal.classList.add('active');
 }
@@ -177,17 +245,17 @@ function closeEventModal() {
 function formatDate(dateString) {
     const date = new Date(dateString + 'T00:00:00');
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
+    return date.toLocaleDateString('es-CL', options);
 }
 
 // Format event type
 function formatEventType(type) {
     const types = {
-        'campaign_start': 'Campaign Launch',
-        'campaign_end': 'Campaign End',
-        'meeting': 'Meeting',
+        'campaign_start': 'Inicio Campaña',
+        'campaign_end': 'Fin Campaña',
+        'meeting': 'Reunión',
         'deadline': 'Deadline',
-        'milestone': 'Milestone'
+        'milestone': 'Hito'
     };
     return types[type] || type;
 }
@@ -210,7 +278,7 @@ function renderUpcomingEvents() {
         .slice(0, 5);
 
     if (upcoming.length === 0) {
-        container.innerHTML = '<p style="color: #737373; text-align: center;">No upcoming events</p>';
+        container.innerHTML = '<p style="color: #737373; text-align: center;">No hay eventos próximos</p>';
         return;
     }
 
@@ -219,7 +287,7 @@ function renderUpcomingEvents() {
     upcoming.forEach(event => {
         const date = new Date(event.event_date + 'T00:00:00');
         const day = date.getDate();
-        const month = date.toLocaleDateString('en-US', { month: 'short' });
+        const month = date.toLocaleDateString('es-CL', { month: 'short' });
 
         const item = document.createElement('div');
         item.className = 'upcoming-event-item';
@@ -231,16 +299,23 @@ function renderUpcomingEvents() {
                 <div class="upcoming-event-month">${month}</div>
             </div>
             <div class="upcoming-event-details">
-                <div class="upcoming-event-title">${event.event_title}</div>
+                <div class="upcoming-event-title">${escapeHtml(event.event_title)}</div>
                 <div class="upcoming-event-time">
-                    ${event.event_time || 'All day'} • ${formatEventType(event.event_type)}
-                    ${event.campaign_name ? ` • ${event.campaign_name}` : ''}
+                    ${event.event_time || 'Todo el día'} · ${formatEventType(event.event_type)}
+                    ${event.campaign_name ? ` · ${escapeHtml(event.campaign_name)}` : ''}
                 </div>
             </div>
         `;
 
         container.appendChild(item);
     });
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Export for use in dashboard

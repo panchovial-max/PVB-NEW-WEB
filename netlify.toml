@@ -104,3 +104,5 @@
 #   LINKEDIN_CLIENT_SECRET = "your-linkedin-client-secret"
 #   TIKTOK_CLIENT_KEY = "your-tiktok-client-key"
 #   TIKTOK_CLIENT_SECRET = "your-tiktok-client-secret"
+#   GOOGLE_CALENDAR_CLIENT_ID = "same as YOUTUBE_CLIENT_ID or separate"
+#   GOOGLE_CALENDAR_CLIENT_SECRET = "same as YOUTUBE_CLIENT_SECRET or separate"

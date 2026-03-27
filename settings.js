@@ -803,6 +803,45 @@ function loadPlatformCredentials(platform, config) {
     }
 }
 
+// Connect Google Calendar
+async function connectGoogleCalendar() {
+    showNotification('Conectando Google Calendar...', 'info');
+
+    let sessionToken = null;
+    try {
+        const supabaseClient = window.supabase.createClient(
+            'https://krmoihryyvooymvhsuno.supabase.co',
+            'sb_publishable_siFuszUIw5ibS-2Y15O4-Q_k484kZ8i'
+        );
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) sessionToken = session.access_token;
+    } catch (e) {
+        console.error('Could not get Supabase session:', e);
+    }
+
+    if (!sessionToken) {
+        showNotification('Sesión expirada. Inicia sesión de nuevo.', 'error');
+        setTimeout(() => window.location.href = 'login.html', 1500);
+        return;
+    }
+
+    try {
+        const response = await fetch('/.netlify/functions/oauth-google-calendar-initiate', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${sessionToken}` }
+        });
+        const data = await response.json();
+        if (data.success && data.authorization_url) {
+            window.location.href = data.authorization_url;
+        } else {
+            showNotification(data.message || 'Error al conectar Google Calendar', 'error');
+        }
+    } catch (error) {
+        console.error('Google Calendar connect error:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
 // Connect Notion Calendar
 async function connectNotion() {
     showLoading();
@@ -980,7 +1019,21 @@ async function loadSocialConnectionStatuses() {
         platforms.forEach(p => updateSocialButton(p, null));
 
         if (accounts) {
-            accounts.forEach(account => updateSocialButton(account.platform, account));
+            accounts.forEach(account => {
+                if (account.platform === 'google_calendar') {
+                    // Update Google Calendar status in integrations tab
+                    const statusEl = document.getElementById('googleCalendarStatus');
+                    const btn = document.getElementById('btn-google-calendar');
+                    if (statusEl) statusEl.innerHTML = '<span class="status-badge connected">Connected</span>';
+                    if (btn) {
+                        btn.textContent = '✓ Conectado';
+                        btn.classList.add('connected');
+                        btn.disabled = true;
+                    }
+                } else {
+                    updateSocialButton(account.platform, account);
+                }
+            });
         }
     } catch (error) {
         console.error('Error loading social statuses:', error);

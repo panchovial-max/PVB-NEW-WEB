@@ -712,6 +712,33 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Google Calendar Integration -->
+                <div class="notion-integration-card" style="margin-top: 2rem; padding: 1.5rem; background: var(--white); border-radius: 12px; border: 2px solid var(--gray-200);">
+                    <div class="platform-header">
+                        <div class="platform-icon" style="width: 48px; height: 48px; background: linear-gradient(135deg, #4285F4 0%, #34A853 50%, #FBBC05 75%, #EA4335 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 18px;">
+                            📅
+                        </div>
+                        <div class="platform-info">
+                            <h3>Google Calendar</h3>
+                            <p>Sincroniza reuniones, deadlines y eventos de producción</p>
+                        </div>
+                        <div class="platform-status" id="googleCalendarStatus">
+                            <span class="status-badge disconnected">Not Connected</span>
+                        </div>
+                    </div>
+                    <div class="platform-config" style="margin-top: 1rem;">
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 1rem;">
+                            Conecta tu Google Calendar para ver tus eventos directamente en el dashboard. Se usa acceso de solo lectura.
+                        </p>
+                        <button class="btn-platform-connect" id="btn-google-calendar" onclick="connectGoogleCalendar()">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M5 10H15M15 10L11 6M15 10L11 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            Conectar Google Calendar
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Social Media Settings -->
