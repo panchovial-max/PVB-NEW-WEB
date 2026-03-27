@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrato de Servicios y Confidencialidad — PVB Estudio Creativo</title>
+    <meta name="description" content="Contrato de servicios, confidencialidad de métricas y exención de responsabilidad editorial. PVB Estudio Creativo.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* ── Layout ─────────────────────────────────────── */
+        .contract-page {
+            background: #fff;
+            min-height: 100vh;
+            padding-top: 100px;
+        }
+
+        .contract-header {
+            background: #1A1A1A;
+            padding: 72px 0 56px;
+            text-align: center;
+        }
+
+        .contract-header .contract-badge {
+            display: inline-block;
+            border: 1px solid rgba(201,169,110,0.5);
+            color: #c9a96e;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            padding: 6px 18px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .contract-header h1 {
+            font-size: clamp(28px, 5vw, 52px);
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .contract-header .subtitle {
+            color: rgba(255,255,255,0.55);
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Document ───────────────────────────────────── */
+        .contract-document {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 64px 24px 120px;
+        }
+
+        /* TOC */
+        .contract-toc {
+            background: #F5F5F5;
+            border-left: 3px solid #1A1A1A;
+            padding: 28px 32px;
+            margin-bottom: 56px;
+        }
+
+        .contract-toc h3 {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #1A1A1A;
+            margin-bottom: 16px;
+        }
+
+        .contract-toc ol {
+            padding-left: 20px;
+        }
+
+        .contract-toc li {
+            margin-bottom: 8px;
+        }
+
+        .contract-toc a {
+            color: #6B6B6B;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            transition: color 0.2s;
+        }
+
+        .contract-toc a:hover {
+            color: #1A1A1A;
+        }
+
+        /* Sections */
+        .contract-section {
+            margin-bottom: 52px;
+            scroll-margin-top: 100px;
+        }
+
+        .section-number {
+            display: inline-block;
+            background: #1A1A1A;
+            color: #c9a96e;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            padding: 4px 10px;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+        }
+
+        .contract-section h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1A1A1A;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+
+        .contract-section p {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #3a3a3a;
+            margin-bottom: 14px;
+        }
+
+        .contract-section p strong {
+            color: #1A1A1A;
+            font-weight: 600;
+        }
+
+        .contract-section ul,
+        .contract-section ol {
+            padding-left: 22px;
+            margin-bottom: 14px;
+        }
+
+        .contract-section li {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #3a3a3a;
+            margin-bottom: 6px;
+        }
+
+        /* Highlight boxes */
+        .highlight-box {
+            background: #F5F5F5;
+            border-left: 3px solid #c9a96e;
+            padding: 20px 24px;
+            margin: 20px 0;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0 !important;
+            font-size: 14px !important;
+            color: #4a4a4a !important;
+        }
+
+        .highlight-box.alert {
+            background: #fff8f0;
+            border-left-color: #c9a96e;
+        }
+
+        /* Divider */
+        .section-divider {
+            border: none;
+            border-top: 1px solid #e8e8e8;
+            margin: 52px 0;
+        }
+
+        /* Signature block */
+        .signature-block {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 48px;
+            padding-top: 40px;
+            border-top: 2px solid #1A1A1A;
+        }
+
+        .signature-party h4 {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #6B6B6B;
+            margin-bottom: 12px;
+        }
+
+        .signature-party .party-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1A1A1A;
+            margin-bottom: 4px;
+        }
+
+        .signature-party .party-detail {
+            font-size: 13px;
+            color: #6B6B6B;
+            margin-bottom: 2px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #1A1A1A;
+            margin-top: 48px;
+            margin-bottom: 8px;
+        }
+
+        .signature-label {
+            font-size: 11px;
+            color: #6B6B6B;
+            letter-spacing: 0.1em;
+        }
+
+        /* CTA */
+        .contract-cta {
+            text-align: center;
+            background: #1A1A1A;
+            padding: 56px 24px;
+            margin-top: 80px;
+        }
+
+        .contract-cta p {
+            color: rgba(255,255,255,0.65);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .contract-cta .btn-gold {
+            display: inline-block;
+            background: #c9a96e;
+            color: #1A1A1A;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 16px 40px;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .contract-cta .btn-gold:hover {
+            opacity: 0.85;
+        }
+
+        /* Print button */
+        .print-bar {
+            background: #F5F5F5;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .print-bar span {
+            font-size: 12px;
+            color: #6B6B6B;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-print {
+            background: none;
+            border: 1px solid #1A1A1A;
+            color: #1A1A1A;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-print:hover {
+            background: #1A1A1A;
+            color: #fff;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .signature-block {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            .navbar, .back-to-top, .print-bar, .contract-cta { display: none !important; }
+            .contract-page { padding-top: 0; }
+            .contract-header { padding: 32px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="pvb-logo.svg" alt="PVB Estudio Creativo" class="logo-image">
+                </a>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html#work" class="nav-link">TRABAJO</a>
+                <a href="index.html#about" class="nav-link">NOSOTROS</a>
+                <a href="index.html#agenda" class="nav-link">AGENDA</a>
+                <a href="login.html" class="nav-link">CLIENT LOGIN</a>
+                <a href="index.html#contact" class="nav-link">CONTACTO</a>
+                <a href="https://wa.me/56944328662?text=Hola!%20Quiero%20iniciar%20un%20proyecto%20con%20PVB%20Estudio%20Creativo" target="_blank" rel="noopener" class="btn btn-primary">INICIAR PROYECTO</a>
+            </div>
+            <button class="hamburger" id="hamburger">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Back to Top -->
+    <button class="back-to-top" id="backToTop">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </button>
+
+    <div class="contract-page">
+
+        <!-- Header -->
+        <div class="contract-header">
+            <div class="contract-badge">Documento Legal</div>
+            <h1>Contrato de Servicios<br>y Confidencialidad</h1>
+            <p class="subtitle">PVB Estudio Creativo — Versión vigente 2025</p>
+        </div>
+
+        <!-- Print bar -->
+        <div class="print-bar">
+            <span>Última actualización: 2025 · Jurisdicción: República de Chile</span>
+            <button class="btn-print" onclick="window.print()">IMPRIMIR / PDF</button>
+        </div>
+
+        <!-- Document body -->
+        <div class="contract-document">
+
+            <!-- TOC -->
+            <div class="contract-toc">
+                <h3>Contenido</h3>
+                <ol>
+                    <li><a href="#partes">Partes del Contrato</a></li>
+                    <li><a href="#objeto">Objeto y Alcance del Servicio</a></li>
+                    <li><a href="#rol">Rol de la Agencia como Colaborador Externo</a></li>
+                    <li><a href="#confidencialidad">Confidencialidad de Métricas y Datos</a></li>
+                    <li><a href="#contenido">Responsabilidad Editorial y de Contenido</a></li>
+                    <li><a href="#comentarios">Exención por Comentarios de Terceros</a></li>
+                    <li><a href="#propiedad">Propiedad Intelectual</a></li>
+                    <li><a href="#datos">Tratamiento de Datos Personales</a></li>
+                    <li><a href="#limitacion">Limitación General de Responsabilidad</a></li>
+                    <li><a href="#vigencia">Vigencia y Terminación</a></li>
+                    <li><a href="#jurisdiccion">Jurisdicción y Ley Aplicable</a></li>
+                    <li><a href="#firmas">Aceptación y Firma</a></li>
+                </ol>
+            </div>
+
+            <!-- ── SECCIÓN 1: PARTES ─────────────────────── -->
+            <div class="contract-section" id="partes">
+                <div class="section-number">Cláusula 1</div>
+                <h2>Partes del Contrato</h2>
+
+                <p>El presente instrumento regula la relación contractual entre las siguientes partes:</p>
+
+                <p><strong>LA AGENCIA:</strong> PVB Estudio Creativo, en adelante indistintamente denominada "la Agencia", "el Prestador" o "PVB", con domicilio en la Región Metropolitana, República de Chile, representada por Francisco Vial Brown en calidad de Director Creativo.</p>
+
+                <p><strong>EL CLIENTE:</strong> La persona natural o jurídica que contrata los servicios de la Agencia, en adelante denominada "el Cliente" o "la Marca", cuyos datos individuales serán registrados al momento de la formalización del contrato mediante la ficha de incorporación correspondiente.</p>
+
+                <p>Ambas partes declaran tener la capacidad legal suficiente para contratar y obligarse, aceptando libre y voluntariamente las condiciones establecidas en el presente documento.</p>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 2: OBJETO ─────────────────────── -->
+            <div class="contract-section" id="objeto">
+                <div class="section-number">Cláusula 2</div>
+                <h2>Objeto y Alcance del Servicio</h2>
+
+                <p>El presente contrato tiene por objeto regular la prestación de servicios de comunicación digital, marketing, gestión de redes sociales, producción audiovisual, fotografía comercial y consultoría estratégica que la Agencia brinda al Cliente, conforme a la propuesta de servicios acordada entre las partes.</p>
+
+                <p>Los servicios pueden incluir, sin limitarse a:</p>
+                <ul>
+                    <li>Gestión y administración de cuentas en redes sociales (Instagram, Facebook, TikTok, LinkedIn, YouTube y otras plataformas).</li>
+                    <li>Creación de contenido visual, audiovisual y textual.</li>
+                    <li>Diseño y ejecución de campañas de pauta publicitaria digital.</li>
+                    <li>Fotografía fine art, comercial y de producto.</li>
+                    <li>Producción audiovisual y postproducción.</li>
+                    <li>Consultoría en estrategia de marca y comunicación.</li>
+                    <li>Reporte y análisis de métricas de desempeño.</li>
+                </ul>
+
+                <p>El alcance específico, plazos, entregables y valores económicos serán definidos en la <strong>Propuesta de Servicios</strong> o <strong>Brief Creativo</strong> suscrito por ambas partes, documento que forma parte integrante del presente contrato.</p>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 3: ROL DE LA AGENCIA ─────────── -->
+            <div class="contract-section" id="rol">
+                <div class="section-number">Cláusula 3</div>
+                <h2>Rol de la Agencia como Colaborador Externo</h2>
+
+                <p>Las partes expresamente declaran y reconocen que <strong>la Agencia actúa en todo momento como un colaborador externo, consultor independiente y facilitador de comunicaciones</strong>, sin que en ningún caso pueda entenderse como representante legal, apoderado, empleado ni socio del Cliente.</p>
+
+                <p>En este contexto:</p>
+
+                <ul>
+                    <li>La Agencia administra las cuentas y plataformas digitales del Cliente <strong>por delegación expresa del mismo</strong>, siendo el Cliente el titular y propietario de dichas cuentas en todo momento.</li>
+                    <li>Las decisiones finales sobre la identidad de marca, valores corporativos, posicionamiento estratégico y comunicaciones sensibles recaen exclusivamente en el Cliente.</li>
+                    <li>La Agencia no tiene facultades para comprometer al Cliente en acuerdos, contratos o declaraciones públicas sin autorización escrita previa del mismo.</li>
+                    <li>Las acciones ejecutadas por la Agencia en nombre del Cliente dentro de las plataformas digitales se realizan bajo instrucción, aprobación o marco de trabajo acordado con el Cliente.</li>
+                    <li>La Agencia opera como un <strong>proveedor de servicios especializado</strong>, manteniendo su independencia profesional y la posibilidad de trabajar simultáneamente con otros clientes, siempre que ello no implique conflictos de interés que sean comunicados oportunamente.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <p><strong>Nota importante:</strong> Ninguna cláusula del presente contrato debe interpretarse en el sentido de que la Agencia asume la responsabilidad final por los resultados comerciales del Cliente, ya que dichos resultados dependen de múltiples factores externos fuera del control de la Agencia, incluyendo el comportamiento del mercado, la calidad del producto o servicio del Cliente, y las condiciones de cada plataforma digital.</p>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 4: CONFIDENCIALIDAD ──────────── -->
+            <div class="contract-section" id="confidencialidad">
+                <div class="section-number">Cláusula 4</div>
+                <h2>Confidencialidad de Métricas y Datos</h2>
+
+                <p>Las partes reconocen que, en el marco de la prestación de servicios, la Agencia tendrá acceso a información sensible y estratégica del Cliente. En consecuencia, ambas partes se obligan a guardar estricta confidencialidad respecto de:</p>
+
+                <ul>
+                    <li><strong>Métricas de desempeño:</strong> Tasas de engagement, alcance orgánico y pagado, impresiones, clics, conversiones, ROAS, ROI, CPM, CPC y cualquier indicador de rendimiento vinculado a las campañas del Cliente.</li>
+                    <li><strong>Datos de audiencia:</strong> Demografía, comportamiento, segmentos, intereses y geografías de los seguidores y audiencias del Cliente.</li>
+                    <li><strong>Información publicitaria:</strong> Estrategias de pauta, presupuestos, segmentaciones, creatividades en desarrollo y resultados de A/B testing.</li>
+                    <li><strong>Información comercial:</strong> Datos de ventas, proyecciones, precios, márgenes, proveedores y operaciones vinculadas a las campañas gestionadas.</li>
+                    <li><strong>Accesos y credenciales:</strong> Usuarios, contraseñas, tokens de acceso, API keys y cualquier dato de autenticación compartido por el Cliente.</li>
+                    <li><strong>Estrategia de contenidos:</strong> Calendarios editoriales, conceptos creativos no publicados, línea editorial y posicionamiento de marca.</li>
+                    <li><strong>Información del negocio:</strong> Planes de expansión, lanzamientos de productos, acuerdos comerciales y cualquier dato no público del Cliente.</li>
+                </ul>
+
+                <p>Esta obligación de confidencialidad:</p>
+                <ul>
+                    <li>Se extiende a todos los colaboradores, subcontratistas y personal de la Agencia que tenga acceso a dicha información.</li>
+                    <li>Permanece vigente durante toda la relación contractual y por un período de <strong>tres (3) años</strong> contados desde la terminación del contrato.</li>
+                    <li>No aplica cuando la información sea de dominio público por causas no imputables a la Agencia, o cuando su divulgación sea exigida por autoridad competente mediante resolución judicial o administrativa.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <p>La Agencia no divulgará, comercializará ni utilizará para beneficio propio ninguna métrica, dato o información estratégica del Cliente fuera del marco de la prestación de servicios aquí acordada.</p>
+                </div>
+
+                <p>La infracción de esta cláusula por parte de cualquiera de las partes dará derecho a la parte afectada a solicitar la resolución inmediata del contrato, sin perjuicio de las acciones civiles y penales que correspondan conforme a la legislación chilena vigente.</p>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 5: RESPONSABILIDAD EDITORIAL ─── -->
+            <div class="contract-section" id="contenido">
+                <div class="section-number">Cláusula 5</div>
+                <h2>Responsabilidad Editorial y de Contenido</h2>
+
+                <p>La Agencia elabora contenido creativo siguiendo las instrucciones, lineamientos y aprobaciones del Cliente. En este sentido, se establece el siguiente régimen de responsabilidades:</p>
+
+                <p><strong>5.1 Proceso de aprobación:</strong> Todo contenido a ser publicado en nombre del Cliente deberá ser aprobado por este —expresa o tácitamente— previo a su publicación. La aprobación puede ser:</p>
+                <ul>
+                    <li>Expresa: mediante confirmación escrita por correo electrónico, mensaje de texto, WhatsApp u otro medio digital.</li>
+                    <li>Tácita: cuando el Cliente no formule objeciones dentro del plazo de revisión acordado, que por defecto es de <strong>48 horas hábiles</strong> desde el envío del contenido para revisión.</li>
+                </ul>
+
+                <p><strong>5.2 Responsabilidad post-publicación:</strong> Una vez aprobado y publicado el contenido, la <strong>responsabilidad editorial recae íntegramente sobre el Cliente</strong> como titular de las cuentas y de la marca. La Agencia no asume responsabilidad por:</p>
+                <ul>
+                    <li>Reclamaciones de terceros por el contenido publicado bajo aprobación del Cliente.</li>
+                    <li>Infracciones de derechos de autor derivadas del uso de activos (imágenes, música, logos) proporcionados por el propio Cliente.</li>
+                    <li>Declaraciones o afirmaciones sobre productos y servicios que sean inexactas por información errónea suministrada por el Cliente.</li>
+                    <li>Sanciones de plataformas derivadas de contenido que el Cliente instruyó publicar en contradicción con la asesoría de la Agencia.</li>
+                </ul>
+
+                <p><strong>5.3 Actuación de buena fe:</strong> La Agencia se compromete a advertir al Cliente cuando detecte que un contenido solicitado pueda resultar contrario a la ética profesional, las políticas de las plataformas o la legislación vigente, quedando a decisión final del Cliente proceder o no con dicho contenido.</p>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 6: EXENCIÓN COMENTARIOS ─────── -->
+            <div class="contract-section" id="comentarios">
+                <div class="section-number">Cláusula 6</div>
+                <h2>Exención por Comentarios de Terceros</h2>
+
+                <p>Las partes reconocen expresamente que las redes sociales y plataformas digitales son entornos de comunicación pública donde <strong>cualquier persona puede generar contenido de manera autónoma e independiente</strong>, incluyendo comentarios, reseñas, menciones, etiquetas y reacciones sobre la marca del Cliente.</p>
+
+                <div class="highlight-box alert">
+                    <p><strong>La Agencia no asume ninguna responsabilidad</strong> por el contenido generado por terceros —usuarios, seguidores, competidores o cualquier persona ajena a la relación contractual— en las cuentas, publicaciones o en referencia a la marca del Cliente en cualquier plataforma digital.</p>
+                </div>
+
+                <p>Esta exención comprende, sin limitarse a:</p>
+
+                <ul>
+                    <li><strong>Comentarios negativos o difamatorios:</strong> Opiniones desfavorables, críticas, reseñas negativas o ataques hacia la marca publicados por usuarios en redes sociales, Google, plataformas de reseñas u otros medios digitales.</li>
+                    <li><strong>Crisis de reputación:</strong> Situaciones de escalada negativa en redes sociales derivadas de comentarios virales, boicots, "cancel culture" u otros fenómenos de comunicación digital que escapen al control de la Agencia.</li>
+                    <li><strong>Contenido ofensivo o inapropiado en publicaciones:</strong> Comentarios de usuarios que contengan lenguaje ofensivo, discriminatorio, spam o material ilícito en las publicaciones del Cliente.</li>
+                    <li><strong>Desinformación o noticias falsas:</strong> Difusión de información incorrecta sobre la marca del Cliente por parte de terceros en cualquier plataforma.</li>
+                    <li><strong>Suplantación de identidad:</strong> Cuentas o perfiles falsos que se hagan pasar por la marca del Cliente en plataformas no administradas por la Agencia.</li>
+                    <li><strong>Cambios algorítmicos:</strong> Modificaciones en los algoritmos de las plataformas que afecten negativamente el alcance o visibilidad del contenido del Cliente.</li>
+                </ul>
+
+                <p><strong>Gestión de comentarios:</strong> Cuando el servicio contratado incluya la moderación de comunidad, la Agencia actuará según los protocolos de respuesta acordados con el Cliente. Sin embargo, dado que es imposible anticipar ni controlar la totalidad del contenido generado por usuarios, la moderación se realizará con la diligencia razonablemente posible, sin que ello implique garantía de resultado ni responsabilidad por comentarios no detectados o eliminados a tiempo.</p>
+
+                <p>Ante situaciones de crisis reputacional, la Agencia colaborará con el Cliente en la gestión de la misma aplicando las mejores prácticas disponibles, constituyendo esta colaboración un servicio adicional facturable de no estar contemplado en el servicio base contratado.</p>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 7: PROPIEDAD INTELECTUAL ─────── -->
+            <div class="contract-section" id="propiedad">
+                <div class="section-number">Cláusula 7</div>
+                <h2>Propiedad Intelectual</h2>
+
+                <p><strong>7.1 Activos del Cliente:</strong> El Cliente conserva en todo momento la propiedad de su marca, logotipos, identidad visual, nombre comercial, cuentas de redes sociales y cualquier activo preexistente de su propiedad que comparta con la Agencia para la prestación del servicio.</p>
+
+                <p><strong>7.2 Entregables:</strong> Los contenidos, piezas gráficas, fotografías, videos y demás materiales creativos producidos por la Agencia específicamente para el Cliente y pagados íntegramente por este, serán de propiedad del Cliente al momento de su liquidación total, salvo que en la propuesta de servicios se indique lo contrario.</p>
+
+                <p><strong>7.3 Propiedad de la Agencia:</strong> Los métodos, procesos, herramientas, plantillas, flujos de trabajo, know-how y cualquier propiedad intelectual preexistente de la Agencia utilizada en la prestación del servicio permanecen siendo propiedad exclusiva de la Agencia. El Cliente no adquiere ningún derecho sobre los mismos más allá del uso implícito en la ejecución del servicio.</p>
+
+                <p><strong>7.4 Portafolio:</strong> La Agencia se reserva el derecho de incluir en su portafolio, sitio web y materiales de presentación los trabajos realizados para el Cliente, salvo acuerdo expreso en contrario. En caso de objeción del Cliente, éste deberá notificar por escrito dentro de los 30 días siguientes a la entrega del trabajo.</p>
+
+                <p><strong>7.5 Derechos de terceros:</strong> El Cliente garantiza que los activos, imágenes, textos y materiales que suministre a la Agencia están libres de gravámenes y derechos de terceros, liberando a la Agencia de toda responsabilidad ante eventuales reclamaciones de titulares de derechos por el uso de dichos materiales.</p>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 8: DATOS PERSONALES ──────────── -->
+            <div class="contract-section" id="datos">
+                <div class="section-number">Cláusula 8</div>
+                <h2>Tratamiento de Datos Personales</h2>
+
+                <p>En el marco de la prestación de servicios digitales, la Agencia podrá acceder y procesar datos de audiencias y usuarios de las plataformas del Cliente. Al respecto se establece lo siguiente:</p>
+
+                <ul>
+                    <li>La Agencia tratará los datos de audiencias del Cliente <strong>exclusivamente para la prestación del servicio contratado</strong>, sin utilizarlos para fines propios ni cederlos a terceros.</li>
+                    <li>Tanto la Agencia como el Cliente se comprometen a cumplir con la <strong>Ley N° 19.628 sobre Protección de la Vida Privada</strong> y sus modificaciones, así como con las políticas de privacidad y términos de servicio de cada plataforma digital.</li>
+                    <li>El Cliente es responsable de contar con las autorizaciones necesarias de sus usuarios para el tratamiento de sus datos en el marco de campañas digitales.</li>
+                    <li>La Agencia implementará medidas de seguridad razonables para proteger los datos a los que accede en el marco del servicio.</li>
+                    <li>Los accesos y credenciales compartidas por el Cliente serán almacenados de forma segura y revocados a la terminación del contrato si el Cliente así lo solicita.</li>
+                </ul>
+
+                <p>En caso de brecha de seguridad que afecte datos del Cliente, la Agencia notificará al Cliente a la brevedad posible, colaborando en la identificación del incidente y las medidas de mitigación correspondientes.</p>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 9: LIMITACIÓN RESPONSABILIDAD── -->
+            <div class="contract-section" id="limitacion">
+                <div class="section-number">Cláusula 9</div>
+                <h2>Limitación General de Responsabilidad</h2>
+
+                <p>Sin perjuicio de las disposiciones particulares establecidas en las cláusulas anteriores, las partes acuerdan las siguientes limitaciones de responsabilidad:</p>
+
+                <p><strong>9.1</strong> La Agencia no será responsable por daños indirectos, pérdida de ganancias, lucro cesante, pérdida de reputación ni daños consecuenciales derivados de la ejecución o inejecución del servicio, salvo que medie dolo o culpa grave de su parte debidamente acreditada.</p>
+
+                <p><strong>9.2</strong> La responsabilidad máxima de la Agencia ante el Cliente, en caso de incumplimiento imputable, quedará limitada al monto total efectivamente pagado por el Cliente por los servicios directamente relacionados con el daño, durante los últimos tres (3) meses anteriores al hecho generador.</p>
+
+                <p><strong>9.3</strong> La Agencia no garantiza resultados específicos en términos de ventas, seguidores, alcance orgánico, posicionamiento en buscadores ni ningún otro indicador de negocio del Cliente, dado que estos dependen de factores ajenos a su control, incluyendo la calidad del producto o servicio del Cliente, el comportamiento del mercado, y los cambios en los algoritmos de las plataformas.</p>
+
+                <p><strong>9.4</strong> Ninguna de las partes será responsable por incumplimientos derivados de caso fortuito o fuerza mayor, incluyendo fallas masivas de plataformas digitales, cambios abruptos en políticas de redes sociales, pandemias, desastres naturales u otras circunstancias ajenas a la voluntad de las partes.</p>
+
+                <p><strong>9.5</strong> El Cliente es el único responsable ante las plataformas digitales (Meta, TikTok, Google, LinkedIn y otras) por el cumplimiento de sus términos de servicio y políticas publicitarias. La Agencia asesorará al Cliente al respecto, pero la responsabilidad final recae en el titular de las cuentas.</p>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 10: VIGENCIA ──────────────────── -->
+            <div class="contract-section" id="vigencia">
+                <div class="section-number">Cláusula 10</div>
+                <h2>Vigencia y Terminación</h2>
+
+                <p><strong>10.1 Vigencia:</strong> El presente contrato entrará en vigor en la fecha de su suscripción y tendrá la duración establecida en la propuesta de servicios asociada. A falta de plazo específico, se entenderá de duración indefinida.</p>
+
+                <p><strong>10.2 Renovación:</strong> Los contratos por plazo definido se renovarán automáticamente por períodos iguales, salvo que cualquiera de las partes notifique por escrito su voluntad de no renovar con al menos <strong>30 días corridos</strong> de anticipación al vencimiento.</p>
+
+                <p><strong>10.3 Terminación anticipada por mutuo acuerdo:</strong> Ambas partes podrán poner término al contrato en cualquier momento mediante acuerdo escrito, regulando los servicios pendientes y honorarios proporcionales correspondientes.</p>
+
+                <p><strong>10.4 Terminación por incumplimiento:</strong> Cualquiera de las partes podrá resolver el contrato ante incumplimiento grave de la otra, previa notificación escrita otorgando un plazo de <strong>10 días hábiles</strong> para subsanar el incumplimiento. Si este no es subsanado, la resolución operará de pleno derecho.</p>
+
+                <p><strong>10.5 Efectos de la terminación:</strong> Al término del contrato:</p>
+                <ul>
+                    <li>La Agencia restituirá al Cliente todos los accesos y credenciales recibidos.</li>
+                    <li>Los materiales creativos pagados íntegramente serán entregados al Cliente.</li>
+                    <li>Las obligaciones de confidencialidad se mantendrán vigentes por el período establecido en la Cláusula 4.</li>
+                    <li>Los honorarios devengados hasta la fecha de término serán exigibles de inmediato.</li>
+                </ul>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 11: JURISDICCIÓN ──────────────── -->
+            <div class="contract-section" id="jurisdiccion">
+                <div class="section-number">Cláusula 11</div>
+                <h2>Jurisdicción y Ley Aplicable</h2>
+
+                <p>El presente contrato se rige íntegramente por las leyes de la <strong>República de Chile</strong>.</p>
+
+                <p>Para todos los efectos legales derivados de la interpretación, cumplimiento o incumplimiento del presente contrato, las partes se someten expresamente a la jurisdicción de los <strong>Tribunales Ordinarios de Justicia de la ciudad de Santiago de Chile</strong>, renunciando a cualquier otro fuero o jurisdicción que pudiera corresponderles.</p>
+
+                <p>Sin perjuicio de lo anterior, las partes podrán, de común acuerdo y previo a cualquier acción judicial, someter sus diferencias a un proceso de <strong>mediación extrajudicial</strong> ante mediador acreditado, con el objetivo de alcanzar una solución consensuada dentro de un plazo de 30 días corridos.</p>
+
+                <p>La nulidad o inaplicabilidad de cualquier cláusula del presente contrato no afectará la validez de las restantes, las que continuarán plenamente vigentes.</p>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- ── SECCIÓN 12: FIRMA ─────────────────────── -->
+            <div class="contract-section" id="firmas">
+                <div class="section-number">Cláusula 12</div>
+                <h2>Aceptación y Firma</h2>
+
+                <p>Las partes declaran haber leído íntegramente el presente contrato, comprender su contenido y aceptar libremente todas y cada una de sus cláusulas.</p>
+
+                <p>El contrato puede ser suscrito:</p>
+                <ul>
+                    <li>En formato físico con firma manuscrita en dos ejemplares de igual valor.</li>
+                    <li>En formato digital mediante firma electrónica simple o avanzada conforme a la <strong>Ley N° 19.799</strong> sobre documentos electrónicos, firma electrónica y servicios de certificación.</li>
+                    <li>Mediante aceptación expresa por correo electrónico o plataforma digital habilitada al efecto.</li>
+                </ul>
+
+                <div class="signature-block">
+                    <div class="signature-party">
+                        <h4>Por la Agencia</h4>
+                        <div class="party-name">PVB Estudio Creativo</div>
+                        <div class="party-detail">Francisco Vial Brown</div>
+                        <div class="party-detail">Director Creativo</div>
+                        <div class="party-detail">Santiago, Chile</div>
+                        <div class="signature-line"></div>
+                        <div class="signature-label">FIRMA / FECHA</div>
+                    </div>
+                    <div class="signature-party">
+                        <h4>Por el Cliente</h4>
+                        <div class="party-name">________________________________</div>
+                        <div class="party-detail">Nombre completo</div>
+                        <div class="party-detail">RUT / RUC</div>
+                        <div class="party-detail">Representación</div>
+                        <div class="signature-line"></div>
+                        <div class="signature-label">FIRMA / FECHA</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- /contract-document -->
+
+        <!-- CTA -->
+        <div class="contract-cta">
+            <p>¿Listo para comenzar tu proyecto con PVB Estudio Creativo?</p>
+            <a href="https://wa.me/56944328662?text=Hola!%20Lei%20el%20contrato%20y%20quiero%20iniciar%20un%20proyecto%20con%20PVB%20Estudio%20Creativo" target="_blank" rel="noopener" class="btn-gold">INICIAR PROYECTO</a>
+        </div>
+
+    </div>
+    <!-- /contract-page -->
+
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.style.background = window.scrollY > 50
+                ? 'rgba(26,26,26,0.98)'
+                : 'transparent';
+        });
+
+        // Back to top
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            backToTop.style.opacity = window.scrollY > 400 ? '1' : '0';
+        });
+        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        // Hamburger
+        const hamburger = document.getElementById('hamburger');
+        const navMenu = document.getElementById('navMenu');
+        hamburger?.addEventListener('click', () => navMenu.classList.toggle('active'));
+    </script>
+</body>
+</html>

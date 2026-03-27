@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red de Proveedores — PVB Estudio Creativo</title>
+    <meta name="description" content="¿Tienes un vehículo, locación, vestuario o eres modelo? Súmate a la red de producción de PVB Estudio Creativo. Te llamamos cuando hay trabajo.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ── HERO ── */
+        .prov-hero {
+            background: var(--color-dark);
+            color: var(--white);
+            padding: 140px var(--spacing-md) 80px;
+        }
+        .prov-hero-inner {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .prov-hero .label {
+            font-size: 10px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .prov-hero h1 {
+            font-size: clamp(2.4rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.05;
+            margin-bottom: 24px;
+        }
+        .prov-hero h1 em {
+            font-style: normal;
+            color: #888;
+        }
+        .prov-hero p {
+            font-size: 1.05rem;
+            color: #aaa;
+            line-height: 1.7;
+            max-width: 520px;
+        }
+        .prov-hero .francisco {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 1px solid #333;
+        }
+        .prov-hero .francisco-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .prov-hero .francisco-info p {
+            font-size: 0.82rem;
+            color: #666;
+            margin: 0;
+        }
+        .prov-hero .francisco-info strong {
+            display: block;
+            font-size: 0.92rem;
+            color: var(--white);
+            margin-bottom: 2px;
+        }
+
+        /* ── CATEGORÍAS ── */
+        .categorias-section {
+            padding: var(--spacing-xl) var(--spacing-md);
+            background: var(--color-light);
+        }
+        .categorias-section h2 {
+            font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .categorias-section .sub {
+            text-align: center;
+            color: var(--medium-gray);
+            margin-bottom: 48px;
+        }
+        .categorias-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .cat-card {
+            background: var(--white);
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cat-card:hover, .cat-card.selected {
+            border-color: var(--color-dark);
+            background: var(--color-dark);
+            color: var(--white);
+        }
+        .cat-card .cat-icon { font-size: 30px; margin-bottom: 10px; }
+        .cat-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+        .cat-card span { font-size: 0.75rem; color: var(--medium-gray); }
+        .cat-card:hover span, .cat-card.selected span { color: #aaa; }
+
+        /* ── FORMULARIO ── */
+        .form-section {
+            padding: var(--spacing-xl) var(--spacing-md);
+            background: var(--white);
+        }
+        .form-container {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+        .form-header {
+            margin-bottom: 40px;
+        }
+        .form-header .label {
+            font-size: 10px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--medium-gray);
+            margin-bottom: 12px;
+        }
+        .form-header h2 {
+            font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+            font-weight: 900;
+        }
+        .form-header p {
+            color: var(--medium-gray);
+            margin-top: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--color-dark);
+            margin-bottom: 8px;
+        }
+        .form-group label .optional {
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+            color: var(--medium-gray);
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: var(--color-dark);
+            background: var(--white);
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--color-dark);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-group .hint {
+            font-size: 0.78rem;
+            color: var(--medium-gray);
+            margin-top: 6px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Upload de fotos */
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--color-dark);
+            background: #fafafa;
+        }
+        .upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        .upload-area .upload-icon { font-size: 32px; margin-bottom: 10px; }
+        .upload-area p { font-size: 0.9rem; color: var(--medium-gray); margin: 0; }
+        .upload-area strong { color: var(--color-dark); }
+        .upload-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .preview-thumb {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #eee;
+        }
+        .preview-thumb-remove {
+            position: relative;
+        }
+        .preview-thumb-remove button {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--color-dark);
+            color: var(--white);
+            border: none;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Asset adicional */
+        .add-asset-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            color: var(--medium-gray);
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .add-asset-btn:hover {
+            border-color: var(--color-dark);
+            color: var(--color-dark);
+        }
+
+        .asset-block {
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .asset-block .asset-number {
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--medium-gray);
+            margin-bottom: 16px;
+        }
+        .asset-block .remove-asset {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #ccc;
+            cursor: pointer;
+        }
+        .asset-block .remove-asset:hover { color: var(--color-dark); }
+
+        /* Divider */
+        .form-divider {
+            border: none;
+            border-top: 1px solid #f0f0f0;
+            margin: 32px 0;
+        }
+
+        /* Submit */
+        .form-submit {
+            margin-top: 32px;
+        }
+        .form-submit .commission-note {
+            background: #f7f7f7;
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-size: 0.82rem;
+            color: var(--medium-gray);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .form-submit .commission-note strong { color: var(--color-dark); }
+        .btn-submit {
+            width: 100%;
+            padding: 18px;
+            background: var(--color-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover { background: #333; }
+        .btn-submit:disabled { background: #999; cursor: not-allowed; }
+
+        /* Success */
+        .success-screen {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .success-screen .success-icon { font-size: 56px; margin-bottom: 20px; }
+        .success-screen h3 { font-size: 1.8rem; font-weight: 900; margin-bottom: 12px; }
+        .success-screen p { color: var(--medium-gray); max-width: 440px; margin: 0 auto 24px; }
+
+        /* Error message */
+        .form-error {
+            background: #fff0f0;
+            border: 1px solid #ffcccc;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            color: #c00;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="pvb-logo.svg" alt="PVB Estudio Creativo" class="logo-image">
+                </a>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html#work" class="nav-link">TRABAJO</a>
+                <a href="proceso.html" class="nav-link">PROCESO</a>
+                <a href="servicios.html" class="nav-link">SERVICIOS</a>
+                <a href="login.html" class="nav-link">CLIENT LOGIN</a>
+                <a href="index.html#contact" class="nav-link">CONTACTO</a>
+                <a href="https://wa.me/56944328662?text=Hola!%20Quiero%20iniciar%20un%20proyecto%20con%20PVB%20Estudio%20Creativo" target="_blank" rel="noopener" class="btn btn-primary">INICIAR PROYECTO</a>
+            </div>
+            <button class="hamburger" id="hamburger">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="prov-hero">
+        <div class="prov-hero-inner">
+            <p class="label">PVB Estudio Creativo — Red de Producción</p>
+            <h1>Si lo tienes,<br><em>lo ponemos</em><br>en pantalla.</h1>
+            <p>Producimos campañas, comerciales y contenido para marcas en Chile y el extranjero. Cuando necesitamos algo para un set — un auto, una locación, un modelo, utilería — llamamos primero a nuestra red.</p>
+            <p style="margin-top: 16px; color: #aaa;">Regístrate una vez. Te contactamos cuando hay un proyecto que hace fit con lo que tienes.</p>
+            <div class="francisco">
+                <div class="francisco-avatar">📞</div>
+                <div class="francisco-info">
+                    <strong>Francisco Vial Brown</strong>
+                    <p>Director de Producción — PVB Estudio Creativo</p>
+                    <p>Yo mismo coordino cada producción y mantengo la red activa.</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Categorías -->
+    <section class="categorias-section">
+        <h2>¿Qué tienes para ofrecer?</h2>
+        <p class="sub">Selecciona la categoría que mejor describe lo que puedes aportar a una producción.</p>
+        <div class="categorias-grid">
+            <div class="cat-card" data-cat="vehiculos">
+                <div class="cat-icon">🚗</div>
+                <h4>Vehículos</h4>
+                <span>Autos, motos, camiones, bicis, lanchas...</span>
+            </div>
+            <div class="cat-card" data-cat="locaciones">
+                <div class="cat-icon">🏠</div>
+                <h4>Locaciones</h4>
+                <span>Casas, oficinas, galpones, exteriores...</span>
+            </div>
+            <div class="cat-card" data-cat="modelos">
+                <div class="cat-icon">🧍</div>
+                <h4>Modelos / Talent</h4>
+                <span>Modelos, actores, extras, animales...</span>
+            </div>
+            <div class="cat-card" data-cat="utileria">
+                <div class="cat-icon">🪑</div>
+                <h4>Utilería</h4>
+                <span>Muebles, props, elementos de arte...</span>
+            </div>
+            <div class="cat-card" data-cat="vestuario">
+                <div class="cat-icon">👗</div>
+                <h4>Vestuario</h4>
+                <span>Ropa, accesorios, styling...</span>
+            </div>
+            <div class="cat-card" data-cat="catering">
+                <div class="cat-icon">🍱</div>
+                <h4>Catering</h4>
+                <span>Alimentación en set, coffee break...</span>
+            </div>
+            <div class="cat-card" data-cat="otro">
+                <div class="cat-icon">✨</div>
+                <h4>Otro</h4>
+                <span>Algo que no está en la lista...</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Formulario -->
+    <section class="form-section" id="registro">
+        <div class="form-container">
+            <div class="form-header">
+                <p class="label">Registro de Proveedor</p>
+                <h2>Cuéntanos de ti</h2>
+                <p>Completar el formulario toma 3 minutos. Una vez revisado tu perfil, quedas en nuestra base y te contactamos cuando tengamos un proyecto.</p>
+            </div>
+
+            <div class="form-error" id="formError"></div>
+
+            <form id="proveedorForm" novalidate>
+
+                <!-- Datos personales -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fullName">Nombre completo</label>
+                        <input type="text" id="fullName" name="fullName" placeholder="Tu nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Teléfono / WhatsApp</label>
+                        <input type="tel" id="phone" name="phone" placeholder="+56 9 XXXX XXXX" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email <span class="optional">(opcional)</span></label>
+                        <input type="email" id="email" name="email" placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="instagram">Instagram <span class="optional">(opcional)</span></label>
+                        <input type="text" id="instagram" name="instagram" placeholder="@tucuenta">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Categoría principal</label>
+                    <select id="category" name="category" required>
+                        <option value="">Selecciona una categoría...</option>
+                        <option value="vehiculos">Vehículos</option>
+                        <option value="locaciones">Locaciones</option>
+                        <option value="modelos">Modelos / Talent</option>
+                        <option value="utileria">Utilería</option>
+                        <option value="vestuario">Vestuario</option>
+                        <option value="catering">Catering</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+
+                <hr class="form-divider">
+
+                <!-- Assets -->
+                <div class="form-group">
+                    <label>Lo que ofreces</label>
+                    <p style="font-size:0.85rem;color:var(--medium-gray);margin-bottom:16px;">
+                        Describe cada bien o servicio que puedes poner a disposición de una producción. Sé específico — los detalles son los que generan las llamadas.
+                    </p>
+
+                    <div id="assetsContainer">
+                        <!-- Asset 1 (siempre visible) -->
+                        <div class="asset-block" id="asset-0">
+                            <p class="asset-number">Asset 01</p>
+                            <div class="form-group">
+                                <label>Título</label>
+                                <input type="text" name="asset_title_0" placeholder="Ej: Bicicleta de montaña azul" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Descripción detallada</label>
+                                <textarea name="asset_desc_0" placeholder="Ej: Trek 2022, frenos hidráulicos perfecto estado, ruedas 29&quot;, disponible con o sin casco y guantes de repuesto." required></textarea>
+                                <p class="hint">Marca, modelo, año, color, estado, condiciones de uso — todo suma.</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Zona / Disponibilidad</label>
+                                <input type="text" name="asset_location_0" placeholder="Ej: Santiago Oriente — disponible con 48hrs de aviso">
+                            </div>
+                            <div class="form-group">
+                                <label>Fotos <span class="optional">(hasta 5 por asset)</span></label>
+                                <div class="upload-area" id="uploadArea-0">
+                                    <input type="file" accept="image/*" multiple data-asset="0" class="photo-input">
+                                    <div class="upload-icon">📷</div>
+                                    <p><strong>Sube las fotos aquí</strong></p>
+                                    <p>JPG, PNG · Máx 5MB por foto</p>
+                                </div>
+                                <div class="upload-preview" id="preview-0"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="add-asset-btn" id="addAssetBtn">
+                        + Agregar otro asset
+                    </button>
+                </div>
+
+                <hr class="form-divider">
+
+                <div class="form-submit">
+                    <div class="commission-note">
+                        <strong>¿Cómo funciona?</strong> Cuando un proyecto hace match con lo que tienes, te contactamos directamente. Si se concreta, PVB aplica una comisión de coordinación del 19% sobre el valor acordado. Sin exclusividad — puedes trabajar con quien quieras.
+                    </div>
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        REGISTRARME EN LA RED
+                    </button>
+                </div>
+
+            </form>
+
+            <!-- Éxito -->
+            <div class="success-screen" id="successScreen">
+                <div class="success-icon">✅</div>
+                <h3>¡Quedaste registrado!</h3>
+                <p>Revisaré tu perfil personalmente y te confirmo por WhatsApp. Cuando tengamos un proyecto que haga fit, eres el primero al que llamamos.</p>
+                <p style="font-size:0.85rem;color:var(--medium-gray);margin-top:8px;">— Francisco Vial Brown, PVB Estudio Creativo</p>
+                <a href="index.html" class="btn btn-primary" style="margin-top:24px;display:inline-block;">VOLVER AL INICIO</a>
+            </div>
+
+        </div>
+    </section>
+
+    <script>
+        const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Navbar scroll
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 50));
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('navMenu').classList.toggle('open');
+        });
+
+        // Categoría clickeable → rellena el select
+        document.querySelectorAll('.cat-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                document.getElementById('category').value = card.dataset.cat;
+                document.getElementById('registro').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // ── ASSETS DINÁMICOS ──
+        let assetCount = 1;
+        const filesMap = {}; // assetIndex → FileList
+
+        document.getElementById('addAssetBtn').addEventListener('click', () => {
+            const idx = assetCount;
+            const block = document.createElement('div');
+            block.className = 'asset-block';
+            block.id = `asset-${idx}`;
+            block.innerHTML = `
+                <p class="asset-number">Asset ${String(idx + 1).padStart(2, '0')}</p>
+                <button type="button" class="remove-asset" data-idx="${idx}">×</button>
+                <div class="form-group">
+                    <label>Título</label>
+                    <input type="text" name="asset_title_${idx}" placeholder="Ej: Locación casa moderna con piscina">
+                </div>
+                <div class="form-group">
+                    <label>Descripción detallada</label>
+                    <textarea name="asset_desc_${idx}" placeholder="Describe el asset con todos los detalles relevantes para una producción."></textarea>
+                    <p class="hint">Marca, modelo, año, color, estado, condiciones de uso — todo suma.</p>
+                </div>
+                <div class="form-group">
+                    <label>Zona / Disponibilidad</label>
+                    <input type="text" name="asset_location_${idx}" placeholder="Ej: Las Condes — disponible fines de semana">
+                </div>
+                <div class="form-group">
+                    <label>Fotos <span class="optional">(hasta 5 por asset)</span></label>
+                    <div class="upload-area" id="uploadArea-${idx}">
+                        <input type="file" accept="image/*" multiple data-asset="${idx}" class="photo-input">
+                        <div class="upload-icon">📷</div>
+                        <p><strong>Sube las fotos aquí</strong></p>
+                        <p>JPG, PNG · Máx 5MB por foto</p>
+                    </div>
+                    <div class="upload-preview" id="preview-${idx}"></div>
+                </div>`;
+            document.getElementById('assetsContainer').appendChild(block);
+            attachPhotoHandler(block.querySelector('.photo-input'));
+            block.querySelector('.remove-asset').addEventListener('click', () => block.remove());
+            assetCount++;
+        });
+
+        // ── FOTOS ──
+        function attachPhotoHandler(input) {
+            input.addEventListener('change', () => {
+                const idx = input.dataset.asset;
+                filesMap[idx] = Array.from(input.files).slice(0, 5);
+                renderPreviews(idx);
+            });
+        }
+        function renderPreviews(idx) {
+            const container = document.getElementById(`preview-${idx}`);
+            container.innerHTML = '';
+            (filesMap[idx] || []).forEach((file, i) => {
+                const url = URL.createObjectURL(file);
+                const wrap = document.createElement('div');
+                wrap.className = 'preview-thumb-remove';
+                wrap.style.position = 'relative';
+                wrap.style.display = 'inline-block';
+                wrap.innerHTML = `<img src="${url}" class="preview-thumb"><button type="button">×</button>`;
+                wrap.querySelector('button').addEventListener('click', () => {
+                    filesMap[idx].splice(i, 1);
+                    renderPreviews(idx);
+                });
+                container.appendChild(wrap);
+            });
+        }
+        // Inicializar primer input
+        attachPhotoHandler(document.querySelector('.photo-input'));
+
+        // ── SUBMIT ──
+        document.getElementById('proveedorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const errorEl = document.getElementById('formError');
+            errorEl.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = 'ENVIANDO...';
+
+            try {
+                const form = e.target;
+
+                // 1. Insertar proveedor
+                const { data: provider, error: provErr } = await supabase
+                    .from('providers')
+                    .insert({
+                        full_name: form.fullName.value.trim(),
+                        phone: form.phone.value.trim(),
+                        email: form.email.value.trim() || null,
+                        instagram: form.instagram.value.trim() || null,
+                        category: form.category.value,
+                        status: 'pending'
+                    })
+                    .select()
+                    .single();
+
+                if (provErr) throw provErr;
+
+                // 2. Insertar assets
+                const assetBlocks = document.querySelectorAll('.asset-block');
+                for (const block of assetBlocks) {
+                    const idx = block.id.replace('asset-', '');
+                    const titleInput = block.querySelector(`[name="asset_title_${idx}"]`);
+                    const descInput = block.querySelector(`[name="asset_desc_${idx}"]`);
+                    const locInput = block.querySelector(`[name="asset_location_${idx}"]`);
+
+                    if (!titleInput?.value.trim()) continue;
+
+                    const { data: asset, error: assetErr } = await supabase
+                        .from('provider_assets')
+                        .insert({
+                            provider_id: provider.id,
+                            title: titleInput.value.trim(),
+                            description: descInput?.value.trim() || '',
+                            category: form.category.value,
+                            availability_notes: locInput?.value.trim() || null,
+                            is_active: true
+                        })
+                        .select()
+                        .single();
+
+                    if (assetErr) throw assetErr;
+
+                    // 3. Subir fotos a Storage
+                    const photos = filesMap[idx] || [];
+                    for (let i = 0; i < photos.length; i++) {
+                        const file = photos[i];
+                        const ext = file.name.split('.').pop();
+                        const path = `${provider.id}/${asset.id}/${i}.${ext}`;
+
+                        const { error: uploadErr } = await supabase.storage
+                            .from('provider-assets')
+                            .upload(path, file, { upsert: true });
+
+                        if (!uploadErr) {
+                            const { data: urlData } = supabase.storage
+                                .from('provider-assets')
+                                .getPublicUrl(path);
+
+                            await supabase.from('provider_asset_photos').insert({
+                                asset_id: asset.id,
+                                storage_path: path,
+                                url: urlData.publicUrl,
+                                is_cover: i === 0,
+                                sort_order: i
+                            });
+                        }
+                    }
+                }
+
+                // Éxito
+                document.getElementById('proveedorForm').style.display = 'none';
+                document.getElementById('successScreen').style.display = 'block';
+
+            } catch (err) {
+                console.error(err);
+                errorEl.textContent = 'Hubo un problema al enviar el formulario. Intenta de nuevo o escríbenos por WhatsApp.';
+                errorEl.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'REGISTRARME EN LA RED';
+            }
+        });
+    </script>
+</body>
+</html>

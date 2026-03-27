@@ -281,10 +281,378 @@
       margin-bottom: 2rem;
     }
 
+    /* ── Contrato (step 5) ── */
+    .contract-scroll-box {
+      background: var(--gray-800);
+      border: 1px solid var(--gray-700);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      max-height: 340px;
+      overflow-y: auto;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--gray-300);
+      margin-bottom: 1.25rem;
+    }
+
+    .contract-scroll-box h4 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--red);
+      margin: 1rem 0 0.4rem;
+    }
+
+    .contract-scroll-box h4:first-child { margin-top: 0; }
+
+    .contract-scroll-box ul {
+      padding-left: 1.1rem;
+      margin: 0.3rem 0 0.6rem;
+    }
+
+    .contract-scroll-box li { margin-bottom: 0.3rem; }
+
+    .accept-check-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: rgba(201,169,110,0.07);
+      border: 1px solid rgba(201,169,110,0.25);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+    }
+
+    .accept-check-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      accent-color: var(--red);
+      cursor: pointer;
+    }
+
+    .accept-check-row label {
+      font-size: 0.88rem;
+      color: var(--gray-300);
+      cursor: pointer;
+      line-height: 1.5;
+    }
+
+    .accept-check-row label strong { color: var(--white); }
+
+    .scroll-hint {
+      font-size: 0.72rem;
+      color: var(--gray-600);
+      text-align: right;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── Pago (step 6) ── */
+    .plan-card {
+      background: var(--gray-900);
+      border: 1px solid var(--gray-700);
+      border-radius: 12px;
+      padding: 1.75rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .plan-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--red);
+    }
+
+    .plan-badge {
+      display: inline-block;
+      background: rgba(201,169,110,0.12);
+      color: var(--red);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.85rem;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+    }
+
+    .plan-price {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+
+    .plan-price span {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--gray-400);
+    }
+
+    .plan-desc {
+      font-size: 0.83rem;
+      color: var(--gray-400);
+      margin-bottom: 1.5rem;
+    }
+
+    .plan-includes {
+      text-align: left;
+      display: inline-block;
+    }
+
+    .plan-includes li {
+      font-size: 0.83rem;
+      color: var(--gray-300);
+      margin-bottom: 0.4rem;
+      list-style: none;
+      padding-left: 1.25rem;
+      position: relative;
+    }
+
+    .plan-includes li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .payment-methods {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .payment-option {
+      position: relative;
+    }
+
+    .payment-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+    }
+
+    .payment-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--gray-800);
+      border: 1px solid var(--gray-700);
+      border-radius: 10px;
+      padding: 1rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .payment-option label .pm-icon {
+      font-size: 1.5rem;
+    }
+
+    .payment-option label .pm-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .payment-option label .pm-detail {
+      font-size: 0.7rem;
+      color: var(--gray-500);
+    }
+
+    .payment-option input:checked + label {
+      border-color: var(--red);
+      background: rgba(201,169,110,0.08);
+      box-shadow: 0 0 0 2px rgba(201,169,110,0.2);
+    }
+
+    .payment-option label:hover {
+      border-color: var(--gray-500);
+    }
+
+    .contract-footer-note {
+      margin-top: 1rem;
+      font-size: 0.78rem;
+      color: #666;
+    }
+
+    .contract-footer-note a { color: var(--red); }
+
+    .payment-subtitle { margin-top: 0; }
+
+    .transfer-info-box {
+      display: none;
+      margin-top: 1rem;
+      background: var(--gray-800);
+      border: 1px solid var(--gray-700);
+      border-radius: 8px;
+      padding: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--gray-300);
+      line-height: 1.8;
+    }
+
+    .transfer-info-box strong {
+      color: var(--white);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .transfer-info-box .transfer-note {
+      color: var(--gray-500);
+      font-size: 0.78rem;
+    }
+
+    /* ── Referral system ── */
+    .price-display {
+      margin-bottom: 0.5rem;
+    }
+
+    .price-original {
+      font-size: 1rem;
+      color: var(--gray-500);
+      text-decoration: line-through;
+      display: none;
+      margin-bottom: 0.15rem;
+    }
+
+    .price-original.visible { display: block; }
+
+    .plan-price { transition: color 0.3s; }
+    .plan-price.discounted { color: #4ade80; }
+
+    .discount-badge {
+      display: none;
+      background: rgba(74,222,128,0.12);
+      border: 1px solid rgba(74,222,128,0.3);
+      color: #4ade80;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.85rem;
+      border-radius: 20px;
+      margin-bottom: 0.75rem;
+    }
+
+    .discount-badge.visible { display: inline-block; }
+
+    .referral-section {
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--gray-800);
+    }
+
+    .referral-label {
+      font-size: 0.78rem;
+      color: var(--gray-400);
+      margin-bottom: 0.6rem;
+      display: block;
+    }
+
+    .referral-input-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .referral-input-row .form-control {
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.85rem;
+    }
+
+    .btn-apply {
+      background: var(--gray-700);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      padding: 0 1.25rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-apply:hover { background: var(--gray-600); }
+    .btn-apply.applied { background: #16A34A; }
+
+    .referral-feedback {
+      font-size: 0.78rem;
+      margin-top: 0.4rem;
+      min-height: 1.2em;
+    }
+
+    .referral-feedback.ok  { color: #4ade80; }
+    .referral-feedback.err { color: #f87171; }
+
+    /* ── Success: referral code card ── */
+    .referral-code-card {
+      background: var(--gray-900);
+      border: 1px solid var(--gray-700);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem auto;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .referral-code-card .rc-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gray-500);
+      margin-bottom: 0.6rem;
+    }
+
+    .referral-code-card .rc-code {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--red);
+      letter-spacing: 0.12em;
+      margin-bottom: 0.5rem;
+    }
+
+    .referral-code-card .rc-desc {
+      font-size: 0.78rem;
+      color: var(--gray-400);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    .btn-copy {
+      background: var(--gray-800);
+      border: 1px solid var(--gray-700);
+      color: var(--white);
+      border-radius: 8px;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .btn-copy:hover { background: var(--gray-700); }
+    .btn-copy.copied { background: #16A34A; border-color: #16A34A; }
+
     @media (max-width: 600px) {
       .form-grid { grid-template-columns: 1fr; }
       .form-grid .form-group.full { grid-column: 1; }
       .progress-label { display: none; }
+      .payment-methods { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -315,12 +683,16 @@
       <div class="progress-step"        id="step-bar-2"></div>
       <div class="progress-step"        id="step-bar-3"></div>
       <div class="progress-step"        id="step-bar-4"></div>
+      <div class="progress-step"        id="step-bar-5"></div>
+      <div class="progress-step"        id="step-bar-6"></div>
     </div>
     <div class="progress-labels">
       <span class="progress-label active" onclick="goToStep(1)">Negocio</span>
       <span class="progress-label"        onclick="goToStep(2)">Audiencia</span>
       <span class="progress-label"        onclick="goToStep(3)">Posicionamiento</span>
       <span class="progress-label"        onclick="goToStep(4)">Objetivos</span>
+      <span class="progress-label"        onclick="goToStep(5)">Contrato</span>
+      <span class="progress-label"        onclick="goToStep(6)">Pago</span>
     </div>
 
     <!-- Form -->
@@ -473,6 +845,153 @@
         </div>
       </div>
 
+      <!-- Step 5: Contrato -->
+      <div class="step-content" id="step-5">
+        <div class="form-section">
+          <div class="form-section-title">Contrato de Servicios y Confidencialidad</div>
+
+          <p class="scroll-hint">↓ Desplázate para leer el contrato completo antes de aceptar</p>
+
+          <div class="contract-scroll-box">
+            <h4>1. Rol de la Agencia</h4>
+            <p>PVB Estudio Creativo actúa como <strong>colaborador externo e independiente</strong>. No es representante legal ni empleado del Cliente. Administra las cuentas digitales por delegación expresa, siendo el Cliente el titular en todo momento.</p>
+
+            <h4>2. Confidencialidad de Métricas y Datos</h4>
+            <p>La Agencia se compromete a guardar estricta confidencialidad por <strong>3 años</strong> post-contrato sobre:</p>
+            <ul>
+              <li>Métricas: engagement, alcance, conversiones, ROAS, ROI, CPM, CPC.</li>
+              <li>Datos de audiencia: demografía, segmentos, intereses, comportamiento.</li>
+              <li>Estrategia de contenidos, calendarios editoriales y accesos a plataformas.</li>
+              <li>Información comercial y presupuestos publicitarios del Cliente.</li>
+            </ul>
+            <p>Esta información no será divulgada ni comercializada a terceros bajo ninguna circunstancia.</p>
+
+            <h4>3. Responsabilidad Editorial</h4>
+            <p>Todo contenido es aprobado por el Cliente antes de publicarse (expresa o tácitamente en 48h hábiles). Una vez publicado, la <strong>responsabilidad editorial recae íntegramente sobre el Cliente</strong> como titular de las cuentas y de la marca.</p>
+
+            <h4>4. Exención por Comentarios de Terceros</h4>
+            <p><strong>La Agencia no es responsable</strong> por el contenido generado por usuarios, seguidores o terceros en las plataformas del Cliente. Esto incluye:</p>
+            <ul>
+              <li>Comentarios negativos, críticas o reseñas de usuarios.</li>
+              <li>Crisis de reputación derivadas de comentarios virales o externos.</li>
+              <li>Cambios en algoritmos de plataformas (Meta, TikTok, Google, etc.).</li>
+              <li>Suplantación de identidad en cuentas no administradas por la Agencia.</li>
+            </ul>
+
+            <h4>5. Propiedad Intelectual</h4>
+            <p>El Cliente conserva sus activos de marca. Los entregables pagados íntegramente pasan a propiedad del Cliente. La Agencia puede incluir los trabajos en su portafolio salvo acuerdo en contrario.</p>
+
+            <h4>6. Limitación de Responsabilidad</h4>
+            <p>La Agencia no garantiza resultados específicos de ventas ni seguidores. Su responsabilidad máxima queda limitada al monto pagado en los 3 meses anteriores al hecho. No asume daños indirectos ni lucro cesante.</p>
+
+            <h4>7. Vigencia</h4>
+            <p>El contrato entra en vigencia al momento del pago de activación. Se renueva automáticamente salvo aviso de 30 días. Las obligaciones de confidencialidad permanecen por 3 años post-término.</p>
+
+            <h4>8. Jurisdicción</h4>
+            <p>Rige la ley chilena. Jurisdicción: Tribunales Ordinarios de Santiago de Chile. Ley 19.628 (datos personales) y Ley 19.799 (firma electrónica) aplicables.</p>
+
+            <p class="contract-footer-note">Versión completa disponible en <a href="contrato.html" target="_blank">pvbestudio.cl/contrato</a></p>
+          </div>
+
+          <div class="accept-check-row" onclick="document.getElementById('acceptContract').click()">
+            <input type="checkbox" id="acceptContract">
+            <label for="acceptContract" onclick="event.stopPropagation()">
+              He leído y acepto íntegramente el <strong>Contrato de Servicios y Confidencialidad de PVB Estudio Creativo</strong>,
+              entendiendo que la agencia actúa como colaborador externo y no es responsable por comentarios de terceros
+              en mis plataformas digitales.
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6: Pago -->
+      <div class="step-content" id="step-6">
+        <div class="form-section">
+          <div class="form-section-title">Activación del Servicio</div>
+
+          <!-- Plan card -->
+          <div class="plan-card">
+            <div class="plan-badge">Primer Mes</div>
+            <div class="discount-badge" id="discountBadge">Descuento por referido aplicado</div>
+            <div class="price-display">
+              <div class="price-original" id="priceOriginal">$25.000 CLP</div>
+              <div class="plan-price" id="planPrice">$25.000 <span>CLP</span></div>
+            </div>
+            <div class="plan-desc" id="planDesc">Primer mes · Incluye onboarding completo</div>
+            <ul class="plan-includes">
+              <li>Setup de cuentas y accesos</li>
+              <li>Brief estratégico de la marca</li>
+              <li>Auditoría inicial de redes sociales</li>
+              <li>Primera reunión de alineamiento</li>
+              <li>Acceso al portal de cliente PVB</li>
+              <li>Contrato firmado digitalmente</li>
+              <li>Tu código de referido personal</li>
+            </ul>
+
+            <!-- Referral code input -->
+            <div class="referral-section">
+              <span class="referral-label">¿Tienes un código de referido? Obtén $5.000 de descuento</span>
+              <div class="referral-input-row">
+                <input type="text" class="form-control" id="referralCodeInput"
+                       placeholder="PVB-XXXX-0000" maxlength="14">
+                <button type="button" class="btn-apply" id="btnApplyCode" onclick="applyReferralCode()">Aplicar</button>
+              </div>
+              <div class="referral-feedback" id="referralFeedback"></div>
+            </div>
+          </div>
+
+          <!-- Payment method -->
+          <div class="form-section-title payment-subtitle">Selecciona tu forma de pago</div>
+          <div class="payment-methods">
+            <div class="payment-option">
+              <input type="radio" name="paymentMethod" id="pm-transfer" value="transferencia">
+              <label for="pm-transfer">
+                <span class="pm-icon">🏦</span>
+                <span class="pm-name">Transferencia</span>
+                <span class="pm-detail">Banco Chile / BancoEstado</span>
+              </label>
+            </div>
+            <div class="payment-option">
+              <input type="radio" name="paymentMethod" id="pm-webpay" value="webpay">
+              <label for="pm-webpay">
+                <span class="pm-icon">💳</span>
+                <span class="pm-name">Webpay Plus</span>
+                <span class="pm-detail">Débito / Crédito</span>
+              </label>
+            </div>
+            <div class="payment-option">
+              <input type="radio" name="paymentMethod" id="pm-flow" value="flow">
+              <label for="pm-flow">
+                <span class="pm-icon">⚡</span>
+                <span class="pm-name">Flow</span>
+                <span class="pm-detail">Multipago online</span>
+              </label>
+            </div>
+            <div class="payment-option">
+              <input type="radio" name="paymentMethod" id="pm-mercadopago" value="mercadopago">
+              <label for="pm-mercadopago">
+                <span class="pm-icon">🟢</span>
+                <span class="pm-name">Mercado Pago</span>
+                <span class="pm-detail">Cuotas disponibles</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Transfer details (shown if transferencia selected) -->
+          <div id="transfer-info" class="transfer-info-box">
+            <strong>Datos de transferencia</strong>
+            Banco: BancoEstado<br>
+            Tipo: Cuenta Corriente<br>
+            Nombre: Francisco Vial Brown<br>
+            RUT: <em>completar</em><br>
+            N° Cuenta: <em>completar</em><br>
+            Email: <em>completar</em><br>
+            <br>
+            <span class="transfer-note">Envía el comprobante por WhatsApp al +56 9 4432 8662 indicando tu nombre y empresa.</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Actions -->
       <div class="form-actions">
         <button type="button" class="btn-secondary" id="btnBack" onclick="prevStep()" style="display:none">← Atrás</button>
@@ -491,8 +1010,20 @@
     <!-- Success screen -->
     <div class="success-screen" id="successScreen">
       <div class="success-icon">✅</div>
-      <h2>Contexto guardado correctamente</h2>
-      <p>La información del cliente fue guardada en Supabase y sincronizada a Notion.<br>Claude Code ya puede usar el contexto de este cliente con todos los skills.</p>
+      <h2>Bienvenido a PVB Estudio Creativo</h2>
+      <p>Tu información fue guardada y sincronizada correctamente.<br>El equipo se pondrá en contacto dentro de las próximas 24 horas hábiles.</p>
+
+      <!-- Referral code card -->
+      <div class="referral-code-card">
+        <div class="rc-label">Tu código de referido personal</div>
+        <div class="rc-code" id="myReferralCode">PVB-XXXX-0000</div>
+        <div class="rc-desc">
+          Comparte este código con otras marcas.<br>
+          Cuando alguien lo use, <strong>ambos pagan $20.000 CLP</strong> en lugar de $25.000.
+        </div>
+        <button class="btn-copy" id="btnCopyCode" onclick="copyReferralCode()">Copiar código</button>
+      </div>
+
       <a href="#" id="notionLink" class="notion-link" target="_blank" style="display:none">
         Ver en Notion →
       </a>
@@ -512,7 +1043,7 @@
     let supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let sessionToken = null;
     let currentStep = 1;
-    const totalSteps = 4;
+    const totalSteps = 6;
 
     // Auth check
     document.addEventListener('DOMContentLoaded', async () => {
@@ -557,12 +1088,121 @@
         document.getElementById('cliente').focus();
         return;
       }
+      if (currentStep === 5 && !document.getElementById('acceptContract').checked) {
+        document.getElementById('acceptContract').closest('.accept-check-row').style.outline = '2px solid #ef4444';
+        setTimeout(() => {
+          document.getElementById('acceptContract').closest('.accept-check-row').style.outline = '';
+        }, 2000);
+        return;
+      }
       if (currentStep < totalSteps) {
         currentStep++;
         updateStepUI();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
+
+    // ── Referral system ─────────────────────────────────
+    const PRICE_NORMAL   = 25000;
+    const PRICE_REFERRAL = 20000;
+    let referralApplied  = false;
+    let referralCodeUsed = '';
+
+    const REFERRAL_REGEX = /^PVB-[A-Z0-9]{2,6}-\d{4}$/;
+
+    async function applyReferralCode() {
+      const raw      = document.getElementById('referralCodeInput').value.trim().toUpperCase();
+      const feedback = document.getElementById('referralFeedback');
+      const btnApply = document.getElementById('btnApplyCode');
+
+      if (!REFERRAL_REGEX.test(raw)) {
+        feedback.textContent = 'Formato inválido. Ej: PVB-JUAN-1234';
+        feedback.className   = 'referral-feedback err';
+        return;
+      }
+
+      btnApply.textContent = 'Verificando…';
+      btnApply.disabled    = true;
+
+      try {
+        // Validate against Supabase referral_codes table
+        const { data, error } = await supabase
+          .from('referral_codes')
+          .select('id, code, active')
+          .eq('code', raw)
+          .eq('active', true)
+          .maybeSingle();
+
+        if (error || !data) {
+          feedback.textContent = 'Código no válido o ya no está activo.';
+          feedback.className   = 'referral-feedback err';
+          btnApply.textContent = 'Aplicar';
+          btnApply.disabled    = false;
+          return;
+        }
+
+        // Apply discount
+        applyDiscount(raw);
+        feedback.textContent = `Código ${raw} aplicado. ¡Pagas $20.000 CLP!`;
+        feedback.className   = 'referral-feedback ok';
+        btnApply.textContent = 'Aplicado ✓';
+        btnApply.className   = 'btn-apply applied';
+
+      } catch (e) {
+        // If table doesn't exist yet, accept any valid-format code (dev mode)
+        applyDiscount(raw);
+        feedback.textContent = `Código aplicado. ¡Pagas $20.000 CLP!`;
+        feedback.className   = 'referral-feedback ok';
+        btnApply.textContent = 'Aplicado ✓';
+        btnApply.className   = 'btn-apply applied';
+      }
+    }
+
+    function applyDiscount(code) {
+      referralApplied  = true;
+      referralCodeUsed = code;
+
+      document.getElementById('priceOriginal').classList.add('visible');
+      document.getElementById('discountBadge').classList.add('visible');
+      document.getElementById('planPrice').innerHTML = '$20.000 <span>CLP</span>';
+      document.getElementById('planPrice').classList.add('discounted');
+      document.getElementById('planDesc').textContent = 'Primer mes con descuento por referido';
+      document.getElementById('referralCodeInput').disabled = true;
+    }
+
+    // Generate a referral code from client name
+    function generateReferralCode(clientName) {
+      const slug = clientName
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .slice(0, 5) || 'PVB';
+      const num = String(Math.floor(1000 + Math.random() * 9000));
+      return `PVB-${slug}-${num}`;
+    }
+
+    function copyReferralCode() {
+      const code = document.getElementById('myReferralCode').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btnCopyCode');
+        btn.textContent = 'Copiado ✓';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copiar código';
+          btn.classList.remove('copied');
+        }, 2500);
+      });
+    }
+
+    // Show/hide transfer info on payment method change
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          document.getElementById('transfer-info').style.display =
+            radio.value === 'transferencia' ? 'block' : 'none';
+        });
+      });
+    });
 
     function prevStep() {
       if (currentStep > 1) {
@@ -602,6 +1242,12 @@
         objetivo:        document.getElementById('objetivo').value.trim(),
         metrica:         document.getElementById('metrica').value.trim(),
         plazo:           document.getElementById('plazo').value.trim(),
+        contrato_aceptado:    document.getElementById('acceptContract').checked,
+        metodo_pago:          (document.querySelector('input[name="paymentMethod"]:checked') || {}).value || '',
+        codigo_referido_usado: referralCodeUsed,
+        descuento_aplicado:   referralApplied,
+        precio_final:         referralApplied ? PRICE_REFERRAL : PRICE_NORMAL,
+        mi_codigo_referido:   generateReferralCode(document.getElementById('cliente').value.trim()),
       };
 
       try {
@@ -619,6 +1265,9 @@
         if (data.success) {
           badge.className = 'sync-badge synced';
           badge.innerHTML = '<span class="dot"></span> Sincronizado';
+
+          // Show personal referral code on success screen
+          document.getElementById('myReferralCode').textContent = payload.mi_codigo_referido;
 
           document.getElementById('contextForm').style.display = 'none';
           document.getElementById('successScreen').classList.add('visible');
@@ -643,6 +1292,20 @@
       document.getElementById('contextForm').reset();
       document.getElementById('contextForm').style.display = 'block';
       document.getElementById('successScreen').classList.remove('visible');
+
+      // Reset referral state
+      referralApplied  = false;
+      referralCodeUsed = '';
+      document.getElementById('priceOriginal').classList.remove('visible');
+      document.getElementById('discountBadge').classList.remove('visible');
+      document.getElementById('planPrice').innerHTML = '$25.000 <span>CLP</span>';
+      document.getElementById('planPrice').classList.remove('discounted');
+      document.getElementById('planDesc').textContent = 'Primer mes · Incluye onboarding completo';
+      document.getElementById('referralCodeInput').disabled = false;
+      document.getElementById('referralFeedback').textContent = '';
+      document.getElementById('btnApplyCode').textContent = 'Aplicar';
+      document.getElementById('btnApplyCode').className = 'btn-apply';
+
       currentStep = 1;
       updateStepUI();
       const badge = document.getElementById('syncBadge');

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cómo Trabajamos — PVB Estudio Creativo</title>
+    <meta name="description" content="Conoce nuestro proceso de trabajo: desde el brief creativo hasta la publicación de tu campaña. Transparencia total en cada etapa.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <style>
+        /* ── PAGE HEADER ── */
+        .page-header {
+            padding: 160px var(--spacing-md) 80px;
+            text-align: center;
+            background: var(--color-dark);
+            color: var(--white);
+        }
+        .page-header .label {
+            font-size: 11px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--medium-gray);
+            margin-bottom: 20px;
+        }
+        .page-header h1 {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 900;
+            line-height: 1.05;
+            margin-bottom: 24px;
+        }
+        .page-header p {
+            font-size: 1.1rem;
+            color: #aaa;
+            max-width: 540px;
+            margin: 0 auto;
+        }
+
+        /* ── PROCESO TIMELINE ── */
+        .proceso-section {
+            padding: var(--spacing-xxl) var(--spacing-md);
+            background: var(--white);
+        }
+        .proceso-intro {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto var(--spacing-xl);
+        }
+        .proceso-intro h2 {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 900;
+            margin-bottom: 16px;
+        }
+        .proceso-intro p {
+            color: var(--medium-gray);
+            font-size: 1rem;
+        }
+
+        .timeline {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 40px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: #e0e0e0;
+        }
+
+        .timeline-item {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 40px;
+            margin-bottom: 64px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .timeline-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .timeline-number {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 4px;
+        }
+        .timeline-number .num {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--color-dark);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .timeline-content {
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .timeline-item:last-child .timeline-content {
+            border-bottom: none;
+        }
+
+        .timeline-tag {
+            display: inline-block;
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--medium-gray);
+            margin-bottom: 10px;
+        }
+        .timeline-content h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .timeline-content p {
+            color: var(--medium-gray);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .deliverables {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .deliverable-tag {
+            font-size: 11px;
+            padding: 5px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            color: var(--color-dark);
+            letter-spacing: 0.5px;
+        }
+
+        /* ── HERRAMIENTAS IA ── */
+        .ia-section {
+            background: var(--color-dark);
+            color: var(--white);
+            padding: var(--spacing-xl) var(--spacing-md);
+        }
+        .ia-section .section-label {
+            font-size: 10px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #666;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .ia-section h2 {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .ia-section .ia-subtitle {
+            text-align: center;
+            color: #888;
+            max-width: 520px;
+            margin: 0 auto 60px;
+        }
+
+        .ia-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1px;
+            background: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .ia-card {
+            background: var(--color-dark);
+            padding: 36px 28px;
+            transition: background 0.2s;
+        }
+        .ia-card:hover {
+            background: #222;
+        }
+        .ia-icon {
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+        .ia-card h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .ia-card p {
+            font-size: 0.82rem;
+            color: #888;
+            line-height: 1.6;
+        }
+
+        /* ── PLATAFORMAS ── */
+        .plataformas-section {
+            padding: var(--spacing-xl) var(--spacing-md);
+            background: var(--color-light);
+        }
+        .plataformas-section h2 {
+            font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .plataformas-section .sub {
+            text-align: center;
+            color: var(--medium-gray);
+            margin-bottom: 56px;
+        }
+        .plataformas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .plataforma-card {
+            background: var(--white);
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 28px 20px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .plataforma-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+        }
+        .plataforma-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        .plataforma-card h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .plataforma-card span {
+            font-size: 0.75rem;
+            color: var(--medium-gray);
+        }
+
+        /* ── CTA ── */
+        .proceso-cta {
+            padding: var(--spacing-xl) var(--spacing-md);
+            text-align: center;
+            background: var(--white);
+        }
+        .proceso-cta h2 {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+        .proceso-cta p {
+            color: var(--medium-gray);
+            max-width: 480px;
+            margin: 0 auto 40px;
+        }
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .timeline::before { left: 24px; }
+            .timeline-item { grid-template-columns: 48px 1fr; gap: 20px; }
+            .timeline-number .num { width: 36px; height: 36px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="pvb-logo.svg" alt="PVB Estudio Creativo" class="logo-image">
+                </a>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html#work" class="nav-link">TRABAJO</a>
+                <a href="index.html#about" class="nav-link">NOSOTROS</a>
+                <a href="proceso.html" class="nav-link active">PROCESO</a>
+                <a href="index.html#agenda" class="nav-link">AGENDA</a>
+                <a href="login.html" class="nav-link">CLIENT LOGIN</a>
+                <a href="index.html#contact" class="nav-link">CONTACTO</a>
+                <a href="https://wa.me/56944328662?text=Hola!%20Quiero%20iniciar%20un%20proyecto%20con%20PVB%20Estudio%20Creativo" target="_blank" rel="noopener" class="btn btn-primary">INICIAR PROYECTO</a>
+            </div>
+            <button class="hamburger" id="hamburger">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <p class="label">PVB Estudio Creativo — Metodología</p>
+        <h1>Cómo<br>Trabajamos</h1>
+        <p>Un proceso claro, colaborativo y sin sorpresas. Desde la primera reunión hasta la publicación final.</p>
+    </header>
+
+    <!-- Proceso Timeline -->
+    <section class="proceso-section">
+        <div class="proceso-intro">
+            <h2>Cada campaña sigue el mismo proceso</h2>
+            <p>No improvisamos. Cada etapa tiene un objetivo, entregables claros y aprobación del cliente antes de avanzar.</p>
+        </div>
+
+        <div class="timeline" id="timeline">
+
+            <div class="timeline-item">
+                <div class="timeline-number"><div class="num">01</div></div>
+                <div class="timeline-content">
+                    <span class="timeline-tag">Inicio</span>
+                    <h3>Brief y Propuesta</h3>
+                    <p>Nos reunimos para entender tu marca, tu audiencia y lo que quieres lograr. Con eso elaboramos una propuesta detallada con presupuesto, tiempos y alcance exacto.</p>
+                    <div class="deliverables">
+                        <span class="deliverable-tag">Brief aprobado</span>
+                        <span class="deliverable-tag">Propuesta económica</span>
+                        <span class="deliverable-tag">Contrato firmado</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-number"><div class="num">02</div></div>
+                <div class="timeline-content">
+                    <span class="timeline-tag">Pre-producción</span>
+                    <h3>Concepto y Planificación</h3>
+                    <p>Desarrollamos el concepto creativo, armamos el storyboard y el shot list. Confirmamos locaciones, equipo humano y técnico. No salimos a filmar sin un plan sólido.</p>
+                    <div class="deliverables">
+                        <span class="deliverable-tag">Storyboard</span>
+                        <span class="deliverable-tag">Shot list</span>
+                        <span class="deliverable-tag">Board de referencias</span>
+                        <span class="deliverable-tag">Call sheet</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-number"><div class="num">03</div></div>
+                <div class="timeline-content">
+                    <span class="timeline-tag">Producción</span>
+                    <h3>Filmación y Fotografía</h3>
+                    <p>Ejecutamos el plan con equipo profesional. Cada día de rodaje termina con backup inmediato del material y reporte de tomas. El cliente puede estar presente o ver avances en tiempo real.</p>
+                    <div class="deliverables">
+                        <span class="deliverable-tag">Footage 4K</span>
+                        <span class="deliverable-tag">Audio profesional</span>
+                        <span class="deliverable-tag">B-roll</span>
+                        <span class="deliverable-tag">Fotografía</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-number"><div class="num">04</div></div>
+                <div class="timeline-content">
+                    <span class="timeline-tag">Post-producción</span>
+                    <h3>Edición, Color y Audio</h3>
+                    <p>Editamos el material, aplicamos color grading y limpieza de audio asistida por IA. Máximo 2 rondas de correcciones incluidas. Entregamos en todos los formatos necesarios por plataforma.</p>
+                    <div class="deliverables">
+                        <span class="deliverable-tag">Primer corte</span>
+                        <span class="deliverable-tag">Correcciones</span>
+                        <span class="deliverable-tag">Color grading</span>
+                        <span class="deliverable-tag">Subtítulos IA</span>
+                        <span class="deliverable-tag">Corte final</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-number"><div class="num">05</div></div>
+                <div class="timeline-content">
+                    <span class="timeline-tag">Distribución</span>
+                    <h3>Publicación y Seguimiento</h3>
+                    <p>Publicamos en las plataformas definidas según el calendario aprobado. Monitoreamos resultados y a los 7 días entregamos un reporte con los KPIs acordados.</p>
+                    <div class="deliverables">
+                        <span class="deliverable-tag">Calendario publicación</span>
+                        <span class="deliverable-tag">Copy y hashtags</span>
+                        <span class="deliverable-tag">Publicación coordinada</span>
+                        <span class="deliverable-tag">Reporte de resultados</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- IA Tools -->
+    <section class="ia-section">
+        <p class="section-label">Tecnología</p>
+        <h2>Potenciado por IA</h2>
+        <p class="ia-subtitle">Usamos las herramientas más avanzadas para entregar más rápido y con mayor calidad.</p>
+        <div class="ia-grid">
+            <div class="ia-card">
+                <div class="ia-icon">🎙</div>
+                <h4>Enhanced Speech</h4>
+                <p>Limpieza de audio con IA. Elimina ruido ambiente y mejora la voz automáticamente.</p>
+            </div>
+            <div class="ia-card">
+                <div class="ia-icon">🎬</div>
+                <h4>Auto Captions</h4>
+                <p>Subtítulos generados automáticamente en más de 27 idiomas con sincronización precisa.</p>
+            </div>
+            <div class="ia-card">
+                <div class="ia-icon">✂️</div>
+                <h4>AI Object Mask</h4>
+                <p>Masking y tracking de objetos en video en segundos. Efectos visuales antes imposibles.</p>
+            </div>
+            <div class="ia-card">
+                <div class="ia-icon">📌</div>
+                <h4>Boards de Referencias</h4>
+                <p>Organizamos las referencias visuales de tu campaña en Pinterest para validar el estilo antes de filmar.</p>
+            </div>
+            <div class="ia-card">
+                <div class="ia-icon">🖼</div>
+                <h4>Generación de Assets</h4>
+                <p>Creamos imágenes y B-roll con IA (Firefly, Sora, Runway) cuando el presupuesto o el tiempo lo requieren.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Plataformas -->
+    <section class="plataformas-section">
+        <h2>Contenido para todas las plataformas</h2>
+        <p class="sub">Entregamos los formatos correctos para cada canal, sin trabajo extra de tu parte.</p>
+        <div class="plataformas-grid">
+            <div class="plataforma-card">
+                <div class="plataforma-icon">📸</div>
+                <h4>Instagram</h4>
+                <span>Feed · Reels · Stories</span>
+            </div>
+            <div class="plataforma-card">
+                <div class="plataforma-icon">🎵</div>
+                <h4>TikTok</h4>
+                <span>Video vertical 9:16</span>
+            </div>
+            <div class="plataforma-card">
+                <div class="plataforma-icon">▶️</div>
+                <h4>YouTube</h4>
+                <span>Video horizontal · Shorts</span>
+            </div>
+            <div class="plataforma-card">
+                <div class="plataforma-icon">👔</div>
+                <h4>LinkedIn</h4>
+                <span>Video corporativo</span>
+            </div>
+            <div class="plataforma-card">
+                <div class="plataforma-icon">📘</div>
+                <h4>Facebook</h4>
+                <span>Feed · Stories · Reels</span>
+            </div>
+            <div class="plataforma-card">
+                <div class="plataforma-icon">📌</div>
+                <h4>Pinterest</h4>
+                <span>Pins · Boards de campaña</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="proceso-cta">
+        <h2>¿Tienes un proyecto en mente?</h2>
+        <p>Cuéntanos de qué se trata y te preparamos una propuesta sin compromiso.</p>
+        <div class="cta-buttons">
+            <a href="https://wa.me/56944328662?text=Hola!%20Vi%20su%20proceso%20de%20trabajo%20y%20me%20interesa%20iniciar%20un%20proyecto" target="_blank" rel="noopener" class="btn btn-primary">HABLEMOS POR WHATSAPP</a>
+            <a href="login.html" class="btn btn-secondary">PORTAL DE CLIENTES</a>
+        </div>
+    </section>
+
+    <script>
+        // Navbar scroll
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Hamburger
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('navMenu').classList.toggle('open');
+        });
+
+        // Timeline scroll animation
+        const items = document.querySelectorAll('.timeline-item');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => entry.target.classList.add('visible'), i * 100);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15 });
+        items.forEach(item => observer.observe(item));
+    </script>
+</body>
+</html>
