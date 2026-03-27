@@ -698,7 +698,17 @@ function renderInbox(messages) {
         const typeLabel = msg.type === 'dm' || msg.type === 'message' ? 'DM' : 'Comentario';
         const context = msg.media_caption || msg.post_preview || '';
 
-        return `<div class="inbox-message">
+        const canReply = ['instagram', 'facebook', 'youtube'].includes(msg.platform);
+        const replyData = escapeHtml(JSON.stringify({
+            platform: msg.platform,
+            type: msg.type,
+            conversation_id: msg.conversation_id || null,
+            comment_id: msg.id,
+            media_id: msg.media_id || null,
+            video_id: msg.video_id || null
+        }));
+
+        return `<div class="inbox-message" data-msg-id="${escapeHtml(msg.id)}">
             <div class="inbox-avatar ${msg.platform}">${initials}</div>
             <div class="inbox-body">
                 <div class="inbox-meta">
@@ -709,6 +719,19 @@ function renderInbox(messages) {
                 </div>
                 <div class="inbox-text">${escapeHtml(msg.message)}</div>
                 ${context ? `<div class="inbox-context">En: ${escapeHtml(context)}</div>` : ''}
+                ${canReply ? `
+                <div class="inbox-reply-row">
+                    <button class="inbox-reply-btn" onclick="toggleReplyBox(this)" title="Responder">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z" fill="currentColor"/></svg>
+                        Responder
+                    </button>
+                    <div class="inbox-reply-box hidden">
+                        <input type="text" class="inbox-reply-input" placeholder="Escribe tu respuesta..." onkeydown="if(event.key==='Enter')sendReply(this)">
+                        <button class="inbox-reply-send" data-reply='${replyData}' onclick="sendReply(this.previousElementSibling)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg>
+                        </button>
+                    </div>
+                </div>` : ''}
             </div>
         </div>`;
     }).join('');
@@ -739,6 +762,69 @@ function formatInboxTime(timestamp) {
     if (diffHr < 24) return `hace ${diffHr}h`;
     if (diffDay < 7) return `hace ${diffDay}d`;
     return date.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+}
+
+function toggleReplyBox(btn) {
+    const replyBox = btn.nextElementSibling;
+    if (replyBox) {
+        replyBox.classList.toggle('hidden');
+        if (!replyBox.classList.contains('hidden')) {
+            replyBox.querySelector('input')?.focus();
+        }
+    }
+}
+
+async function sendReply(inputEl) {
+    const message = inputEl?.value?.trim();
+    if (!message) return;
+
+    const sendBtn = inputEl.nextElementSibling;
+    const replyData = JSON.parse(sendBtn.dataset.reply);
+
+    const sessionToken = window._pvbUserData?.session_token || localStorage.getItem('session_id');
+    if (!sessionToken) {
+        showNotification('Sesión expirada', 'error');
+        return;
+    }
+
+    // Disable input while sending
+    inputEl.disabled = true;
+    sendBtn.disabled = true;
+    inputEl.placeholder = 'Enviando...';
+
+    try {
+        const res = await fetch('/.netlify/functions/inbox-reply', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ...replyData, message })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showNotification('Respuesta enviada', 'success');
+            inputEl.value = '';
+            // Show sent confirmation inline
+            const replyBox = inputEl.parentElement;
+            const sentMsg = document.createElement('div');
+            sentMsg.className = 'inbox-reply-sent';
+            sentMsg.textContent = `✓ Enviado: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`;
+            replyBox.parentElement.appendChild(sentMsg);
+            replyBox.classList.add('hidden');
+        } else {
+            showNotification(data.error || 'Error al enviar respuesta', 'error');
+        }
+    } catch (err) {
+        console.error('Reply error:', err);
+        showNotification('Error de conexión al enviar respuesta', 'error');
+    } finally {
+        inputEl.disabled = false;
+        sendBtn.disabled = false;
+        inputEl.placeholder = 'Escribe tu respuesta...';
+    }
 }
 
 function escapeHtml(str) {
