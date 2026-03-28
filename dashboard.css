@@ -2691,8 +2691,8 @@ input[type="password"].form-control::placeholder {
 /* Override old whatsapp styles with new widget */
 .whatsapp-widget {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
+    bottom: 32px;
+    right: 32px;
     z-index: 1000;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
