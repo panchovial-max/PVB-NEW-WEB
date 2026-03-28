@@ -61,8 +61,8 @@ function renderCalendar() {
     const calendarGrid = document.getElementById('calendarGrid');
     calendarGrid.innerHTML = '';
 
-    // Add day headers
-    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    // Add day headers (week starts Monday)
+    const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     dayNames.forEach(day => {
         const header = document.createElement('div');
         header.className = 'calendar-day-header';
@@ -70,8 +70,11 @@ function renderCalendar() {
         calendarGrid.appendChild(header);
     });
 
+    // Adjust firstDay for Monday start (0=Mon, 6=Sun)
+    const firstDayMon = (firstDay + 6) % 7;
+
     // Add previous month days
-    for (let i = firstDay - 1; i >= 0; i--) {
+    for (let i = firstDayMon - 1; i >= 0; i--) {
         const day = daysInPrevMonth - i;
         const dayElement = createDayElement(day, 'other-month');
         calendarGrid.appendChild(dayElement);
@@ -117,7 +120,7 @@ function renderCalendar() {
     }
 
     // Add next month days
-    const remainingCells = 42 - (firstDay + daysInMonth);
+    const remainingCells = 42 - (firstDayMon + daysInMonth);
     for (let day = 1; day <= remainingCells; day++) {
         const dayElement = createDayElement(day, 'other-month');
         calendarGrid.appendChild(dayElement);
@@ -305,17 +308,18 @@ function renderUpcomingEvents() {
     const container = document.getElementById('upcomingEventsList');
     if (!container) return;
 
-    // Get upcoming events (next 7 days)
+    // Get upcoming events (next 90 days)
     const today = new Date();
-    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    today.setHours(0, 0, 0, 0);
+    const futureLimit = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
 
     const upcoming = calendarEvents
         .filter(e => {
             const eventDate = new Date(e.event_date + 'T00:00:00');
-            return eventDate >= today && eventDate <= nextWeek;
+            return eventDate >= today && eventDate <= futureLimit;
         })
         .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
-        .slice(0, 5);
+        .slice(0, 6);
 
     if (upcoming.length === 0) {
         container.innerHTML = '<p style="color: #737373; text-align: center;">No hay eventos próximos</p>';
