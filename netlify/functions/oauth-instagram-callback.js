@@ -124,10 +124,11 @@ export const handler = async (event, context) => {
     }
 
     if (instagramConnected === 0) {
-      const debugStr = debugInfo.map(d => `Page "${d.page_name}": ${JSON.stringify(d.ig_response)}`).join(' | ');
+      const pageNames = debugInfo.map(d => d.page_name).join(', ');
+      const userMessage = `No se encontró una cuenta de Instagram Business vinculada a tus páginas de Facebook (${pageNames}). Para conectar Instagram: 1) Abre Instagram > Configuración > Cuenta > Cambiar a cuenta profesional. 2) En Facebook, ve a tu Página > Configuración > Instagram y vincula tu cuenta.`;
       return {
         statusCode: 302,
-        headers: { Location: `/settings.html?error=no_instagram&error_description=${encodeURIComponent('No Instagram Business account found. Debug: ' + debugStr)}`}
+        headers: { Location: `/settings.html?error=no_instagram&error_description=${encodeURIComponent(userMessage)}` }
       };
     }
 
