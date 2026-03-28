@@ -4,6 +4,39 @@ let currentMonth = new Date();
 let calendarEvents = [];
 let calendarConnected = false;
 
+// Festivales de publicidad y cine 2026 — se muestran siempre
+const FESTIVAL_EVENTS = [
+    // Enero
+    { event_id: 'fest-sundance', event_title: 'Sundance Film Festival', event_description: 'Festival de cine independiente más importante del mundo. Park City, Utah, USA.', event_date: '2026-01-22', event_time: 'All day', event_type: 'milestone', priority: 'high', campaign_name: 'Park City, Utah' },
+    // Febrero
+    { event_id: 'fest-berlinale', event_title: 'Berlinale', event_description: 'Festival Internacional de Cine de Berlín. Competencia oficial + European Film Market.', event_date: '2026-02-12', event_time: 'All day', event_type: 'milestone', priority: 'high', campaign_name: 'Berlín, Alemania' },
+    // Marzo
+    { event_id: 'fest-sxsw', event_title: 'SXSW Film & Interactive', event_description: 'South by Southwest — cine, música, tecnología y creatividad. Austin, Texas.', event_date: '2026-03-13', event_time: 'All day', event_type: 'milestone', priority: 'normal', campaign_name: 'Austin, Texas' },
+    // Abril
+    { event_id: 'fest-mip', event_title: 'MIP TV / MIPTV', event_description: 'Mercado internacional de contenido audiovisual. Cannes, Francia.', event_date: '2026-04-13', event_time: 'All day', event_type: 'meeting', priority: 'normal', campaign_name: 'Cannes, Francia' },
+    // Mayo
+    { event_id: 'fest-cannes', event_title: 'Festival de Cannes', event_description: 'El festival de cine más prestigioso del mundo. Palme d\'Or + Marché du Film.', event_date: '2026-05-13', event_time: 'All day', event_type: 'milestone', priority: 'high', campaign_name: 'Cannes, Francia' },
+    // Junio
+    { event_id: 'fest-canneslions', event_title: 'Cannes Lions', event_description: 'Festival Internacional de Creatividad. La cumbre mundial de publicidad y comunicación.', event_date: '2026-06-15', event_time: 'All day', event_type: 'milestone', priority: 'high', campaign_name: 'Cannes, Francia' },
+    { event_id: 'fest-annecy', event_title: 'Annecy Animation Festival', event_description: 'Festival y mercado de animación más grande del mundo.', event_date: '2026-06-15', event_time: 'All day', event_type: 'milestone', priority: 'normal', campaign_name: 'Annecy, Francia' },
+    // Julio
+    { event_id: 'fest-locarno', event_title: 'Locarno Film Festival', event_description: 'Festival de cine suizo de autor. Piazza Grande al aire libre.', event_date: '2026-08-05', event_time: 'All day', event_type: 'milestone', priority: 'normal', campaign_name: 'Locarno, Suiza' },
+    // Agosto
+    { event_id: 'fest-sanfic', event_title: 'SANFIC', event_description: 'Santiago Festival Internacional de Cine. El principal festival de cine de Chile.', event_date: '2026-08-17', event_time: 'All day', event_type: 'milestone', priority: 'high', campaign_name: 'Santiago, Chile' },
+    // Septiembre
+    { event_id: 'fest-venice', event_title: 'Venice Film Festival', event_description: 'La Mostra de Venecia — el festival de cine más antiguo del mundo. León de Oro.', event_date: '2026-09-02', event_time: 'All day', event_type: 'milestone', priority: 'high', campaign_name: 'Venecia, Italia' },
+    { event_id: 'fest-tiff', event_title: 'TIFF', event_description: 'Toronto International Film Festival. Plataforma clave para lanzamientos de Oscar.', event_date: '2026-09-10', event_time: 'All day', event_type: 'milestone', priority: 'high', campaign_name: 'Toronto, Canadá' },
+    { event_id: 'fest-elojo', event_title: 'El Ojo de Iberoamérica', event_description: 'El festival de creatividad publicitaria más importante de Latinoamérica.', event_date: '2026-09-29', event_time: 'All day', event_type: 'milestone', priority: 'high', campaign_name: 'Buenos Aires, Argentina' },
+    // Octubre
+    { event_id: 'fest-ficvaldivia', event_title: 'FICValdivia', event_description: 'Festival Internacional de Cine de Valdivia. Referente del cine de autor en Chile.', event_date: '2026-10-05', event_time: 'All day', event_type: 'milestone', priority: 'high', campaign_name: 'Valdivia, Chile' },
+    { event_id: 'fest-fiap', event_title: 'FIAP', event_description: 'Festival Iberoamericano de la Publicidad. Premios a la mejor creatividad regional.', event_date: '2026-10-19', event_time: 'All day', event_type: 'milestone', priority: 'normal', campaign_name: 'Miami, USA' },
+    // Noviembre
+    { event_id: 'fest-idfa', event_title: 'IDFA', event_description: 'International Documentary Film Festival Amsterdam. El mayor festival de documental.', event_date: '2026-11-18', event_time: 'All day', event_type: 'milestone', priority: 'normal', campaign_name: 'Amsterdam, Holanda' },
+    { event_id: 'fest-effie', event_title: 'Effie Awards LatAm', event_description: 'Premios a la efectividad en marketing y publicidad en Latinoamérica.', event_date: '2026-11-10', event_time: 'All day', event_type: 'milestone', priority: 'normal', campaign_name: 'CDMX, México' },
+    // Diciembre
+    { event_id: 'fest-fidocs', event_title: 'FIDOCS', event_description: 'Festival Internacional de Documentales de Santiago. Cine documental chileno e internacional.', event_date: '2026-12-01', event_time: 'All day', event_type: 'milestone', priority: 'normal', campaign_name: 'Santiago, Chile' },
+];
+
 // Initialize calendar
 function initializeCalendar() {
     renderCalendar();
@@ -116,7 +149,9 @@ function getSessionToken() {
 async function loadCalendarEvents() {
     const sessionToken = getSessionToken();
     if (!sessionToken) {
-        showCalendarConnectPrompt('Inicia sesión para ver tu calendario');
+        calendarEvents = [...FESTIVAL_EVENTS];
+        renderCalendar();
+        renderUpcomingEvents();
         return;
     }
 
@@ -137,6 +172,10 @@ async function loadCalendarEvents() {
         }
 
         if (!data.connected) {
+            // Show festivals even without Google Calendar
+            calendarEvents = [...FESTIVAL_EVENTS];
+            renderCalendar();
+            renderUpcomingEvents();
             showCalendarConnectPrompt();
             return;
         }
@@ -145,7 +184,8 @@ async function loadCalendarEvents() {
         hideCalendarConnectPrompt();
 
         if (data.events) {
-            calendarEvents = data.events;
+            // Merge Google Calendar events with festivals
+            calendarEvents = [...data.events, ...FESTIVAL_EVENTS];
             renderCalendar();
             renderUpcomingEvents();
         }
