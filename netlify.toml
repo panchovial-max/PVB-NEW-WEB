@@ -13,15 +13,8 @@
 
 # Redirects and rewrites
 [[redirects]]
-  # Redirect root domain to www
-  from = "https://panchovial.com/*"
-  to = "https://www.panchovial.com/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
   from = "/kayashoot"
-  to = "https://cheerful-tiramisu-b5dc32.netlify.app/kaya-callsheet"
+  to = "/kaya-callsheet.html"
   status = 301
 
 [[redirects]]
