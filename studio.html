@@ -384,8 +384,8 @@ document.getElementById('btn-boleta').addEventListener('click', async () => {
   const fotoFile = document.getElementById('foto-camara').files[0] || document.getElementById('foto-biblioteca').files[0];
 
   if (fotoFile) {
-    // Con foto: upload a Supabase + crear en Notion con imagen
-    showStatus('Subiendo foto...', 'loading');
+    // Con foto: upload a Supabase + Claude Vision OCR + Notion
+    showStatus('Analizando documento...', 'loading');
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
@@ -403,7 +403,10 @@ document.getElementById('btn-boleta').addEventListener('click', async () => {
         });
         const data = await res.json();
         if (data.ok) {
-          showStatus('Boleta + foto registrada', 'ok');
+          const msg = data.analysis
+            ? `${data.analysis.tipo_documento}: $${(data.analysis.monto_total||0).toLocaleString('es-CL')} — ${data.analysis.descripcion||'OK'}`
+            : 'Boleta registrada (sin OCR)';
+          showStatus(msg, 'ok');
           if (navigator.vibrate) navigator.vibrate(100);
         } else {
           showStatus('Error: ' + (data.error || 'desconocido'), 'err');
