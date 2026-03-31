@@ -13,16 +13,6 @@
 
 # Redirects and rewrites
 [[redirects]]
-  from = "/kayashoot"
-  to = "/kaya-callsheet.html"
-  status = 301
-
-[[redirects]]
-  from = "/kaya-callsheet"
-  to = "/kaya-callsheet.html"
-  status = 301
-
-[[redirects]]
   from = "/dashboard"
   to = "/dashboard.html"
   status = 200

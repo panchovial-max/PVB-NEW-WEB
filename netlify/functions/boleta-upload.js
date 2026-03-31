@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { validateUserSession } from './utils/supabase.js';
+import { validateAnyToken } from './utils/auth.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -73,14 +73,11 @@ export const handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: '{"error":"Method not allowed"}' };
 
-  // Auth check
+  // Auth check (accepts Supabase JWT or Studio HMAC token)
   const authHeader = event.headers.authorization || event.headers.Authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Missing authorization token' }) };
-  }
-  const authUser = await validateUserSession(authHeader.substring(7));
-  if (!authUser) {
-    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid or expired session' }) };
+  const auth = await validateAnyToken(authHeader);
+  if (!auth) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Missing or invalid authorization token' }) };
   }
 
   try {

@@ -1,4 +1,4 @@
-import { validateUserSession } from './utils/supabase.js';
+import { validateAnyToken } from './utils/auth.js';
 
 const NOTION_KEY = process.env.NOTION_API_KEY;
 const DB_BOLETAS = '3337ab7f-975e-81e2-a15d-fb2e6071f1bf';
@@ -19,14 +19,11 @@ export const handler = async (event) => {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
-  // Auth check
+  // Auth check (accepts Supabase JWT or Studio HMAC token)
   const authHeader = event.headers.authorization || event.headers.Authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Missing authorization token' }) };
-  }
-  const user = await validateUserSession(authHeader.substring(7));
-  if (!user) {
-    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid or expired session' }) };
+  const auth = await validateAnyToken(authHeader);
+  if (!auth) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Missing or invalid authorization token' }) };
   }
 
   if (!NOTION_KEY) {
