@@ -356,7 +356,12 @@
                                 <div class="option-card selected" data-value="tv_commercial">
                                     <div class="option-icon">&#127909;</div>
                                     <div class="option-label">TV Commercial</div>
-                                    <div class="option-desc">30s-60s broadcast / cable</div>
+                                    <div class="option-desc">30s-60s, mid-scale crew (~40)</div>
+                                </div>
+                                <div class="option-card" data-value="agency_commercial">
+                                    <div class="option-icon">&#127902;</div>
+                                    <div class="option-label">Agency Commercial (Large)</div>
+                                    <div class="option-desc">Full-scale, multi-location (~118 crew)</div>
                                 </div>
                                 <div class="option-card" data-value="digital_ad">
                                     <div class="option-icon">&#128241;</div>
@@ -392,6 +397,11 @@
                                     <div class="option-icon">&#128248;</div>
                                     <div class="option-label">Fashion / Lookbook</div>
                                     <div class="option-desc">Photo + video campaign</div>
+                                </div>
+                                <div class="option-card" data-value="social_content_unit">
+                                    <div class="option-icon">&#128242;</div>
+                                    <div class="option-label">Social Content Unit</div>
+                                    <div class="option-desc">Separate social crew on set (+9)</div>
                                 </div>
                                 <div class="option-card" data-value="bts">
                                     <div class="option-icon">&#127910;</div>
@@ -810,31 +820,35 @@
                 // Direction & Production
                 { role: 'Director', rate: 1200 },
                 { role: '1st AD', rate: 500 },
+                { role: '2nd AD', rate: 280 },
                 { role: 'Line Producer', rate: 700 },
                 { role: 'Productor Técnico', rate: 450 },
                 { role: 'Production Coordinator', rate: 250 },
                 { role: 'Script Supervisor', rate: 250 },
+                { role: 'PA x3', rate: 300 },
                 // Camera
                 { role: 'DP / Cinematographer', rate: 650 },
                 { role: 'Camera Operator', rate: 350 },
                 { role: '1st AC / Focus Puller', rate: 250 },
                 { role: '2nd AC / Loader', rate: 180 },
                 { role: 'DIT', rate: 300 },
-                { role: 'VTR / Video Assist', rate: 220 },
-                // Grip & Electric
+                { role: 'VTR', rate: 220 },
+                // G&E
                 { role: 'Gaffer', rate: 280 },
                 { role: 'Best Boy Electric', rate: 200 },
-                { role: 'Electric x2', rate: 320 },
+                { role: 'Spark x3', rate: 450 },
                 { role: 'Generator Operator', rate: 180 },
                 { role: 'Key Grip', rate: 250 },
                 { role: 'Best Boy Grip', rate: 200 },
-                { role: 'Grip x2', rate: 320 },
+                { role: 'Grip x3', rate: 450 },
                 // Sound
                 { role: 'Sound Mixer', rate: 300 },
                 { role: 'Boom Operator', rate: 180 },
                 // Art
                 { role: 'Art Director', rate: 450 },
-                { role: 'Art Assistant x2', rate: 300 },
+                { role: 'Art Assistant', rate: 180 },
+                { role: 'Set Dresser x2', rate: 300 },
+                { role: 'Prop Master', rate: 250 },
                 // Wardrobe
                 { role: 'Stylist / Wardrobe', rate: 350 },
                 { role: 'Wardrobe Asst x2', rate: 260 },
@@ -846,14 +860,107 @@
                 { role: 'Lighting Truck Op', rate: 180 },
                 { role: 'Camera Truck Op', rate: 180 },
                 { role: 'Craft Services', rate: 200 },
-                { role: 'PA x3', rate: 300 },
                 { role: 'Driver x2', rate: 200 },
+                { role: 'Unit Manager', rate: 300 },
             ],
             extraEquipPerDay: 0,
-            postProduction: 5500,
-            cateringMultiplier: 1.2,
-            headcount: 35,
-            description: 'Full commercial crew (33-35 people). Direction + productor técnico, camera (6 inc. DIT & VTR), G&E (8 inc. generator & truck), art (3), wardrobe (3), MUA/hair (3), sound (2), craft, PAs, trucks, drivers.'
+            postProduction: 6000,
+            cateringMultiplier: 1.5,
+            headcount: 40,
+            description: 'Full commercial crew (~40 people). ADs (3), camera dept (6), G&E (10 inc. generator), art (5), wardrobe (3), MUA/hair (3), sound (2), productor técnico, unit manager, craft, PAs, trucks, drivers.'
+        },
+        agency_commercial: {
+            label: 'Agency Commercial (Large)',
+            crewPerDay: [
+                // Direction & Production — Based on Hyundai FIFA Chile call sheet (real data)
+                { role: '1st AD', rate: 500 },
+                { role: '2nd AD', rate: 280 },
+                { role: '3rd AD', rate: 180 },
+                { role: 'Line Producer', rate: 700 },
+                { role: 'Production Manager', rate: 500 },
+                { role: 'Productor Técnico', rate: 500 },
+                { role: 'Production Coordinator', rate: 250 },
+                { role: 'Script Supervisor', rate: 250 },
+                { role: 'Talent Coordinator', rate: 250 },
+                { role: 'Talent Coord. Asst x2', rate: 300 },
+                { role: 'Talent Translator x2', rate: 400 },
+                { role: 'PA x5', rate: 500 },
+                { role: 'Set Runner', rate: 120 },
+                // Chaperones (client, agency, director, social)
+                { role: 'Agency Chaperone', rate: 180 },
+                { role: 'Director Chaperone', rate: 180 },
+                { role: 'Client Chaperone', rate: 180 },
+                { role: 'Unit Manager', rate: 350 },
+                { role: 'Unit Manager Asst', rate: 180 },
+                { role: 'Production Runner x3', rate: 300 },
+                // Camera
+                { role: 'DP (provided by client)', rate: 0 },
+                { role: '1st Camera Assistant', rate: 250 },
+                { role: '2nd Camera Assistant x2', rate: 320 },
+                { role: 'DIT', rate: 300 },
+                { role: 'Q-Take / Playback Op', rate: 280 },
+                { role: 'VTR 1', rate: 220 },
+                { role: 'VTR 2', rate: 220 },
+                { role: 'Sound Mixer', rate: 300 },
+                { role: 'Sound Assistant', rate: 180 },
+                { role: 'Movi / Steadicam Op', rate: 450 },
+                { role: 'Movi Op Assistant', rate: 200 },
+                { role: 'Drone Assistant', rate: 200 },
+                // G&E — 11 Electrics + 8 Grips = 19 (real Hyundai numbers)
+                { role: 'Gaffer', rate: 300 },
+                { role: 'Best Boy Electric', rate: 220 },
+                { role: 'Spark x4', rate: 640 },
+                { role: 'Advanced Spark x5 (LOC 2)', rate: 750 },
+                { role: 'Generator Operator', rate: 200 },
+                { role: 'Key Grip', rate: 280 },
+                { role: 'Best Boy Grip', rate: 220 },
+                { role: 'Grip x6', rate: 900 },
+                // Art — 11 people (real Hyundai numbers)
+                { role: 'Art Director', rate: 450 },
+                { role: 'Art Producer', rate: 350 },
+                { role: 'Art Producer Asst', rate: 180 },
+                { role: 'Set Dresser x4', rate: 600 },
+                { role: 'Prop Master x4', rate: 800 },
+                // Wardrobe — 4 people
+                { role: 'Wardrobe', rate: 300 },
+                { role: 'Wardrobe Asst x3', rate: 420 },
+                // MUA & Hair — 3 people
+                { role: 'MUA & Hair Artist', rate: 300 },
+                { role: 'MUA & Hair Asst x2', rate: 320 },
+                // Crane / Special
+                { role: 'Precision Driver / Body Double', rate: 350 },
+                { role: 'U-Crane Operator', rate: 400 },
+                { role: 'U-Crane Driver', rate: 200 },
+                { role: 'Russian Arm Op', rate: 450 },
+                // Locations — 5 people
+                { role: 'Location Manager', rate: 400 },
+                { role: 'Location Asst x4', rate: 600 },
+                // Trucks & Transport — 19 vehicles
+                { role: 'Lights Truck x2', rate: 360 },
+                { role: 'Art Truck x2', rate: 300 },
+                { role: 'Wardrobe Truck', rate: 180 },
+                { role: 'Camera Van', rate: 150 },
+                { role: 'DIT Van', rate: 120 },
+                { role: 'VTR Van (Merken)', rate: 150 },
+                { role: 'Production Truck', rate: 180 },
+                { role: 'Grip Boxer', rate: 150 },
+                { role: 'Visiting Crew Van x2', rate: 300 },
+                { role: 'Agency Van', rate: 150 },
+                { role: 'Client Van', rate: 150 },
+                { role: 'Talent Van x3', rate: 450 },
+                { role: 'Crew Van x3', rate: 450 },
+                // Support
+                { role: 'Ambulance / Medic', rate: 250 },
+                { role: 'Craft / Catering Service', rate: 400 },
+                { role: 'Motorhome x2', rate: 600 },
+                { role: 'Washroom Unit', rate: 200 },
+                { role: 'BTS PA', rate: 150 },
+            ],
+            extraEquipPerDay: 1500, // Q-Take, comms, video village, crane, russian arm, camera car
+            postProduction: 12000,
+            cateringMultiplier: 4.0,
+            headcount: 118,
+            description: 'Full agency commercial crew (~118 local crew). Based on real Hyundai FIFA production in Chile. Production office (17), direction (10), locations (5), camera dept (12 inc. DIT, VTR x2, Movi, drone), G&E (19: 11 electrics + 8 grips + generator), art (11: director, producer, 4 dressers, 4 props), wardrobe (4), MUA/hair (3), crane/precision (4), BTS, 19 vehicles + motorhomes. Does NOT include director, DP or agency team (provided by client).'
         },
         digital_ad: {
             label: 'Digital / Social Ads',
@@ -869,10 +976,29 @@
                 { role: 'PA x2', rate: 200 },
             ],
             extraEquipPerDay: 0,
-            postProduction: 2500, // Multiple cuts, resizes, subtitles, motion
+            postProduction: 2500,
             cateringMultiplier: 0.6,
             headcount: 10,
             description: 'Agile crew (10 people). Camera, basic G&E, sound, MUA. Multi-format edit + platform resizes.'
+        },
+        social_content_unit: {
+            label: 'Social Content Unit (add-on)',
+            crewPerDay: [
+                // Based on Hyundai FIFA real social unit (9 people, separate crew)
+                { role: 'Socials Producer', rate: 350 },
+                { role: 'Socials 1st AD', rate: 280 },
+                { role: 'DoP Socials', rate: 450 },
+                { role: 'Social 1st AC', rate: 220 },
+                { role: 'Social Sound', rate: 250 },
+                { role: 'Social Spark x2', rate: 300 },
+                { role: 'Socials PA / Runner', rate: 120 },
+                { role: 'Movi Op (social)', rate: 350 },
+            ],
+            extraEquipPerDay: 300, // Separate camera pkg, wireless, movi
+            postProduction: 2000, // Social edits, vertical cuts, stories
+            cateringMultiplier: 0.5,
+            headcount: 9,
+            description: '+9 people: separate social content unit running alongside main production. Own DP, AD, sound, sparks, movi op. Based on real Hyundai FIFA Chile production data.'
         },
         brand_film: {
             label: 'Brand Film',
