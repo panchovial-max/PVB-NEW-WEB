@@ -376,15 +376,54 @@ async function notionCreate(dbId, properties) {
   }
 }
 
-document.getElementById('btn-boleta').addEventListener('click', () => {
-  notionCreate(DB.boletas, {
-    'Descripcion': { title: [{ text: { content: document.getElementById('b-desc').value || 'Sin descripcion' } }] },
-    'Fecha': { date: { start: hoy() } },
-    'Monto CLP': { number: parseInt(document.getElementById('b-monto').value) || 0 },
-    'Categoria': { select: { name: getChipValue('b-cats') || 'Otro' } },
-    'Tipo Documento': { select: { name: document.getElementById('b-tipo').value } },
-    'Estado': { select: { name: 'Pendiente' } }
-  });
+document.getElementById('btn-boleta').addEventListener('click', async () => {
+  const desc = document.getElementById('b-desc').value || 'Sin descripcion';
+  const monto = parseInt(document.getElementById('b-monto').value) || 0;
+  const categoria = getChipValue('b-cats') || 'Otro';
+  const tipo = document.getElementById('b-tipo').value;
+  const fotoFile = document.getElementById('foto-camara').files[0] || document.getElementById('foto-biblioteca').files[0];
+
+  if (fotoFile) {
+    // Con foto: upload a Supabase + crear en Notion con imagen
+    showStatus('Subiendo foto...', 'loading');
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const res = await fetch('/.netlify/functions/boleta-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imagen: e.target.result,
+            filename: fotoFile.name,
+            descripcion: desc,
+            monto,
+            categoria,
+            tipo_documento: tipo
+          })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showStatus('Boleta + foto registrada', 'ok');
+          if (navigator.vibrate) navigator.vibrate(100);
+        } else {
+          showStatus('Error: ' + (data.error || 'desconocido'), 'err');
+        }
+      } catch (err) {
+        showStatus('Error de red: ' + err.message, 'err');
+      }
+    };
+    reader.readAsDataURL(fotoFile);
+  } else {
+    // Sin foto: solo crear en Notion
+    notionCreate(DB.boletas, {
+      'Descripcion': { title: [{ text: { content: desc } }] },
+      'Fecha': { date: { start: hoy() } },
+      'Monto CLP': { number: monto },
+      'Categoria': { select: { name: categoria } },
+      'Tipo Documento': { select: { name: tipo } },
+      'Estado': { select: { name: 'Pendiente' } }
+    });
+  }
 });
 
 document.getElementById('btn-proyecto').addEventListener('click', () => {
