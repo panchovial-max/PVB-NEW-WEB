@@ -17,9 +17,11 @@ label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; text-t
 input, select, textarea { width: 100%; padding: 12px 14px; border: 1px solid #222; border-radius: 10px; background: #141414; color: #fff; font-size: 16px; -webkit-appearance: none; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: #74b563; box-shadow: 0 0 0 3px rgba(116,181,99,0.15); }
 select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
-.foto-area { border: 2px dashed #222; border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; color: #555; }
-.foto-area.tiene { border-color: #74b563; border-style: solid; color: #74b563; }
-.foto-area img { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 8px; object-fit: contain; }
+.foto-btns { display: flex; gap: 8px; margin-bottom: 10px; }
+.foto-btn { flex: 1; padding: 14px; text-align: center; border-radius: 10px; background: #1a1a1a; border: 1px solid #333; cursor: pointer; font-size: 14px; font-weight: 600; color: #aaa; transition: all 0.15s; }
+.foto-btn:active { transform: scale(0.97); background: #74b563; color: #000; border-color: #74b563; }
+.foto-area { border: 1px solid #74b563; border-radius: 12px; padding: 12px; text-align: center; color: #74b563; }
+.foto-area img { max-width: 100%; max-height: 200px; border-radius: 8px; object-fit: contain; }
 .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.15s; letter-spacing: -0.3px; }
 .btn:active { transform: scale(0.98); }
 .btn-primary { background: #74b563; color: #000; }
@@ -56,11 +58,16 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 <div id="form-boleta" class="form-section active">
   <div class="campo">
     <label>Foto de boleta</label>
-    <div class="foto-area" id="foto-area">
-      <span id="foto-text">Toca para tomar foto</span>
-      <img id="foto-preview" style="display:none">
+    <div class="foto-btns">
+      <div class="foto-btn" id="btn-camara">Camara</div>
+      <div class="foto-btn" id="btn-biblioteca">Biblioteca</div>
     </div>
-    <input type="file" id="foto-input" accept="image/*" capture="environment" style="display:none">
+    <div class="foto-area" id="foto-area" style="display:none">
+      <img id="foto-preview">
+      <div id="foto-name" style="font-size:12px;color:#888;margin-top:6px"></div>
+    </div>
+    <input type="file" id="foto-camara" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="foto-biblioteca" accept="image/*,application/pdf" style="display:none">
   </div>
   <div class="row">
     <div class="campo">
@@ -263,19 +270,29 @@ document.querySelectorAll('.chips.multi').forEach(container => {
 });
 
 // Foto
-document.getElementById('foto-area').addEventListener('click', () => document.getElementById('foto-input').click());
-document.getElementById('foto-input').addEventListener('change', function() {
-  if (this.files && this.files[0]) {
+function handleFoto(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
     const reader = new FileReader();
     reader.onload = e => {
-      document.getElementById('foto-preview').src = e.target.result;
-      document.getElementById('foto-preview').style.display = 'block';
-      document.getElementById('foto-text').textContent = 'Foto lista';
-      document.getElementById('foto-area').classList.add('tiene');
+      const area = document.getElementById('foto-area');
+      const preview = document.getElementById('foto-preview');
+      if (file.type.startsWith('image/')) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+      document.getElementById('foto-name').textContent = file.name;
+      area.style.display = 'block';
     };
-    reader.readAsDataURL(this.files[0]);
+    reader.readAsDataURL(file);
   }
-});
+}
+document.getElementById('btn-camara').addEventListener('click', () => document.getElementById('foto-camara').click());
+document.getElementById('btn-biblioteca').addEventListener('click', () => document.getElementById('foto-biblioteca').click());
+document.getElementById('foto-camara').addEventListener('change', function() { handleFoto(this); });
+document.getElementById('foto-biblioteca').addEventListener('change', function() { handleFoto(this); });
 
 function showStatus(msg, type) {
   const el = document.getElementById('status');
