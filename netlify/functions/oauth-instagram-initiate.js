@@ -2,7 +2,7 @@
 // Uses Meta Graph API (Facebook Login) — Instagram Basic Display API deprecated Dec 2024
 // URL: /.netlify/functions/oauth-instagram-initiate
 
-import { validateUserSession } from './utils/supabase.js';
+import { validateUserSession, createOAuthState } from './utils/supabase.js';
 
 export const handler = async (event, context) => {
   const headers = {
@@ -28,12 +28,7 @@ export const handler = async (event, context) => {
       return { statusCode: 401, headers, body: JSON.stringify({ success: false, message: 'Invalid or expired session' }) };
     }
 
-    const state = Buffer.from(JSON.stringify({
-      session_token: sessionToken,
-      user_id: user.id,
-      platform: 'instagram',
-      timestamp: Date.now()
-    })).toString('base64');
+    const state = await createOAuthState(user.id, sessionToken, 'instagram');
 
     const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-instagram-callback`;
 

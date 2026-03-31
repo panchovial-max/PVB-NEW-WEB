@@ -53,3 +53,6 @@ build/
 # Public plugins (very large - exclude to reduce repo size)
 public/plugins/
 
+
+# Local Netlify folder
+.netlify

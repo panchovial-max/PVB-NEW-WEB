@@ -2,7 +2,7 @@
 // Uses Google OAuth 2.0 with YouTube Data API v3 scope
 // URL: /.netlify/functions/oauth-youtube-initiate
 
-import { validateUserSession } from './utils/supabase.js';
+import { validateUserSession, createOAuthState } from './utils/supabase.js';
 
 export const handler = async (event) => {
   const headers = {
@@ -26,12 +26,7 @@ export const handler = async (event) => {
       return { statusCode: 401, headers, body: JSON.stringify({ success: false, message: 'Invalid or expired session' }) };
     }
 
-    const state = Buffer.from(JSON.stringify({
-      session_token: sessionToken,
-      user_id: user.id,
-      platform: 'youtube',
-      timestamp: Date.now()
-    })).toString('base64');
+    const state = await createOAuthState(user.id, sessionToken, 'youtube');
 
     const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-youtube-callback`;
 

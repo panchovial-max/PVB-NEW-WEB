@@ -2,7 +2,7 @@
 // Uses Google OAuth 2.0 with Calendar API scope
 // Reuses YOUTUBE_CLIENT_ID/SECRET (same Google Cloud project)
 
-import { validateUserSession } from './utils/supabase.js';
+import { validateUserSession, createOAuthState } from './utils/supabase.js';
 
 export const handler = async (event) => {
   const headers = {
@@ -31,12 +31,7 @@ export const handler = async (event) => {
       return { statusCode: 503, headers, body: JSON.stringify({ success: false, message: 'Google Calendar integration not configured yet' }) };
     }
 
-    const state = Buffer.from(JSON.stringify({
-      session_token: sessionToken,
-      user_id: user.id,
-      platform: 'google_calendar',
-      timestamp: Date.now()
-    })).toString('base64');
+    const state = await createOAuthState(user.id, sessionToken, 'google_calendar');
 
     const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-google-calendar-callback`;
 

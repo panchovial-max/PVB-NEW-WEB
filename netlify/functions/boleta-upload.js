@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { validateUserSession } from './utils/supabase.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -63,14 +64,24 @@ async function analyzeImage(base64Data, contentType) {
 
 export const handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': process.env.BASE_URL || '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
   };
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: '{"error":"Method not allowed"}' };
+
+  // Auth check
+  const authHeader = event.headers.authorization || event.headers.Authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Missing authorization token' }) };
+  }
+  const authUser = await validateUserSession(authHeader.substring(7));
+  if (!authUser) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid or expired session' }) };
+  }
 
   try {
     const body = JSON.parse(event.body);
@@ -92,7 +103,7 @@ export const handler = async (event) => {
 
     const { data: buckets } = await supabase.storage.listBuckets();
     if (!buckets?.find(b => b.name === 'boletas')) {
-      await supabase.storage.createBucket('boletas', { public: true });
+      await supabase.storage.createBucket('boletas', { public: false });
     }
 
     const { error: uploadError } = await supabase.storage
@@ -103,8 +114,8 @@ export const handler = async (event) => {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Upload failed: ' + uploadError.message }) };
     }
 
-    const { data: urlData } = supabase.storage.from('boletas').getPublicUrl(storagePath);
-    const publicUrl = urlData.publicUrl;
+    const { data: urlData } = await supabase.storage.from('boletas').createSignedUrl(storagePath, 86400);
+    const publicUrl = urlData?.signedUrl || storagePath;
 
     // 2. Analyze image with Claude Vision (if API key available)
     const analysis = await analyzeImage(base64Data, contentType);

@@ -2,7 +2,7 @@
 // Initiates OAuth flow for LinkedIn
 // URL: /.netlify/functions/oauth-linkedin-initiate
 
-import { validateUserSession } from './utils/supabase.js';
+import { validateUserSession, createOAuthState } from './utils/supabase.js';
 
 export const handler = async (event, context) => {
   // CORS headers
@@ -47,13 +47,6 @@ export const handler = async (event, context) => {
       };
     }
 
-    // Create state parameter with user session
-    const state = Buffer.from(JSON.stringify({
-      session_token: sessionToken,
-      user_id: user.id,
-      timestamp: Date.now()
-    })).toString('base64');
-
     // Check credentials are configured
     if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
       return {
@@ -62,6 +55,8 @@ export const handler = async (event, context) => {
         body: JSON.stringify({ success: false, message: 'LinkedIn integration not configured yet' })
       };
     }
+
+    const state = await createOAuthState(user.id, sessionToken, 'linkedin');
 
     // Build LinkedIn OAuth authorization URL
     const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-linkedin-callback`;

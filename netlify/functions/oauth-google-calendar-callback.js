@@ -1,7 +1,7 @@
 // Google Calendar OAuth Callback - Netlify Function
 // Exchanges code for tokens and stores calendar access
 
-import { validateUserSession, storeSocialAccountToken } from './utils/supabase.js';
+import { validateUserSession, storeSocialAccountToken, consumeOAuthState } from './utils/supabase.js';
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
@@ -32,15 +32,12 @@ export const handler = async (event) => {
       return { statusCode: 302, headers: { Location: '/settings.html?error=missing_code#integrations' } };
     }
 
-    let userSession;
-    try {
-      const stateData = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
-      userSession = stateData.session_token;
-    } catch {
+    const stateData = await consumeOAuthState(state);
+    if (!stateData) {
       return { statusCode: 302, headers: { Location: '/settings.html?error=invalid_state#integrations' } };
     }
 
-    const user = await validateUserSession(userSession);
+    const user = await validateUserSession(stateData.session_token);
     if (!user) {
       return { statusCode: 302, headers: { Location: '/login.html?error=session_expired&redirect=settings' } };
     }

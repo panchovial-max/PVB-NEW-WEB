@@ -144,6 +144,56 @@ export async function getUserSocialAccounts(userId) {
 }
 
 /**
+ * Creates a secure OAuth state nonce and stores the session server-side.
+ * Returns the nonce string to use as the OAuth state parameter.
+ */
+export async function createOAuthState(userId, sessionToken, platform, extra = {}) {
+  const { randomBytes } = await import('crypto');
+  const nonce = randomBytes(32).toString('hex');
+  const supabase = getSupabaseAdmin();
+
+  await supabase.from('oauth_states').upsert({
+    nonce,
+    user_id: userId,
+    session_token: sessionToken,
+    platform,
+    extra: JSON.stringify(extra),
+    expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString() // 5 min expiry
+  });
+
+  return nonce;
+}
+
+/**
+ * Validates an OAuth state nonce and returns the stored session data.
+ * Deletes the nonce after use (one-time use).
+ */
+export async function consumeOAuthState(nonce) {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from('oauth_states')
+    .select('*')
+    .eq('nonce', nonce)
+    .single();
+
+  if (error || !data) return null;
+
+  // Delete used nonce
+  await supabase.from('oauth_states').delete().eq('nonce', nonce);
+
+  // Check expiry
+  if (new Date(data.expires_at) < new Date()) return null;
+
+  return {
+    session_token: data.session_token,
+    user_id: data.user_id,
+    platform: data.platform,
+    extra: data.extra ? JSON.parse(data.extra) : {}
+  };
+}
+
+/**
  * Update user profile
  */
 export async function updateUserProfile(userId, profileData) {

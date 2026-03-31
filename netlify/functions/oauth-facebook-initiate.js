@@ -1,7 +1,7 @@
 // Facebook OAuth Initiate - Netlify Function
 // URL: /.netlify/functions/oauth-facebook-initiate
 
-import { validateUserSession } from './utils/supabase.js';
+import { validateUserSession, createOAuthState } from './utils/supabase.js';
 
 export const handler = async (event, context) => {
   const headers = {
@@ -27,12 +27,7 @@ export const handler = async (event, context) => {
       return { statusCode: 401, headers, body: JSON.stringify({ success: false, message: 'Invalid or expired session' }) };
     }
 
-    const state = Buffer.from(JSON.stringify({
-      session_token: sessionToken,
-      user_id: user.id,
-      platform: 'facebook',
-      timestamp: Date.now()
-    })).toString('base64');
+    const state = await createOAuthState(user.id, sessionToken, 'facebook');
 
     const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-facebook-callback`;
 

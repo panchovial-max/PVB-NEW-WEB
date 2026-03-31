@@ -2,7 +2,7 @@
 // Handles OAuth callback from TikTok
 // URL: /.netlify/functions/oauth-tiktok-callback
 
-import { validateUserSession, storeSocialAccountToken } from './utils/supabase.js';
+import { validateUserSession, storeSocialAccountToken, consumeOAuthState } from './utils/supabase.js';
 
 export const handler = async (event, context) => {
   // CORS headers
@@ -49,26 +49,18 @@ export const handler = async (event, context) => {
       };
     }
 
-    // Decode state to get user session token and code_verifier
-    let userSession, codeVerifier;
-    try {
-      const stateData = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
-      userSession = stateData.session_token;
-      codeVerifier = stateData.code_verifier;
-    } catch (err) {
-      console.error('Invalid state parameter:', err);
+    // Validate state nonce server-side (includes code_verifier)
+    const stateData = await consumeOAuthState(state);
+    if (!stateData) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({
-          success: false,
-          message: 'Invalid state parameter'
-        })
+        body: JSON.stringify({ success: false, message: 'Invalid or expired state parameter' })
       };
     }
+    const codeVerifier = stateData.extra?.code_verifier;
 
-    // Validate user session
-    const user = await validateUserSession(userSession);
+    const user = await validateUserSession(stateData.session_token);
     if (!user) {
       return {
         statusCode: 302,

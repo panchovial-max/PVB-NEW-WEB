@@ -2,7 +2,7 @@
 // Handles Meta Graph API callback to get Instagram Business Account
 // URL: /.netlify/functions/oauth-instagram-callback
 
-import { validateUserSession, storeSocialAccountToken } from './utils/supabase.js';
+import { validateUserSession, storeSocialAccountToken, consumeOAuthState } from './utils/supabase.js';
 
 const META_API = 'https://graph.facebook.com/v20.0';
 
@@ -34,16 +34,13 @@ export const handler = async (event, context) => {
       return { statusCode: 400, headers, body: JSON.stringify({ success: false, message: 'Missing authorization code' }) };
     }
 
-    // Decode state
-    let userSession;
-    try {
-      const stateData = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
-      userSession = stateData.session_token;
-    } catch {
-      return { statusCode: 400, headers, body: JSON.stringify({ success: false, message: 'Invalid state parameter' }) };
+    // Validate state nonce server-side
+    const stateData = await consumeOAuthState(state);
+    if (!stateData) {
+      return { statusCode: 400, headers, body: JSON.stringify({ success: false, message: 'Invalid or expired state parameter' }) };
     }
 
-    const user = await validateUserSession(userSession);
+    const user = await validateUserSession(stateData.session_token);
     if (!user) {
       return { statusCode: 302, headers: { Location: '/login.html?error=session_expired&redirect=settings' } };
     }

@@ -1,9 +1,12 @@
-const NOTION_KEY = process.env.NOTION_API_KEY;
+import { validateUserSession } from './utils/supabase.js';
 
-exports.handler = async (event) => {
+const NOTION_KEY = process.env.NOTION_API_KEY;
+const DB_BOLETAS = '3337ab7f-975e-81e2-a15d-fb2e6071f1bf';
+
+export const handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': process.env.BASE_URL || '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
   };
@@ -16,6 +19,16 @@ exports.handler = async (event) => {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
+  // Auth check
+  const authHeader = event.headers.authorization || event.headers.Authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Missing authorization token' }) };
+  }
+  const user = await validateUserSession(authHeader.substring(7));
+  if (!user) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid or expired session' }) };
+  }
+
   if (!NOTION_KEY) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'NOTION_API_KEY not configured' }) };
   }
@@ -24,9 +37,10 @@ exports.handler = async (event) => {
     const body = JSON.parse(event.body);
     const { endpoint, payload } = body;
 
-    const allowed = ['/v1/pages', '/v1/databases'];
+    // Strict allowlist: only specific endpoints
+    const allowed = ['/v1/pages', `/v1/databases/${DB_BOLETAS}/query`];
     const path = endpoint || '/v1/pages';
-    if (!allowed.some(a => path.startsWith(a))) {
+    if (!allowed.includes(path)) {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Endpoint not allowed' }) };
     }
 
@@ -43,6 +57,6 @@ exports.handler = async (event) => {
     const data = await res.json();
     return { statusCode: res.status, headers, body: JSON.stringify(data) };
   } catch (e) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error' }) };
   }
 };

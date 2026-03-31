@@ -2,7 +2,7 @@
 // Initiates OAuth flow for TikTok
 // URL: /.netlify/functions/oauth-tiktok-initiate
 
-import { validateUserSession } from './utils/supabase.js';
+import { validateUserSession, createOAuthState } from './utils/supabase.js';
 
 export const handler = async (event, context) => {
   // CORS headers
@@ -47,23 +47,12 @@ export const handler = async (event, context) => {
       };
     }
 
-    // Create state parameter with user session
-    const state = Buffer.from(JSON.stringify({
-      session_token: sessionToken,
-      user_id: user.id,
-      timestamp: Date.now()
-    })).toString('base64');
-
-        // Generate PKCE code_verifier and code_challenge (SHA256 / S256)
+    // Generate PKCE code_verifier and code_challenge (SHA256 / S256)
     const codeVerifier = generateRandomString(64);
     const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-    const stateWithVerifier = Buffer.from(JSON.stringify({
-      session_token: sessionToken,
-      user_id: user.id,
-      timestamp: Date.now(),
-      code_verifier: codeVerifier
-    })).toString('base64');
+    // Store code_verifier server-side (not in URL)
+    const state = await createOAuthState(user.id, sessionToken, 'tiktok', { code_verifier: codeVerifier });
 
     const redirectUri = `${process.env.BASE_URL}/.netlify/functions/oauth-tiktok-callback`;
 
@@ -73,7 +62,7 @@ export const handler = async (event, context) => {
     authUrl.searchParams.append('scope', 'user.info.basic,user.info.profile,user.info.stats,video.list,comment.list');
     authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('redirect_uri', redirectUri);
-    authUrl.searchParams.append('state', stateWithVerifier);
+    authUrl.searchParams.append('state', state);
     authUrl.searchParams.append('code_challenge', codeChallenge);
     authUrl.searchParams.append('code_challenge_method', 'S256');
 

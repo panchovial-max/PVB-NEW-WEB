@@ -1,0 +1,18 @@
+[
+  {
+    "id": "d0bbab7d-c891-4075-9ad3-a8de10acee71",
+    "user_id": "4cb2e3bb-b8ad-4621-a78f-ae8e80ee7f21",
+    "platform": "facebook",
+    "account_id": "10161991871371761",
+    "account_name": "Pancho Vial Brown",
+    "access_token": "EAAQRWE48i8ABQ86ucvGxQDD5BZB8QgW8YGGZAQ7LV4d5W3V1GpZBkGU5Uv1wpPzbnIGkzLqLAO1c3R54bo22iSd2e0ZBgJ7PJeHzNgnY1IqkoIuDxP4YGpPwpp9lY4zyw2NeL9zIk1w37qGP3oduDrvKW7dCkiJvQhST816CUVZBiYni5llng8EI2R7hZCrlG04rZB0tdNecwZDZD",
+    "refresh_token": null,
+    "token_expires_at": "2026-05-05T11:59:52.702+00:00",
+    "metadata": {
+      "username": "panchovial@gmail.com",
+      "profile_picture": "https://platform-lookaside.fbsbx.com/platform/profilepic/?asid=10161991871371761&height=50&width=50&ext=1775390392&hash=AT8YOC35lNM2ECzfddJDL3q-"
+    },
+    "connected_at": "2026-03-05T21:29:49.287805+00:00",
+    "last_sync_at": "2026-03-06T11:59:52.748+00:00"
+  }
+]

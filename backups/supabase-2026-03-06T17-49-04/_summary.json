@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-03-06T17:49:07.106Z",
+  "tables": [
+    "user_profiles",
+    "social_accounts",
+    "social_metrics",
+    "client_contexts"
+  ],
+  "backup_dir": "/Users/franciscovialbrown/Documents/GitHub/PVB-NEW-WEB/backups/supabase-2026-03-06T17-49-04",
+  "total_rows": 3
+}
