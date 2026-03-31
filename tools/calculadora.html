@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chile Production Cost Estimator | PVB Estudio Creativo</title>
+    <meta name="description" content="Estimate your film, commercial or streaming production costs in Chile. Free estimator with real 2026 crew rates, travel, hospitality and equipment costs. Based on IATSE CPA scale.">
+    <meta name="keywords" content="chile production cost, film production chile, filming in chile cost, crew rates chile, why film in chile, chile locations filming, patagonia filming, atacama filming">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Chile Production Cost Estimator | PVB Estudio Creativo">
+    <meta property="og:description" content="Free tool: estimate your production costs in Chile with real 2026 rates. Film, commercial, streaming &amp; more.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://panchovial.com/tools/calculadora.html">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Schema.org -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Chile Production Cost Estimator",
+        "description": "Estimate film, commercial and streaming production costs in Chile with real 2026 rates.",
+        "url": "https://panchovial.com/tools/calculadora.html",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Organization", "name": "PVB Estudio Creativo", "url": "https://panchovial.com" }
+    }
+    </script>
+
+    <!-- FAQ Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "How much does a commercial production cost in Chile?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "A commercial production in Chile typically costs between $5,000 and $50,000 USD depending on crew size, shoot days, locations, and post-production. Chile crew costs run approximately 35-45% of US IATSE union rates, with 24% crew fringes. Chile offers a 30% cash rebate on qualifying spend (40% outside Santiago) through the IFI Audiovisual program."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What are film crew rates in Chile for 2026?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Based on 2025 IATSE CPA scale adjusted for Chile (35-45% of US rates): Director of Photography $500-$800 USD/day, Camera Operator $280-$450, Gaffer $200-$350, Sound Mixer $280-$400, Production Assistant $80-$130. Chile uses a 10-hour base day with 24% crew fringes."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Why do international productions choose to film in Chile?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Chile offers: 1) Extreme landscape diversity from the driest desert (Atacama) to glaciers (Patagonia) within one country. 2) 30-40% production cost rebate. 3) Crew costs 35-45% of US rates. 4) Modern infrastructure and high safety. 5) Direct flights from major cities. 6) Stable economy and straightforward permitting. 7) Reversed seasons for Northern Hemisphere productions needing summer in December."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Do I need permits to film in Chile?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes. Municipal permits cost $100-$500 USD (5-15 business days). National parks require CONAF permits. A local production service company handles all permitting, insurance, and logistics."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "How much does it cost to fly a crew to Patagonia or Atacama?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Domestic flights from Santiago to Calama (Atacama) or Punta Arenas (Patagonia) cost $150-$350 USD round-trip per person. Flight time is 2-3 hours. Ground transport from airports to remote locations adds $200-$800/day for vehicles. Hotels in these regions range from $80-$250/night."
+                }
+            }
+        ]
+    }
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --dark: #1A1A1A;
+            --mid: #6B6B6B;
+            --light: #F5F5F5;
+            --white: #FFFFFF;
+            --accent: #2D5A27;
+            --accent-light: #3a7a32;
+        }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--white); color: var(--dark); line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+        /* Nav */
+        .navbar { position: fixed; top: 0; left: 0; right: 0; background: var(--white); z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .nav-container { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; max-width: 1200px; margin: 0 auto; }
+        .nav-logo { display: flex; align-items: center; text-decoration: none; }
+        .nav-logo img { height: 48px; width: auto; }
+        .nav-links { display: flex; align-items: center; gap: 24px; }
+        .nav-links a { color: var(--mid); text-decoration: none; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--dark); }
+
+        /* Hero */
+        .calc-hero { padding: 130px 0 50px; background: linear-gradient(135deg, #000 0%, #1a1a1a 50%, #000 100%); color: var(--white); text-align: center; }
+        .calc-hero h1 { font-size: clamp(28px, 5vw, 52px); font-weight: 900; line-height: 1.1; margin-bottom: 12px; }
+        .calc-hero .subtitle { font-size: 17px; color: rgba(255,255,255,0.65); max-width: 640px; margin: 0 auto 20px; }
+        .badge { display: inline-block; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 5px 14px; border-radius: 100px; font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.8); margin-bottom: 16px; letter-spacing: 1.5px; }
+        .estimate-notice { display: inline-block; background: rgba(255,200,50,0.15); border: 1px solid rgba(255,200,50,0.3); color: rgba(255,255,255,0.9); padding: 8px 20px; border-radius: 4px; font-size: 13px; margin-top: 8px; }
+
+        /* Why Chile */
+        .why-chile { padding: 70px 0; background: var(--dark); color: var(--white); }
+        .why-chile h2 { font-size: 32px; font-weight: 900; text-align: center; margin-bottom: 40px; }
+        .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .why-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 28px; }
+        .why-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--white); }
+        .why-card p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+        .why-number { font-size: 36px; font-weight: 900; color: rgba(255,255,255,0.15); margin-bottom: 8px; }
+
+        /* Calculator */
+        .calc-section { padding: 60px 0; }
+        .calc-grid { display: grid; grid-template-columns: 1fr 400px; gap: 40px; align-items: start; }
+
+        /* Steps */
+        .step-indicator { display: flex; gap: 4px; margin-bottom: 32px; }
+        .step-dot { flex: 1; height: 4px; background: #e0e0e0; border-radius: 2px; transition: background 0.3s; }
+        .step-dot.active { background: var(--dark); }
+        .step-dot.done { background: var(--accent); }
+
+        /* Form */
+        .calc-form { background: var(--white); }
+        .form-step { display: none; }
+        .form-step.active { display: block; }
+        .form-section { margin-bottom: 28px; }
+        .form-section-title { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; color: var(--mid); text-transform: uppercase; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #e5e5e5; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+        .form-group select, .form-group input[type="number"], .form-group input[type="text"], .form-group input[type="email"] {
+            width: 100%; padding: 11px 14px; border: 1px solid #d5d5d5; border-radius: 4px;
+            font-family: 'Inter', sans-serif; font-size: 14px; color: var(--dark); background: var(--white); transition: border-color 0.2s;
+        }
+        .form-group select:focus, .form-group input:focus { outline: none; border-color: var(--dark); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-hint { font-size: 12px; color: var(--mid); margin-top: 3px; }
+
+        /* Option cards (production type) */
+        .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .option-card { border: 2px solid #e0e0e0; border-radius: 6px; padding: 16px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .option-card:hover { border-color: var(--dark); background: var(--light); }
+        .option-card.selected { border-color: var(--dark); background: var(--dark); color: var(--white); }
+        .option-card .option-icon { font-size: 28px; margin-bottom: 6px; }
+        .option-card .option-label { font-size: 13px; font-weight: 700; }
+        .option-card .option-desc { font-size: 11px; color: var(--mid); margin-top: 2px; }
+        .option-card.selected .option-desc { color: rgba(255,255,255,0.6); }
+
+        /* Checkboxes */
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid #e5e5e5; border-radius: 4px; cursor: pointer; transition: all 0.2s; font-size: 13px; }
+        .checkbox-item:hover { border-color: var(--dark); background: var(--light); }
+        .checkbox-item.active { border-color: var(--dark); background: var(--dark); color: var(--white); }
+        .checkbox-item input { display: none; }
+        .checkbox-cost { margin-left: auto; font-size: 11px; opacity: 0.6; }
+
+        /* Buttons */
+        .btn { padding: 14px 28px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.5px; border: none; cursor: pointer; transition: all 0.3s; text-transform: uppercase; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+        .btn-primary { background: var(--dark); color: var(--white); }
+        .btn-primary:hover { background: #000; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        .btn-secondary { background: transparent; color: var(--mid); border: 2px solid #d5d5d5; }
+        .btn-secondary:hover { border-color: var(--dark); color: var(--dark); }
+        .btn-white { background: var(--white); color: var(--dark); }
+        .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        .btn-accent { background: var(--accent); color: var(--white); }
+        .btn-accent:hover { background: var(--accent-light); transform: translateY(-2px); }
+        .btn-full { width: 100%; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-group .btn { flex: 1; }
+
+        /* Results */
+        .calc-results { position: sticky; top: 90px; }
+        .results-card { background: var(--dark); color: var(--white); border-radius: 8px; padding: 28px; }
+        .results-title { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 20px; }
+        .results-total { font-size: 44px; font-weight: 900; line-height: 1; }
+        .results-currency { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
+        .results-range { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 24px; font-style: italic; }
+        .results-breakdown { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
+        .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 13px; }
+        .breakdown-label { color: rgba(255,255,255,0.5); }
+        .breakdown-value { font-weight: 700; }
+        .breakdown-bar { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+        .breakdown-bar-fill { height: 100%; background: rgba(255,255,255,0.35); border-radius: 2px; transition: width 0.5s; }
+        .breakdown-row.subtotal { border-top: 1px solid rgba(255,255,255,0.1); margin-top: 6px; padding-top: 12px; }
+        .breakdown-row.total { border-top: 2px solid rgba(255,255,255,0.2); margin-top: 8px; padding-top: 14px; font-size: 15px; }
+        .breakdown-row.contingency { color: rgba(255,200,50,0.7); }
+        .breakdown-row.service-fee { color: rgba(100,200,100,0.7); }
+        .results-disclaimer { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); line-height: 1.5; }
+
+        .results-cta { margin-top: 24px; }
+        .results-cta .btn { width: 100%; margin-bottom: 10px; }
+        .results-cta .btn:last-child { margin-bottom: 0; }
+
+        /* Comparison */
+        .comparison-section { padding: 70px 0; background: var(--light); }
+        .section-title { font-size: 30px; font-weight: 900; text-align: center; margin-bottom: 10px; }
+        .section-subtitle { font-size: 14px; color: var(--mid); text-align: center; margin-bottom: 40px; }
+        .comparison-table { width: 100%; border-collapse: collapse; background: var(--white); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .comparison-table th { background: var(--dark); color: var(--white); font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 14px 16px; text-align: left; }
+        .comparison-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #eee; }
+        .comparison-table tr:last-child td { border-bottom: none; }
+        .comparison-table tr:hover td { background: var(--light); }
+        .highlight-cell { font-weight: 700; color: var(--dark); }
+
+        /* FAQ */
+        .faq-section { padding: 70px 0; }
+        .faq-list { max-width: 800px; margin: 0 auto; }
+        .faq-item { border-bottom: 1px solid #e5e5e5; }
+        .faq-question { width: 100%; background: none; border: none; padding: 18px 0; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: var(--dark); text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .faq-question::after { content: '+'; font-size: 22px; font-weight: 400; color: var(--mid); transition: transform 0.3s; }
+        .faq-item.open .faq-question::after { transform: rotate(45deg); }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+        .faq-answer-inner { padding: 0 0 18px; color: var(--mid); font-size: 14px; line-height: 1.7; }
+        .faq-item.open .faq-answer { max-height: 400px; }
+
+        /* Footer CTA */
+        .footer-cta { padding: 70px 0; background: var(--dark); color: var(--white); text-align: center; }
+        .footer-cta h2 { font-size: 32px; font-weight: 900; margin-bottom: 12px; }
+        .footer-cta p { color: rgba(255,255,255,0.5); max-width: 500px; margin: 0 auto 28px; font-size: 15px; }
+        .footer-cta .btn { width: auto; padding: 16px 48px; }
+        .footer-note { padding: 20px 0; text-align: center; font-size: 12px; color: var(--mid); }
+        .footer-note a { color: var(--dark); text-decoration: none; font-weight: 600; }
+
+        /* Lead Modal */
+        .lead-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .lead-overlay.active { display: flex; }
+        .lead-modal { background: var(--white); border-radius: 8px; padding: 40px; max-width: 520px; width: 92%; max-height: 90vh; overflow-y: auto; }
+        .lead-modal h3 { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+        .lead-modal p { color: var(--mid); margin-bottom: 20px; font-size: 14px; }
+        .lead-form { display: flex; flex-direction: column; gap: 10px; }
+        .lead-form input, .lead-form select, .lead-form textarea { width: 100%; padding: 12px 14px; border: 1px solid #d5d5d5; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 14px; }
+        .lead-form textarea { height: 80px; resize: vertical; }
+        .lead-form input:focus, .lead-form select:focus, .lead-form textarea:focus { outline: none; border-color: var(--dark); }
+        .lead-skip { background: none; border: none; color: var(--mid); font-size: 12px; cursor: pointer; margin-top: 6px; font-family: 'Inter', sans-serif; }
+        .lead-skip:hover { color: var(--dark); }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .calc-grid { grid-template-columns: 1fr; }
+            .calc-results { position: static; }
+            .option-grid { grid-template-columns: 1fr 1fr; }
+            .nav-links { display: none; }
+            .why-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 500px) {
+            .option-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .checkbox-grid { grid-template-columns: 1fr; }
+            .btn-group { flex-direction: column; }
+            .results-total { font-size: 32px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">
+                <img src="../LOGO_PVB.png" alt="PVB Estudio Creativo">
+            </a>
+            <div class="nav-links">
+                <a href="../index.html">HOME</a>
+                <a href="#why-chile">WHY CHILE</a>
+                <a href="#calculator">ESTIMATOR</a>
+                <a href="#faq">FAQ</a>
+                <a href="https://wa.me/56944328662?text=Hi!%20I%20used%20your%20production%20cost%20estimator" target="_blank" rel="noopener" class="btn btn-primary" style="padding:8px 20px;font-size:13px;width:auto;">GET A QUOTE</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="calc-hero">
+        <div class="container">
+            <div class="badge">FREE TOOL &mdash; 2026 RATES</div>
+            <h1>Chile Production<br>Cost Estimator</h1>
+            <p class="subtitle">Get a ballpark estimate for your film, commercial or streaming production in Chile. Based on IATSE CPA 2025 scale rates adjusted for the Chilean market.</p>
+            <div class="estimate-notice">This is a preliminary estimate &mdash; every production is unique. We'll refine the numbers together in a discovery call.</div>
+        </div>
+    </section>
+
+    <!-- Why Film in Chile -->
+    <section class="why-chile" id="why-chile">
+        <div class="container">
+            <h2>Why International Productions Choose Chile</h2>
+            <div class="why-grid">
+                <div class="why-card">
+                    <div class="why-number">01</div>
+                    <h3>Extreme Landscape Diversity</h3>
+                    <p>The world's driest desert (Atacama), Andean peaks, Pacific coastline, lakes, glaciers, vineyards, and cosmopolitan Santiago &mdash; all in one country. No other location offers this range within 2-3h flights.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-number">02</div>
+                    <h3>35-45% Cost Savings vs USA</h3>
+                    <p>Crew rates run 35-45% of US IATSE union scale. Equipment rental 50-65% of US prices. Plus a 30% cash rebate on qualifying production spend (40% outside Santiago) through CORFO's IFI Audiovisual program.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-number">03</div>
+                    <h3>Reversed Seasons</h3>
+                    <p>Need summer in December? Snow in July? Chile's Southern Hemisphere location means you can shoot "summer" content during the Northern Hemisphere winter &mdash; and vice versa. Year-round production capability.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-number">04</div>
+                    <h3>Safety & Infrastructure</h3>
+                    <p>Highest safety rating in Latin America. Modern airports, highways, hotels and telecommunications. Reliable power grid even in remote locations. Santiago has direct flights from LAX, Miami, NYC, Dallas, Atlanta, Madrid, London, and more.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-number">05</div>
+                    <h3>Experienced Local Crews</h3>
+                    <p>Chile has a mature film industry with crews experienced in international co-productions. Spanish and English-speaking professionals. Rental houses with ARRI, RED, and Sony Venice inventory.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-number">06</div>
+                    <h3>Straightforward Permitting</h3>
+                    <p>Municipal permits in 5-15 business days. Film Commission Chile provides free location scouting support. Chile has co-production treaties with 12+ countries. We handle all paperwork.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calculator -->
+    <section class="calc-section" id="calculator">
+        <div class="container">
+            <h2 class="section-title">Build Your Estimate</h2>
+            <p class="section-subtitle">Configure your production and get an instant ballpark figure</p>
+
+            <div class="calc-grid">
+                <!-- Form Column -->
+                <div class="calc-form">
+
+                    <!-- Step indicator -->
+                    <div class="step-indicator">
+                        <div class="step-dot active" data-step="1"></div>
+                        <div class="step-dot" data-step="2"></div>
+                        <div class="step-dot" data-step="3"></div>
+                        <div class="step-dot" data-step="4"></div>
+                    </div>
+
+                    <!-- STEP 1: What are you producing? -->
+                    <div class="form-step active" id="step1">
+                        <div class="form-section">
+                            <div class="form-section-title">Step 1 &mdash; What Deliverables Do You Need?</div>
+                            <p class="form-hint" style="margin-bottom:14px">Select all that apply. Each deliverable adds its own crew, equipment and post-production costs.</p>
+                            <div class="option-grid" id="productionTypeGrid">
+                                <div class="option-card selected" data-value="tv_commercial">
+                                    <div class="option-icon">&#127909;</div>
+                                    <div class="option-label">TV Commercial</div>
+                                    <div class="option-desc">30s-60s broadcast / cable</div>
+                                </div>
+                                <div class="option-card" data-value="digital_ad">
+                                    <div class="option-icon">&#128241;</div>
+                                    <div class="option-label">Digital / Social Ads</div>
+                                    <div class="option-desc">Online spots, reels, stories</div>
+                                </div>
+                                <div class="option-card" data-value="brand_film">
+                                    <div class="option-icon">&#127916;</div>
+                                    <div class="option-label">Brand Film</div>
+                                    <div class="option-desc">Corporate, brand story 2-10min</div>
+                                </div>
+                                <div class="option-card" data-value="feature_film">
+                                    <div class="option-icon">&#127902;</div>
+                                    <div class="option-label">Feature Film</div>
+                                    <div class="option-desc">Theatrical / indie feature</div>
+                                </div>
+                                <div class="option-card" data-value="streaming_series">
+                                    <div class="option-icon">&#128250;</div>
+                                    <div class="option-label">Streaming / Series</div>
+                                    <div class="option-desc">Netflix, HBO, episodic</div>
+                                </div>
+                                <div class="option-card" data-value="music_video">
+                                    <div class="option-icon">&#127925;</div>
+                                    <div class="option-label">Music Video</div>
+                                    <div class="option-desc">Single or multi-location</div>
+                                </div>
+                                <div class="option-card" data-value="documentary">
+                                    <div class="option-icon">&#127758;</div>
+                                    <div class="option-label">Documentary</div>
+                                    <div class="option-desc">Docu, nature, travel</div>
+                                </div>
+                                <div class="option-card" data-value="fashion_lookbook">
+                                    <div class="option-icon">&#128248;</div>
+                                    <div class="option-label">Fashion / Lookbook</div>
+                                    <div class="option-desc">Photo + video campaign</div>
+                                </div>
+                                <div class="option-card" data-value="bts">
+                                    <div class="option-icon">&#127910;</div>
+                                    <div class="option-label">Behind the Scenes</div>
+                                    <div class="option-desc">BTS content from the shoot</div>
+                                </div>
+                                <div class="option-card" data-value="stills">
+                                    <div class="option-icon">&#128247;</div>
+                                    <div class="option-label">Photography / Stills</div>
+                                    <div class="option-desc">Campaign stills, key art</div>
+                                </div>
+                            </div>
+                            <div id="typeBreakdown" style="margin-top:16px;font-size:13px;background:var(--light);border-radius:6px;padding:16px;"></div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-full" onclick="goToStep(2)">NEXT: CREW & LOCATION</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: Crew, Location, Duration -->
+                    <div class="form-step" id="step2">
+                        <div class="form-section">
+                            <div class="form-section-title">Step 2 &mdash; Crew & Location</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="shootDays">Shoot Days</label>
+                                    <input type="number" id="shootDays" value="2" min="1" max="60">
+                                </div>
+                                <div class="form-group">
+                                    <label>Crew Size</label>
+                                    <div id="crewSizeAuto" style="padding:11px 14px;border:1px solid #d5d5d5;border-radius:4px;font-size:14px;background:var(--light);color:var(--dark);font-weight:600;">14 people</div>
+                                    <div class="form-hint">Auto-calculated from your deliverables</div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Primary Location</label>
+                                <select id="location">
+                                    <option value="santiago_studio">Santiago &mdash; Studio</option>
+                                    <option value="santiago_exterior">Santiago &mdash; Exterior / City</option>
+                                    <option value="valparaiso">Valparaiso / Vina del Mar (coast)</option>
+                                    <option value="wine_country">Wine Country (Colchagua / Casablanca)</option>
+                                    <option value="atacama">Atacama Desert (flights required)</option>
+                                    <option value="patagonia">Patagonia / Torres del Paine (flights required)</option>
+                                    <option value="lakes">Lakes District / Pucon (drive or fly)</option>
+                                    <option value="andes">Andes Mountains (drive from Santiago)</option>
+                                    <option value="rural">Rural / Hacienda / Equestrian</option>
+                                    <option value="multiple">Multiple Locations</option>
+                                </select>
+                            </div>
+                            <div class="form-hint" id="locationHint"></div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-secondary" onclick="goToStep(1)">BACK</button>
+                            <button class="btn btn-primary" onclick="goToStep(3)">NEXT: EQUIPMENT</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: Equipment, Services, Extras -->
+                    <div class="form-step" id="step3">
+                        <div class="form-section">
+                            <div class="form-section-title">Step 3 &mdash; Equipment & Production Needs</div>
+                            <p class="form-hint" style="margin-bottom:12px">Select everything your production requires. Costs are per day.</p>
+
+                            <div class="form-section-title" style="margin-top:20px">Camera & Tech</div>
+                            <div class="checkbox-grid" id="equipGrid">
+                                <label class="checkbox-item active" data-cost="1200" data-key="cinema_camera" data-cat="equip">
+                                    <input type="checkbox" checked> Cinema Camera Pkg <span class="checkbox-cost">$1,200</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="550" data-key="lighting" data-cat="equip">
+                                    <input type="checkbox"> Lighting Package <span class="checkbox-cost">$550</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="350" data-key="audio" data-cat="equip">
+                                    <input type="checkbox"> Pro Audio / Sound <span class="checkbox-cost">$350</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="850" data-key="drone" data-cat="equip">
+                                    <input type="checkbox"> Drone / Aerial <span class="checkbox-cost">$850</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="350" data-key="gimbal_light" data-cat="equip">
+                                    <input type="checkbox"> Gimbal (DJI RS/Tilta) <span class="checkbox-cost">$350</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="800" data-key="steadicam_pro" data-cat="equip">
+                                    <input type="checkbox"> Steadicam / Trinity <span class="checkbox-cost">$800</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="250" data-key="segway" data-cat="equip">
+                                    <input type="checkbox"> Segway / EasyRig <span class="checkbox-cost">$250</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="200" data-key="teleprompter" data-cat="equip">
+                                    <input type="checkbox"> Teleprompter <span class="checkbox-cost">$200</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="400" data-key="monitor" data-cat="equip">
+                                    <input type="checkbox"> Director's Monitor <span class="checkbox-cost">$400</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="350" data-key="generator" data-cat="equip">
+                                    <input type="checkbox"> Generator (remote) <span class="checkbox-cost">$350</span>
+                                </label>
+                            </div>
+
+                            <div class="form-section-title" style="margin-top:20px">Production Services</div>
+                            <div class="checkbox-grid" id="servicesGrid">
+                                <label class="checkbox-item" data-cost="500" data-key="art_direction" data-cat="services">
+                                    <input type="checkbox"> Art Direction <span class="checkbox-cost">$500</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="350" data-key="styling" data-cat="services">
+                                    <input type="checkbox"> Wardrobe / Styling <span class="checkbox-cost">$350</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="300" data-key="mua" data-cat="services">
+                                    <input type="checkbox"> Makeup / Hair <span class="checkbox-cost">$300</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="250" data-key="casting" data-cat="services">
+                                    <input type="checkbox"> Local Casting <span class="checkbox-cost">$250</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="300" data-key="location_scout" data-cat="services">
+                                    <input type="checkbox"> Location Scouting <span class="checkbox-cost">$300</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="200" data-key="permits" data-cat="services">
+                                    <input type="checkbox"> Permits / Insurance <span class="checkbox-cost">$200</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-secondary" onclick="goToStep(2)">BACK</button>
+                            <button class="btn btn-primary" onclick="goToStep(4)">NEXT: TRAVEL & POST</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: Travel, Hospitality, Post -->
+                    <div class="form-step" id="step4">
+
+                        <!-- Crew travel (auto for remote locations) -->
+                        <div class="form-section" id="crewTravelSection">
+                            <div class="form-section-title">Crew Travel &amp; Accommodation</div>
+                            <div class="form-hint" id="crewTravelNote" style="margin-bottom:14px;padding:10px;background:#fff8e1;border-radius:4px;border:1px solid #ffe082;"></div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="crewFlying">Crew members flying to location</label>
+                                    <input type="number" id="crewFlying" value="0" min="0" max="50">
+                                    <div class="form-hint">Auto-filled based on crew size + location</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="crewHotelNights">Hotel nights for crew</label>
+                                    <input type="number" id="crewHotelNights" value="0" min="0" max="30">
+                                    <div class="form-hint">Shoot days + 1 travel day each way</div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="crewHotelTier">Crew hotel tier</label>
+                                <select id="crewHotelTier">
+                                    <option value="budget">Budget ($60-$90/night)</option>
+                                    <option value="mid" selected>Mid-range ($100-$160/night)</option>
+                                    <option value="premium">Premium ($180-$280/night)</option>
+                                </select>
+                            </div>
+
+                            <div class="checkbox-grid">
+                                <label class="checkbox-item" data-cost="0" data-key="crew_per_diem" data-cat="crewtravel">
+                                    <input type="checkbox"> Crew Per Diem <span class="checkbox-cost">$45/pp/day</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="180" data-key="catering" data-cat="crewtravel">
+                                    <input type="checkbox"> On-Set Catering <span class="checkbox-cost">$180/day</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="400" data-key="ground_transport" data-cat="crewtravel">
+                                    <input type="checkbox"> Ground Transport <span class="checkbox-cost">$400/day</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Agency / Client hospitality -->
+                        <div class="form-section">
+                            <div class="form-section-title">Agency / Client Hospitality (optional)</div>
+                            <p class="form-hint" style="margin-bottom:12px">If your agency or client team is visiting for the shoot</p>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="agencyPax">Agency/client people</label>
+                                    <input type="number" id="agencyPax" value="0" min="0" max="20">
+                                </div>
+                                <div class="form-group">
+                                    <label for="agencyNights">Hotel nights</label>
+                                    <input type="number" id="agencyNights" value="0" min="0" max="15">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="agencyHotelTier">Agency hotel tier</label>
+                                <select id="agencyHotelTier">
+                                    <option value="mid">Mid-range ($100-$160/night)</option>
+                                    <option value="premium">Premium ($180-$280/night)</option>
+                                    <option value="luxury" selected>Luxury ($300-$500/night)</option>
+                                    <option value="5star_atacama">5-Star Atacama (Nayara/Tierra &mdash; $450-$850/night)</option>
+                                    <option value="5star_patagonia">5-Star Patagonia (Explora/Awasi &mdash; $600-$1,200/night)</option>
+                                </select>
+                                <div class="form-hint" id="hotelExamples"></div>
+                            </div>
+
+                            <div class="checkbox-grid" style="margin-top:12px">
+                                <label class="checkbox-item" data-cost="0" data-key="client_dinners" data-cat="hospitality">
+                                    <input type="checkbox"> Client Dinners <span class="checkbox-cost">$80-$120/pp</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="0" data-key="agency_flights" data-cat="hospitality">
+                                    <input type="checkbox"> Domestic Flights (agency) <span class="checkbox-cost">$250/pp RT</span>
+                                </label>
+                                <label class="checkbox-item" data-cost="0" data-key="agency_transport" data-cat="hospitality">
+                                    <input type="checkbox"> Private Transfer (agency) <span class="checkbox-cost">$200/day</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title">Post-Production</div>
+                            <div class="form-group">
+                                <label for="postLevel">Post-Production Level</label>
+                                <select id="postLevel">
+                                    <option value="none">Not needed (client handles post)</option>
+                                    <option value="basic">Basic &mdash; edit + color correction</option>
+                                    <option value="standard" selected>Standard &mdash; edit + color + sound + graphics</option>
+                                    <option value="premium">Premium &mdash; full post + VFX + motion graphics</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-secondary" onclick="goToStep(3)">BACK</button>
+                            <button class="btn btn-accent btn-full" id="btnGetEstimate">VIEW FULL ESTIMATE</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Results Column (sticky) -->
+                <div class="calc-results">
+                    <div class="results-card">
+                        <div class="results-title">Preliminary Estimate</div>
+                        <div class="results-total" id="totalUSD">$12,400</div>
+                        <div class="results-currency" id="totalCLP">~$11.656.000 CLP</div>
+                        <div class="results-range" id="totalRange">Range: $10,500 &ndash; $14,900</div>
+
+                        <div class="results-breakdown">
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Crew</span>
+                                <span class="breakdown-value" id="bCrew">$3,620</span>
+                            </div>
+                            <div class="breakdown-bar"><div class="breakdown-bar-fill" id="barCrew" style="width:30%"></div></div>
+
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Equipment</span>
+                                <span class="breakdown-value" id="bEquip">$2,400</span>
+                            </div>
+                            <div class="breakdown-bar"><div class="breakdown-bar-fill" id="barEquip" style="width:20%"></div></div>
+
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Location & Permits</span>
+                                <span class="breakdown-value" id="bLoc">$600</span>
+                            </div>
+                            <div class="breakdown-bar"><div class="breakdown-bar-fill" id="barLoc" style="width:5%"></div></div>
+
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Production Services</span>
+                                <span class="breakdown-value" id="bServices">$0</span>
+                            </div>
+                            <div class="breakdown-bar"><div class="breakdown-bar-fill" id="barServices" style="width:0%"></div></div>
+
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Crew Travel & Accommodation</span>
+                                <span class="breakdown-value" id="bCrewTravel">$0</span>
+                            </div>
+                            <div class="breakdown-bar"><div class="breakdown-bar-fill" id="barCrewTravel" style="width:0%"></div></div>
+
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Agency / Client Hospitality</span>
+                                <span class="breakdown-value" id="bAgency">$0</span>
+                            </div>
+                            <div class="breakdown-bar"><div class="breakdown-bar-fill" id="barAgency" style="width:0%"></div></div>
+
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Post-Production</span>
+                                <span class="breakdown-value" id="bPost">$4,000</span>
+                            </div>
+                            <div class="breakdown-bar"><div class="breakdown-bar-fill" id="barPost" style="width:33%"></div></div>
+
+                            <div class="breakdown-row subtotal">
+                                <span class="breakdown-label">Subtotal</span>
+                                <span class="breakdown-value" id="bSubtotal">$10,620</span>
+                            </div>
+
+                            <div class="breakdown-row contingency">
+                                <span class="breakdown-label">Contingency (10%)</span>
+                                <span class="breakdown-value" id="bContingency">$1,062</span>
+                            </div>
+
+                            <div class="breakdown-row service-fee">
+                                <span class="breakdown-label">Production Service Fee (25% AICP)</span>
+                                <span class="breakdown-value" id="bServiceFee">$1,593</span>
+                            </div>
+
+                            <div class="breakdown-row total">
+                                <span class="breakdown-label">Total Estimate</span>
+                                <span class="breakdown-value" id="bTotal">$12,400</span>
+                            </div>
+                        </div>
+
+                        <div class="results-disclaimer">
+                            This is a preliminary estimate for budgeting purposes only. Every production has unique requirements. Final costs are determined after a detailed discovery call and location scout. Prices do not include talent fees (SAG-AFTRA or local), which vary significantly by project.
+                        </div>
+
+                        <div class="results-cta">
+                            <button class="btn btn-white" id="ctaSchedule">SCHEDULE DISCOVERY CALL</button>
+                            <button class="btn btn-secondary" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);" id="ctaWhatsApp">OR MESSAGE US ON WHATSAPP</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison -->
+    <!-- Comparison table removed — not necessary for the estimator flow -->
+
+    <!-- FAQ -->
+    <section class="faq-section" id="faq">
+        <div class="container">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <p class="section-subtitle">Common questions about filming in Chile</p>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-question">How much does a commercial production cost in Chile?</button>
+                    <div class="faq-answer"><div class="faq-answer-inner">A commercial production in Chile typically costs between $5,000 and $50,000 USD depending on crew size, shoot days, locations, and post-production. Chile crew costs run approximately 35-45% of US IATSE union rates, with 24% crew fringes (vs 30-40% in the US). Chile also offers a 30% cash rebate on qualifying production spend through the IFI Audiovisual program (40% outside Santiago).</div></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">What are film crew rates in Chile for 2026?</button>
+                    <div class="faq-answer"><div class="faq-answer-inner">Based on 2025 IATSE CPA scale adjusted for Chile: Director of Photography $500-$800/day, Camera Operator $280-$450, Gaffer $200-$350, Sound Mixer $280-$400, PA $80-$130. Chile uses a 10-hour base day with OT at 1.5x for hours 11-12, 2x after that, capped at 14 hours. Crew fringes are 24%.</div></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">Why do productions choose Chile over Argentina or Colombia?</button>
+                    <div class="faq-answer"><div class="faq-answer-inner">Chile is 10-20% more expensive than Argentina/Colombia for labor, but offers: higher safety standards, superior infrastructure, extreme landscape diversity (Atacama desert to Patagonian glaciers), reversed seasons for year-round flexibility, reliable logistics, and the 30% production rebate. Many productions find the quality-to-cost ratio and reliability make Chile the better overall value.</div></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">How much do flights to Atacama or Patagonia cost?</button>
+                    <div class="faq-answer"><div class="faq-answer-inner">Domestic flights from Santiago: Calama (Atacama) $150-$300 RT, Punta Arenas (Patagonia) $180-$350 RT, Temuco (Lakes District) $120-$250 RT. Flight times are 2-3 hours. Budget extra for ground transport from airports: 4x4 vehicles in Atacama ~$200-$400/day, vans in Patagonia ~$300-$600/day. Hotels range from $80-$250/night depending on remoteness.</div></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">Do we need permits to film in Chile?</button>
+                    <div class="faq-answer"><div class="faq-answer-inner">Yes. Municipal permits: $100-$500 USD, 5-15 business days. National parks: CONAF permits required. Private locations: negotiate with owners. Film Commission Chile offers free location scouting support. PVB handles all permitting, insurance, and logistics as part of our production service.</div></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">What does the production service fee cover?</button>
+                    <div class="faq-answer"><div class="faq-answer-inner">The 22% production service fee is the industry standard for Latin American production services. It covers: dedicated line producer, full production coordination, crew hiring and management, vendor negotiations, on-ground logistics, schedule management, daily production reports, location scouting, permit handling, insurance coordination, equipment sourcing, travel and accommodation booking, and 24/7 availability during production. This is your complete local production arm &mdash; we handle everything on the ground so your team can focus on the creative.</div></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">Should we budget for agency/client hospitality?</button>
+                    <div class="faq-answer"><div class="faq-answer-inner">Yes. If your agency or client team is traveling to Chile, budget for: international flights, hotel, ground transport, per diem, and client dinners at well-known Santiago restaurants ($60-$120/person). These are standard production expenses. We can recommend hotels and restaurants for every budget level and arrange all reservations.</div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer CTA -->
+    <section class="footer-cta">
+        <div class="container">
+            <h2>Ready to Explore Chile?</h2>
+            <p>Every great production starts with a conversation. Tell us what you're envisioning and we'll build a detailed, custom estimate.</p>
+            <a href="https://wa.me/56944328662?text=Hi!%20I%20used%20your%20Chile%20production%20cost%20estimator%20and%20I%27d%20like%20to%20schedule%20a%20discovery%20call." target="_blank" rel="noopener" class="btn btn-white">SCHEDULE A DISCOVERY CALL</a>
+        </div>
+    </section>
+    <div class="footer-note"><div class="container">&copy; 2026 <a href="https://panchovial.com">PVB Estudio Creativo</a> &mdash; Santiago, Chile</div></div>
+
+    <!-- Lead / Discovery Call Modal -->
+    <div class="lead-overlay" id="leadOverlay">
+        <div class="lead-modal">
+            <h3>Schedule a Discovery Call</h3>
+            <p>Tell us about your project and we'll come back with a detailed, line-by-line estimate within 48 hours.</p>
+            <form class="lead-form" id="leadForm">
+                <input type="text" id="leadName" placeholder="Your name *" required>
+                <input type="email" id="leadEmail" placeholder="Email *" required>
+                <input type="text" id="leadCompany" placeholder="Company / Agency">
+                <select id="leadTimeline">
+                    <option value="">When are you looking to shoot?</option>
+                    <option value="asap">ASAP (next 2-4 weeks)</option>
+                    <option value="1-3months">1-3 months</option>
+                    <option value="3-6months">3-6 months</option>
+                    <option value="exploring">Just exploring / budgeting</option>
+                </select>
+                <textarea id="leadNotes" placeholder="Tell us briefly about your project (optional)"></textarea>
+                <div id="leadEstimateSummary" style="background:var(--light);padding:12px;border-radius:4px;font-size:12px;color:var(--mid);"></div>
+                <button type="submit" class="btn btn-primary btn-full">SEND &amp; SCHEDULE CALL</button>
+            </form>
+            <button class="lead-skip" id="leadSkip">Skip form, message us on WhatsApp instead</button>
+        </div>
+    </div>
+
+    <script>
+    // =================================================================
+    // CHILE PRODUCTION COST ESTIMATOR — PVB Estudio Creativo
+    //
+    // Sources:
+    // - IATSE CPA 2025 scale (cmsproductions.com/blog/iatse-commercial-rates)
+    //   DP $154.28/hr ($1,234/8hr), Cam Op $94.45/hr ($756/8hr)
+    //   Sound Mixer $105.38/hr ($843/8hr)
+    //   Chile rates ~35-45% of US union scale
+    // - DGA 2025-2026: Director $1,841/day, 1st AD $1,280/day
+    // - Emerge Film Solutions: Chile fringes 24%, base 10hr day
+    // - CORFO IFI Audiovisual: 30% rebate (40% outside Santiago)
+    // - Assemble/Wrapbook 2024: non-union US DP $1,000-$1,800
+    // =================================================================
+
+    // =================================================================
+    // Each deliverable adds REAL costs: extra crew, equipment, post
+    // Not multipliers — actual line items that get added per day
+    // =================================================================
+
+    const DELIVERABLES = {
+        tv_commercial: {
+            label: 'TV Commercial',
+            // Base crew for a commercial shoot
+            crewPerDay: [
+                { role: 'Director', rate: 1200 },
+                { role: 'Line Producer', rate: 700 },
+                { role: 'DP / Cinematographer', rate: 650 },
+                { role: 'Camera Operator', rate: 350 },
+                { role: '1st AC / Focus Puller', rate: 250 },
+                { role: 'Gaffer', rate: 280 },
+                { role: 'Key Grip', rate: 250 },
+                { role: 'Sound Mixer', rate: 300 },
+                { role: 'Boom Operator', rate: 180 },
+                { role: 'Script Supervisor', rate: 250 },
+                { role: 'Production Coordinator', rate: 250 },
+                { role: '2x PA', rate: 200 },
+            ],
+            extraEquipPerDay: 0, // equipment selected separately
+            postProduction: 4500, // Full edit + color + sound + graphics
+            cateringMultiplier: 1.0, // base catering for this crew size
+            headcount: 14,
+            description: 'Full commercial crew (12-14 people). Edit + color grade + sound mix + graphics.'
+        },
+        digital_ad: {
+            label: 'Digital / Social Ads',
+            crewPerDay: [
+                { role: 'Content Director', rate: 600 },
+                { role: 'DP / Camera', rate: 500 },
+                { role: 'Gaffer / Grip', rate: 250 },
+                { role: 'Sound', rate: 250 },
+                { role: 'PA / Runner', rate: 100 },
+            ],
+            extraEquipPerDay: 0,
+            postProduction: 2000, // Multiple cuts, resizes, subtitles
+            cateringMultiplier: 0.6,
+            headcount: 6,
+            description: 'Lean crew (5-6 people). Multiple format edits + resizes for platforms.'
+        },
+        brand_film: {
+            label: 'Brand Film',
+            crewPerDay: [
+                { role: 'Director', rate: 1000 },
+                { role: 'DP', rate: 600 },
+                { role: 'Camera Operator', rate: 350 },
+                { role: '1st AC', rate: 250 },
+                { role: 'Gaffer', rate: 280 },
+                { role: 'Grip', rate: 220 },
+                { role: 'Sound Mixer', rate: 300 },
+                { role: 'Production Coordinator', rate: 250 },
+                { role: 'PA', rate: 100 },
+            ],
+            extraEquipPerDay: 0,
+            postProduction: 3500, // Edit + color + sound + music licensing
+            cateringMultiplier: 0.8,
+            headcount: 10,
+            description: 'Mid-size crew (9-10 people). Full edit + color + sound design + music.'
+        },
+        feature_film: {
+            label: 'Feature Film',
+            crewPerDay: [
+                { role: 'Director', rate: 1500 },
+                { role: '1st AD', rate: 600 },
+                { role: '2nd AD', rate: 300 },
+                { role: 'Line Producer', rate: 800 },
+                { role: 'DP', rate: 800 },
+                { role: 'A-Cam Operator', rate: 400 },
+                { role: 'B-Cam Operator', rate: 350 },
+                { role: '1st AC (x2)', rate: 500 },
+                { role: '2nd AC', rate: 200 },
+                { role: 'DIT', rate: 350 },
+                { role: 'Gaffer', rate: 300 },
+                { role: 'Best Boy Electric', rate: 220 },
+                { role: 'Key Grip', rate: 280 },
+                { role: 'Best Boy Grip', rate: 200 },
+                { role: 'Dolly Grip', rate: 220 },
+                { role: 'Sound Mixer', rate: 350 },
+                { role: 'Boom', rate: 200 },
+                { role: 'Script Supervisor', rate: 300 },
+                { role: 'Continuity', rate: 200 },
+                { role: 'Prod. Coordinator', rate: 300 },
+                { role: '3x PA', rate: 300 },
+            ],
+            extraEquipPerDay: 500, // Multi-cam, extra monitors, video village
+            postProduction: 15000,
+            cateringMultiplier: 1.8,
+            headcount: 25,
+            description: 'Full feature crew (22-25 people). Multi-cam, video village, full post pipeline.'
+        },
+        streaming_series: {
+            label: 'Streaming / Series',
+            crewPerDay: [
+                { role: 'Director (episodic)', rate: 1800 },
+                { role: '1st AD', rate: 650 },
+                { role: '2nd AD', rate: 320 },
+                { role: 'Line Producer', rate: 900 },
+                { role: 'DP', rate: 850 },
+                { role: 'A-Cam Op', rate: 400 },
+                { role: 'B-Cam Op', rate: 380 },
+                { role: '1st AC (x2)', rate: 500 },
+                { role: '2nd AC (x2)', rate: 360 },
+                { role: 'DIT', rate: 380 },
+                { role: 'Gaffer', rate: 320 },
+                { role: 'Best Boy + 2 Electrics', rate: 520 },
+                { role: 'Key Grip + 2 Grips', rate: 600 },
+                { role: 'Sound Mixer + Boom', rate: 550 },
+                { role: 'Script Supervisor', rate: 320 },
+                { role: 'Art Director', rate: 500 },
+                { role: 'Set Dresser', rate: 250 },
+                { role: 'Props', rate: 200 },
+                { role: 'Prod. Coordinator', rate: 350 },
+                { role: 'Prod. Secretary', rate: 200 },
+                { role: '4x PA', rate: 400 },
+            ],
+            extraEquipPerDay: 800,
+            postProduction: 20000,
+            cateringMultiplier: 2.2,
+            headcount: 32,
+            description: 'Large-scale crew (28-32 people). Episodic post, VFX, extensive sound design.'
+        },
+        music_video: {
+            label: 'Music Video',
+            crewPerDay: [
+                { role: 'Director', rate: 800 },
+                { role: 'DP', rate: 550 },
+                { role: 'Camera Op / Steadicam', rate: 400 },
+                { role: 'Gaffer', rate: 250 },
+                { role: 'Grip', rate: 200 },
+                { role: 'PA', rate: 100 },
+            ],
+            extraEquipPerDay: 0,
+            postProduction: 2500, // Creative edit + color + graphics
+            cateringMultiplier: 0.5,
+            headcount: 7,
+            description: 'Creative crew (6-7 people). Stylized edit + color grade + motion graphics.'
+        },
+        documentary: {
+            label: 'Documentary',
+            crewPerDay: [
+                { role: 'Director / Interviewer', rate: 800 },
+                { role: 'DP / Camera', rate: 550 },
+                { role: 'Sound Recordist', rate: 300 },
+                { role: 'PA / Fixer', rate: 150 },
+            ],
+            extraEquipPerDay: 0,
+            postProduction: 3000, // Long-form edit + sound + color
+            cateringMultiplier: 0.4,
+            headcount: 4,
+            description: 'Lean crew (3-4 people). Long-form edit + sound design + color.'
+        },
+        fashion_lookbook: {
+            label: 'Fashion / Lookbook',
+            crewPerDay: [
+                { role: 'Creative Director', rate: 800 },
+                { role: 'Photographer', rate: 650 },
+                { role: 'Photo Assistant / Digi Tech', rate: 300 },
+                { role: 'Videographer', rate: 450 },
+                { role: 'Gaffer', rate: 250 },
+                { role: 'Stylist', rate: 400 },
+                { role: 'MUA / Hair', rate: 350 },
+                { role: 'Producer / Coordinator', rate: 350 },
+                { role: 'PA', rate: 100 },
+            ],
+            extraEquipPerDay: 200, // Photo equipment, tethered setup
+            postProduction: 3000, // Photo retouching + video edit + color
+            cateringMultiplier: 0.8,
+            headcount: 10,
+            description: 'Photo + video crew (9-10 people). Retouching + video edit + color.'
+        },
+        bts: {
+            label: 'Behind the Scenes',
+            crewPerDay: [
+                { role: 'BTS Cameraman', rate: 350 },
+                { role: 'BTS PA / Sound', rate: 150 },
+            ],
+            extraEquipPerDay: 100, // Small camera, wireless lav
+            postProduction: 800, // Quick edit of BTS reel
+            cateringMultiplier: 0.15, // Just 2 more mouths
+            headcount: 2,
+            description: '+2 people on set. BTS reel edit.'
+        },
+        stills: {
+            label: 'Photography / Stills',
+            crewPerDay: [
+                { role: 'Photographer', rate: 600 },
+                { role: 'Digi Tech / Photo Asst', rate: 280 },
+                { role: 'Photo PA', rate: 120 },
+            ],
+            extraEquipPerDay: 250, // Photo bodies, lenses, tethered station, strobes
+            postProduction: 1500, // Culling + retouching (50-80 images)
+            cateringMultiplier: 0.2, // 3 more mouths
+            headcount: 3,
+            description: '+3 people on set. Culling + retouching 50-80 selects.'
+        }
+    };
+
+    const DATA = {
+        location: {
+            santiago_studio:   { base: 400, travel: 0, remote: false, flightCost: 0, hint: 'Studio rental $500-$2,000/day depending on size' },
+            santiago_exterior: { base: 300, travel: 0, remote: false, flightCost: 0, hint: 'Municipal permit $100-$300, 5-15 business days' },
+            valparaiso:        { base: 450, travel: 150, remote: false, flightCost: 0, hint: '~1.5hr drive from Santiago. Consider overnight for early calls' },
+            wine_country:      { base: 550, travel: 200, remote: false, flightCost: 0, hint: '~2hr drive. Location fees vary by vineyard ($500-$2,000)' },
+            atacama:           { base: 600, travel: 0, remote: true, flightCost: 250, hint: 'Flights SCL-Calama ~$250 RT/pp (2hr). Crew hotel + per diem required. 300+ clear days/year' },
+            patagonia:         { base: 700, travel: 0, remote: true, flightCost: 300, hint: 'Flights SCL-Punta Arenas ~$300 RT/pp (3hr). Crew hotel + per diem required. Best Oct-Mar' },
+            lakes:             { base: 500, travel: 0, remote: true, flightCost: 200, hint: 'Fly SCL-Temuco ~$200 RT/pp (1.5hr) or 8hr drive. Green year-round' },
+            andes:             { base: 500, travel: 250, remote: 'drive', flightCost: 0, hint: '1-3hr drive from Santiago. May need overnight for dawn shoots. Snow Jun-Sep' },
+            rural:             { base: 600, travel: 300, remote: 'drive', flightCost: 0, hint: 'Hacienda/ranch fees vary. May need overnight. We have equestrian location contacts' },
+            multiple:          { base: 800, travel: 400, remote: true, flightCost: 280, hint: 'Multi-location logistics. Flights + ground transport between locations' }
+        },
+
+        post: { none: 0, basic: 1.0, standard: 1.0, premium: 1.6 }, // multiplier on deliverable post costs
+
+        hotel: {
+            budget: 75, mid: 130, premium: 230, luxury: 400,
+            '5star_atacama': 650,
+            '5star_patagonia': 900
+        },
+        hotelExamples: {
+            budget: '', mid: '', premium: '',
+            luxury: 'e.g. W Santiago, Ritz-Carlton, Mandarin Oriental',
+            '5star_atacama': 'Nayara Alto Atacama ($450-$850), Tierra Atacama ($400-$650), Awasi ($550-$900)',
+            '5star_patagonia': 'Explora Torres del Paine ($600-$1,200), Awasi Patagonia ($700-$1,100), Tierra Patagonia ($500-$900)'
+        },
+
+        baseCateringPerHead: 25,  // $25/person/day (lunch + snacks + drinks)
+        contingency: 0.10,
+        serviceFee: 0.25,  // 25% AICP standard (covers line producer, coordination, crew mgmt, vendor negotiation, logistics, permits, insurance, reporting, 24/7 availability)
+        clpRate: 940,
+        clientDinner: 100,
+        perDiem: 45
+    };
+
+    // State
+    let currentStep = 1;
+
+    // Step navigation
+    function goToStep(n) {
+        currentStep = n;
+        document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step' + n).classList.add('active');
+        document.querySelectorAll('.step-dot').forEach(d => {
+            const s = parseInt(d.dataset.step);
+            d.classList.remove('active', 'done');
+            if (s === n) d.classList.add('active');
+            if (s < n) d.classList.add('done');
+        });
+        calculate();
+        window.scrollTo({ top: document.getElementById('calculator').offsetTop - 80, behavior: 'smooth' });
+    }
+
+    // Production type selection — MULTI-SELECT with real cost breakdown
+    document.querySelectorAll('.option-card').forEach(card => {
+        card.addEventListener('click', function() {
+            this.classList.toggle('selected');
+            const selected = document.querySelectorAll('.option-card.selected');
+            if (selected.length === 0) this.classList.add('selected');
+            updateTypeBreakdown();
+            updateCrewSizeDisplay();
+            updateLocationHint(); // recalc crew travel for new headcount
+            calculate();
+        });
+    });
+
+    function getSelectedTypes() {
+        const selected = [];
+        document.querySelectorAll('.option-card.selected').forEach(c => {
+            const key = c.dataset.value;
+            if (DELIVERABLES[key]) selected.push({ key, ...DELIVERABLES[key] });
+        });
+        return selected;
+    }
+
+    function updateTypeBreakdown() {
+        const types = getSelectedTypes();
+        const el = document.getElementById('typeBreakdown');
+        if (types.length === 0) { el.innerHTML = ''; return; }
+
+        let totalHeadcount = 0;
+        let totalCrewDay = 0;
+        let totalPost = 0;
+        let html = '';
+
+        // First selected = primary, rest = add-ons
+        types.forEach((t, i) => {
+            const crewDay = t.crewPerDay.reduce((sum, c) => sum + c.rate, 0);
+            totalCrewDay += crewDay;
+            totalPost += t.postProduction;
+            totalHeadcount += t.headcount;
+            const isPrimary = i === 0;
+            html += `<div style="margin-bottom:10px;padding-bottom:10px;${i < types.length - 1 ? 'border-bottom:1px solid #ddd;' : ''}">`;
+            html += `<strong>${isPrimary ? '' : '+ '}${t.label}</strong>`;
+            html += `<span style="float:right;font-weight:700;">+$${crewDay.toLocaleString('en-US')}/day crew | +$${t.postProduction.toLocaleString('en-US')} post</span>`;
+            html += `<div style="color:var(--mid);font-size:12px;margin-top:2px;">${t.description}</div>`;
+            html += `<div style="color:var(--mid);font-size:11px;margin-top:2px;">`;
+            html += t.crewPerDay.map(c => `${c.role} $${c.rate}`).join(' &middot; ');
+            html += `</div></div>`;
+        });
+
+        html += `<div style="margin-top:8px;padding-top:8px;border-top:2px solid var(--dark);font-weight:700;">`;
+        html += `Total: ${totalHeadcount} people on set &middot; $${totalCrewDay.toLocaleString('en-US')}/day crew &middot; $${totalPost.toLocaleString('en-US')} post-production`;
+        html += `</div>`;
+
+        el.innerHTML = html;
+    }
+
+    // Checkbox toggle
+    document.querySelectorAll('.checkbox-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            this.classList.toggle('active');
+            calculate();
+        });
+    });
+
+    // Get total headcount from selected deliverables
+    function getTotalHeadcount() {
+        return getSelectedTypes().reduce((sum, t) => sum + t.headcount, 0) || 7;
+    }
+
+    // Update crew size display
+    function updateCrewSizeDisplay() {
+        const el = document.getElementById('crewSizeAuto');
+        if (el) el.textContent = getTotalHeadcount() + ' people';
+    }
+
+    // Location change: update hints + auto-fill crew travel
+    function updateLocationHint() {
+        const loc = document.getElementById('location').value;
+        const locData = DATA.location[loc];
+        document.getElementById('locationHint').textContent = locData?.hint || '';
+
+        const crewCount = getTotalHeadcount();
+        const days = parseInt(document.getElementById('shootDays').value) || 2;
+        const noteEl = document.getElementById('crewTravelNote');
+        const section = document.getElementById('crewTravelSection');
+
+        if (locData.remote === true) {
+            document.getElementById('crewFlying').value = crewCount;
+            document.getElementById('crewHotelNights').value = days + 2;
+            noteEl.innerHTML = `<strong>Remote location:</strong> Your entire crew of ${crewCount} will need flights ($${locData.flightCost} RT/pp) and ${days + 2} hotel nights (shoot days + travel). These costs are added automatically.`;
+            section.style.display = 'block';
+        } else if (locData.remote === 'drive') {
+            document.getElementById('crewFlying').value = 0;
+            document.getElementById('crewHotelNights').value = days > 1 ? days : 0;
+            noteEl.innerHTML = `<strong>Drive-in location:</strong> ${days > 1 ? 'Multi-day shoot — crew of ' + crewCount + ' will need hotel (' + days + ' nights).' : 'Single day possible from Santiago, but consider overnight for early calls.'}`;
+            section.style.display = 'block';
+        } else {
+            document.getElementById('crewFlying').value = 0;
+            document.getElementById('crewHotelNights').value = 0;
+            noteEl.innerHTML = 'Santiago-based shoot — no crew travel required.';
+            section.style.display = 'block';
+        }
+    }
+
+    // Hotel tier examples
+    function updateHotelExamples() {
+        const tier = document.getElementById('agencyHotelTier').value;
+        document.getElementById('hotelExamples').innerHTML = DATA.hotelExamples[tier] || '';
+    }
+    document.getElementById('agencyHotelTier').addEventListener('change', function() {
+        updateHotelExamples();
+        calculate();
+    });
+
+    document.getElementById('location').addEventListener('change', function() {
+        updateLocationHint();
+        calculate();
+    });
+    // crewSize is now auto-calculated, no listener needed
+    document.getElementById('shootDays').addEventListener('change', function() {
+        updateLocationHint(); // recalc hotel nights
+        calculate();
+    });
+    document.getElementById('shootDays').addEventListener('input', function() {
+        updateLocationHint();
+        calculate();
+    });
+
+    // Calculate
+    function calculate() {
+        const days = Math.max(1, parseInt(document.getElementById('shootDays').value) || 1);
+        const locKey = document.getElementById('location').value;
+        const postKey = document.getElementById('postLevel').value;
+        const locData = DATA.location[locKey];
+        const types = getSelectedTypes();
+
+        // 1. Crew labor — sum of all deliverable crew rates per day x shoot days
+        let crewDayRate = 0;
+        let totalHeadcount = 0;
+        let totalPost = 0;
+        let totalExtraEquip = 0;
+        let cateringMult = 0;
+        types.forEach(t => {
+            crewDayRate += t.crewPerDay.reduce((sum, c) => sum + c.rate, 0);
+            totalHeadcount += t.headcount;
+            totalPost += t.postProduction;
+            totalExtraEquip += t.extraEquipPerDay;
+            cateringMult += t.cateringMultiplier;
+        });
+        const crewCost = Math.round(crewDayRate * days);
+        const crewCount = totalHeadcount;
+        updateCrewSizeDisplay();
+
+        // 2. Equipment — selected items + deliverable-specific extras
+        let equipCost = 0;
+        document.querySelectorAll('.checkbox-item[data-cat="equip"]').forEach(item => {
+            if (item.classList.contains('active')) equipCost += parseInt(item.dataset.cost) || 0;
+        });
+        equipCost = Math.round((equipCost + totalExtraEquip) * days);
+
+        // 3. Location & permits
+        const locCost = Math.round((locData.base + locData.travel) * days);
+
+        // 4. Production services
+        let servicesCost = 0;
+        document.querySelectorAll('.checkbox-item[data-cat="services"]').forEach(item => {
+            if (item.classList.contains('active')) servicesCost += parseInt(item.dataset.cost) || 0;
+        });
+        servicesCost = Math.round(servicesCost * days);
+
+        // 5. CREW TRAVEL & ACCOMMODATION
+        let crewTravelCost = 0;
+        const crewFlying = parseInt(document.getElementById('crewFlying').value) || 0;
+        const crewHotelNights = parseInt(document.getElementById('crewHotelNights').value) || 0;
+        const crewHotelRate = DATA.hotel[document.getElementById('crewHotelTier').value] || 130;
+
+        // Crew flights
+        if (crewFlying > 0 && locData.flightCost > 0) {
+            crewTravelCost += locData.flightCost * crewFlying;
+        }
+        // Crew hotels
+        if (crewHotelNights > 0 && crewFlying > 0) {
+            crewTravelCost += crewHotelRate * crewHotelNights * crewFlying;
+        } else if (crewHotelNights > 0 && locData.remote === 'drive') {
+            crewTravelCost += crewHotelRate * crewHotelNights * totalHeadcount;
+        }
+        // Crew per diem
+        const hasCrewPerDiem = document.querySelector('.checkbox-item[data-key="crew_per_diem"]')?.classList.contains('active');
+        if (hasCrewPerDiem) {
+            const pplForPerDiem = crewFlying > 0 ? crewFlying : (crewHotelNights > 0 ? totalHeadcount : 0);
+            crewTravelCost += DATA.perDiem * pplForPerDiem * days;
+        }
+        // On-set catering — based on actual headcount
+        const hasCatering = document.querySelector('.checkbox-item[data-key="catering"]')?.classList.contains('active');
+        if (hasCatering) crewTravelCost += Math.round(DATA.baseCateringPerHead * crewCount * days);
+        // Ground transport
+        const hasGround = document.querySelector('.checkbox-item[data-key="ground_transport"]')?.classList.contains('active');
+        if (hasGround) crewTravelCost += 400 * days;
+
+        crewTravelCost = Math.round(crewTravelCost);
+
+        // 6. AGENCY / CLIENT HOSPITALITY
+        let agencyCost = 0;
+        const agencyPax = parseInt(document.getElementById('agencyPax').value) || 0;
+        const agencyNights = parseInt(document.getElementById('agencyNights').value) || 0;
+        const agencyHotelRate = DATA.hotel[document.getElementById('agencyHotelTier').value] || 400;
+
+        // Agency hotel
+        if (agencyPax > 0 && agencyNights > 0) {
+            agencyCost += agencyHotelRate * agencyNights * agencyPax;
+        }
+        // Agency flights
+        const hasAgencyFlights = document.querySelector('.checkbox-item[data-key="agency_flights"]')?.classList.contains('active');
+        if (hasAgencyFlights && agencyPax > 0) agencyCost += locData.flightCost * agencyPax || 250 * agencyPax;
+        // Agency transport
+        const hasAgencyTransport = document.querySelector('.checkbox-item[data-key="agency_transport"]')?.classList.contains('active');
+        if (hasAgencyTransport) agencyCost += 200 * days;
+        // Client dinners
+        const hasDinners = document.querySelector('.checkbox-item[data-key="client_dinners"]')?.classList.contains('active');
+        if (hasDinners && agencyPax > 0) agencyCost += DATA.clientDinner * agencyPax * Math.min(days, agencyNights || days);
+
+        agencyCost = Math.round(agencyCost);
+
+        // 7. Post-production — sum of each deliverable's post costs, adjusted by level
+        const postMult = DATA.post[postKey] ?? 1.0;
+        const postCost = postKey === 'none' ? 0 : Math.round(totalPost * postMult);
+
+        // Totals
+        const subtotal = crewCost + equipCost + locCost + servicesCost + crewTravelCost + agencyCost + postCost;
+        const contingency = Math.round(subtotal * DATA.contingency);
+        const serviceFee = Math.round(subtotal * DATA.serviceFee);
+        const total = subtotal + contingency + serviceFee;
+        const low = Math.round(total * 0.85);
+        const high = Math.round(total * 1.20);
+
+        // Update DOM
+        const fmt = n => '$' + n.toLocaleString('en-US');
+        document.getElementById('totalUSD').textContent = fmt(total);
+        document.getElementById('totalCLP').textContent = '~$' + (total * DATA.clpRate).toLocaleString('es-CL') + ' CLP';
+        document.getElementById('totalRange').textContent = 'Range: ' + fmt(low) + ' \u2013 ' + fmt(high);
+
+        document.getElementById('bCrew').textContent = fmt(crewCost);
+        document.getElementById('bEquip').textContent = fmt(equipCost);
+        document.getElementById('bLoc').textContent = fmt(locCost);
+        document.getElementById('bServices').textContent = fmt(servicesCost);
+        document.getElementById('bCrewTravel').textContent = fmt(crewTravelCost);
+        document.getElementById('bAgency').textContent = fmt(agencyCost);
+        document.getElementById('bPost').textContent = fmt(postCost);
+        document.getElementById('bSubtotal').textContent = fmt(subtotal);
+        document.getElementById('bContingency').textContent = fmt(contingency);
+        document.getElementById('bServiceFee').textContent = fmt(serviceFee);
+        document.getElementById('bTotal').textContent = fmt(total);
+
+        // Bars
+        if (subtotal > 0) {
+            document.getElementById('barCrew').style.width = (crewCost / subtotal * 100) + '%';
+            document.getElementById('barEquip').style.width = (equipCost / subtotal * 100) + '%';
+            document.getElementById('barLoc').style.width = (locCost / subtotal * 100) + '%';
+            document.getElementById('barServices').style.width = (servicesCost / subtotal * 100) + '%';
+            document.getElementById('barCrewTravel').style.width = (crewTravelCost / subtotal * 100) + '%';
+            document.getElementById('barAgency').style.width = (agencyCost / subtotal * 100) + '%';
+            document.getElementById('barPost').style.width = (postCost / subtotal * 100) + '%';
+        }
+
+        return { total, low, high, crewCost, equipCost, locCost, servicesCost, crewTravelCost, agencyCost, postCost, contingency, serviceFee };
+    }
+
+    // Build estimate summary for lead form
+    function getEstimateSummary() {
+        const r = calculate();
+        const types = getSelectedTypes().map(t => t.label).join(' + ');
+        const loc = document.getElementById('location').options[document.getElementById('location').selectedIndex].text;
+        const days = document.getElementById('shootDays').value;
+        return { ...r, type: types, loc, days };
+    }
+
+    // Schedule Discovery Call
+    document.getElementById('ctaSchedule').addEventListener('click', function() {
+        const s = getEstimateSummary();
+        document.getElementById('leadEstimateSummary').innerHTML =
+            `<strong>Your estimate:</strong> $${s.total.toLocaleString('en-US')} USD | ${s.type} | ${s.days} days | ${s.loc}`;
+        document.getElementById('leadOverlay').classList.add('active');
+    });
+
+    // View Full Estimate button (step 4)
+    document.getElementById('btnGetEstimate').addEventListener('click', function() {
+        const s = getEstimateSummary();
+        document.getElementById('leadEstimateSummary').innerHTML =
+            `<strong>Your estimate:</strong> $${s.total.toLocaleString('en-US')} USD | ${s.type} | ${s.days} days | ${s.loc}`;
+        document.getElementById('leadOverlay').classList.add('active');
+    });
+
+    // WhatsApp CTA
+    document.getElementById('ctaWhatsApp').addEventListener('click', function() {
+        const s = getEstimateSummary();
+        const msg = encodeURIComponent(
+            `Hi! I used the Chile Production Cost Estimator.\n\n` +
+            `Production: ${s.type}\nDays: ${s.days}\nLocation: ${s.loc}\n` +
+            `Estimate: $${s.total.toLocaleString('en-US')} USD (range $${s.low.toLocaleString('en-US')}-$${s.high.toLocaleString('en-US')})\n\n` +
+            `I'd like to discuss this project further.`
+        );
+        window.open('https://wa.me/56944328662?text=' + msg, '_blank');
+    });
+
+    // Lead form submit
+    document.getElementById('leadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const s = getEstimateSummary();
+        const name = document.getElementById('leadName').value;
+        const email = document.getElementById('leadEmail').value;
+        const company = document.getElementById('leadCompany').value;
+        const timeline = document.getElementById('leadTimeline').value;
+        const notes = document.getElementById('leadNotes').value;
+
+        console.log('Lead captured:', { name, email, company, timeline, notes, estimate: s });
+
+        const msg = encodeURIComponent(
+            `Hi! I'm ${name}${company ? ' from ' + company : ''}.\n\n` +
+            `I used the Chile Production Cost Estimator:\n` +
+            `Production: ${s.type} | ${s.days} days | ${s.loc}\n` +
+            `Estimate: $${s.total.toLocaleString('en-US')} USD\n` +
+            `Timeline: ${timeline || 'Not specified'}\n` +
+            `${notes ? 'Notes: ' + notes + '\n' : ''}` +
+            `\nEmail: ${email}\n\nI'd like to schedule a discovery call.`
+        );
+        window.open('https://wa.me/56944328662?text=' + msg, '_blank');
+        document.getElementById('leadOverlay').classList.remove('active');
+    });
+
+    // Skip lead form
+    document.getElementById('leadSkip').addEventListener('click', function() {
+        document.getElementById('leadOverlay').classList.remove('active');
+        document.getElementById('ctaWhatsApp').click();
+    });
+
+    // Close modal
+    document.getElementById('leadOverlay').addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('active');
+    });
+
+    // FAQ accordion
+    document.querySelectorAll('.faq-question').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const item = this.parentElement;
+            const wasOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+            if (!wasOpen) item.classList.add('open');
+        });
+    });
+
+    // Recalculate on any change
+    ['postLevel', 'crewFlying', 'crewHotelNights', 'crewHotelTier', 'agencyPax', 'agencyNights', 'agencyHotelTier'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', calculate);
+            el.addEventListener('input', calculate);
+        }
+    });
+
+    // Init
+    updateTypeBreakdown();
+    updateCrewSizeDisplay();
+    updateLocationHint();
+    updateHotelExamples();
+    calculate();
+    </script>
+</body>
+</html>
