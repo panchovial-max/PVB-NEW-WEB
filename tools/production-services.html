@@ -806,122 +806,248 @@
     const DELIVERABLES = {
         tv_commercial: {
             label: 'TV Commercial',
-            // Base crew for a commercial shoot
             crewPerDay: [
+                // Direction & Production
                 { role: 'Director', rate: 1200 },
+                { role: '1st AD', rate: 500 },
                 { role: 'Line Producer', rate: 700 },
+                { role: 'Productor Técnico', rate: 450 },
+                { role: 'Production Coordinator', rate: 250 },
+                { role: 'Script Supervisor', rate: 250 },
+                // Camera
                 { role: 'DP / Cinematographer', rate: 650 },
                 { role: 'Camera Operator', rate: 350 },
                 { role: '1st AC / Focus Puller', rate: 250 },
+                { role: '2nd AC / Loader', rate: 180 },
+                { role: 'DIT', rate: 300 },
+                { role: 'VTR / Video Assist', rate: 220 },
+                // Grip & Electric
                 { role: 'Gaffer', rate: 280 },
+                { role: 'Best Boy Electric', rate: 200 },
+                { role: 'Electric x2', rate: 320 },
+                { role: 'Generator Operator', rate: 180 },
                 { role: 'Key Grip', rate: 250 },
+                { role: 'Best Boy Grip', rate: 200 },
+                { role: 'Grip x2', rate: 320 },
+                // Sound
                 { role: 'Sound Mixer', rate: 300 },
                 { role: 'Boom Operator', rate: 180 },
-                { role: 'Script Supervisor', rate: 250 },
-                { role: 'Production Coordinator', rate: 250 },
-                { role: '2x PA', rate: 200 },
+                // Art
+                { role: 'Art Director', rate: 450 },
+                { role: 'Art Assistant x2', rate: 300 },
+                // Wardrobe
+                { role: 'Stylist / Wardrobe', rate: 350 },
+                { role: 'Wardrobe Asst x2', rate: 260 },
+                // MUA & Hair
+                { role: 'Key MUA', rate: 300 },
+                { role: 'MUA Assistant', rate: 180 },
+                { role: 'Hair Stylist', rate: 280 },
+                // Trucks & Support
+                { role: 'Lighting Truck Op', rate: 180 },
+                { role: 'Camera Truck Op', rate: 180 },
+                { role: 'Craft Services', rate: 200 },
+                { role: 'PA x3', rate: 300 },
+                { role: 'Driver x2', rate: 200 },
             ],
-            extraEquipPerDay: 0, // equipment selected separately
-            postProduction: 4500, // Full edit + color + sound + graphics
-            cateringMultiplier: 1.0, // base catering for this crew size
-            headcount: 14,
-            description: 'Full commercial crew (12-14 people). Edit + color grade + sound mix + graphics.'
+            extraEquipPerDay: 0,
+            postProduction: 5500,
+            cateringMultiplier: 1.2,
+            headcount: 35,
+            description: 'Full commercial crew (33-35 people). Direction + productor técnico, camera (6 inc. DIT & VTR), G&E (8 inc. generator & truck), art (3), wardrobe (3), MUA/hair (3), sound (2), craft, PAs, trucks, drivers.'
         },
         digital_ad: {
             label: 'Digital / Social Ads',
             crewPerDay: [
                 { role: 'Content Director', rate: 600 },
                 { role: 'DP / Camera', rate: 500 },
-                { role: 'Gaffer / Grip', rate: 250 },
-                { role: 'Sound', rate: 250 },
-                { role: 'PA / Runner', rate: 100 },
+                { role: '1st AC', rate: 220 },
+                { role: 'Gaffer', rate: 250 },
+                { role: 'Grip', rate: 200 },
+                { role: 'Sound Mixer', rate: 250 },
+                { role: 'MUA', rate: 250 },
+                { role: 'Prod. Coordinator', rate: 200 },
+                { role: 'PA x2', rate: 200 },
             ],
             extraEquipPerDay: 0,
-            postProduction: 2000, // Multiple cuts, resizes, subtitles
+            postProduction: 2500, // Multiple cuts, resizes, subtitles, motion
             cateringMultiplier: 0.6,
-            headcount: 6,
-            description: 'Lean crew (5-6 people). Multiple format edits + resizes for platforms.'
+            headcount: 10,
+            description: 'Agile crew (10 people). Camera, basic G&E, sound, MUA. Multi-format edit + platform resizes.'
         },
         brand_film: {
             label: 'Brand Film',
             crewPerDay: [
                 { role: 'Director', rate: 1000 },
+                { role: '1st AD', rate: 400 },
+                { role: 'Line Producer', rate: 600 },
+                { role: 'Prod. Coordinator', rate: 250 },
                 { role: 'DP', rate: 600 },
                 { role: 'Camera Operator', rate: 350 },
                 { role: '1st AC', rate: 250 },
+                { role: 'DIT', rate: 280 },
                 { role: 'Gaffer', rate: 280 },
-                { role: 'Grip', rate: 220 },
+                { role: 'Best Boy Electric', rate: 200 },
+                { role: 'Electric', rate: 160 },
+                { role: 'Key Grip', rate: 250 },
+                { role: 'Grip x2', rate: 320 },
                 { role: 'Sound Mixer', rate: 300 },
-                { role: 'Production Coordinator', rate: 250 },
-                { role: 'PA', rate: 100 },
+                { role: 'Boom', rate: 180 },
+                { role: 'MUA', rate: 280 },
+                { role: 'Stylist', rate: 300 },
+                { role: 'PA x2', rate: 200 },
+                { role: 'Driver', rate: 100 },
             ],
             extraEquipPerDay: 0,
-            postProduction: 3500, // Edit + color + sound + music licensing
-            cateringMultiplier: 0.8,
-            headcount: 10,
-            description: 'Mid-size crew (9-10 people). Full edit + color + sound design + music.'
+            postProduction: 4000, // Edit + color + sound design + music licensing
+            cateringMultiplier: 0.9,
+            headcount: 20,
+            description: 'Mid-size crew (19-20 people). Full camera dept, G&E (5), sound, MUA, stylist. Edit + color + sound + music.'
         },
         feature_film: {
             label: 'Feature Film',
             crewPerDay: [
+                // Direction
                 { role: 'Director', rate: 1500 },
                 { role: '1st AD', rate: 600 },
                 { role: '2nd AD', rate: 300 },
+                { role: '3rd AD / Set PA', rate: 150 },
+                // Production
                 { role: 'Line Producer', rate: 800 },
+                { role: 'Prod. Manager (UPM)', rate: 500 },
+                { role: 'Prod. Coordinator', rate: 300 },
+                { role: 'Prod. Secretary', rate: 180 },
+                // Camera
                 { role: 'DP', rate: 800 },
                 { role: 'A-Cam Operator', rate: 400 },
                 { role: 'B-Cam Operator', rate: 350 },
-                { role: '1st AC (x2)', rate: 500 },
-                { role: '2nd AC', rate: 200 },
+                { role: '1st AC x2', rate: 500 },
+                { role: '2nd AC x2', rate: 360 },
                 { role: 'DIT', rate: 350 },
+                { role: 'Video Assist / Playback', rate: 250 },
+                // Grip & Electric
                 { role: 'Gaffer', rate: 300 },
                 { role: 'Best Boy Electric', rate: 220 },
+                { role: 'Electric x3', rate: 450 },
+                { role: 'Generator Operator', rate: 200 },
+                { role: 'Lighting Truck Operator', rate: 180 },
                 { role: 'Key Grip', rate: 280 },
                 { role: 'Best Boy Grip', rate: 200 },
                 { role: 'Dolly Grip', rate: 220 },
+                { role: 'Grip x3', rate: 450 },
+                // Sound
                 { role: 'Sound Mixer', rate: 350 },
-                { role: 'Boom', rate: 200 },
+                { role: 'Boom Operator', rate: 200 },
+                { role: 'Sound Utility', rate: 150 },
+                // Art Department
+                { role: 'Production Designer', rate: 600 },
+                { role: 'Art Director', rate: 450 },
+                { role: 'Set Decorator', rate: 300 },
+                { role: 'Set Dresser x2', rate: 360 },
+                { role: 'Props Master', rate: 280 },
+                { role: 'Props Assistant', rate: 150 },
+                { role: 'Art Truck Operator', rate: 180 },
+                // Wardrobe
+                { role: 'Costume Designer', rate: 400 },
+                { role: 'Wardrobe Supervisor', rate: 280 },
+                { role: 'Wardrobe Assistant x2', rate: 280 },
+                { role: 'Wardrobe Truck Operator', rate: 180 },
+                // MUA & Hair
+                { role: 'Key MUA', rate: 350 },
+                { role: 'MUA x2', rate: 500 },
+                { role: 'Key Hair', rate: 300 },
+                { role: 'Hair Assistant', rate: 180 },
+                // Script & Continuity
                 { role: 'Script Supervisor', rate: 300 },
-                { role: 'Continuity', rate: 200 },
-                { role: 'Prod. Coordinator', rate: 300 },
-                { role: '3x PA', rate: 300 },
+                // Chile-specific
+                { role: 'Productor Técnico', rate: 500 },
+                // Support
+                { role: 'Craft Services', rate: 200 },
+                { role: 'Craft Assistant', rate: 120 },
+                { role: 'Medic / Safety', rate: 200 },
+                { role: 'PA x4', rate: 400 },
+                { role: 'Camera Truck Operator', rate: 180 },
+                { role: 'Driver x3', rate: 300 },
             ],
-            extraEquipPerDay: 500, // Multi-cam, extra monitors, video village
-            postProduction: 15000,
-            cateringMultiplier: 1.8,
-            headcount: 25,
-            description: 'Full feature crew (22-25 people). Multi-cam, video village, full post pipeline.'
+            extraEquipPerDay: 800,
+            postProduction: 18000,
+            cateringMultiplier: 2.8,
+            headcount: 55,
+            description: 'Full feature crew (53-55 people). All departments: camera (7), G&E (12 inc. generator & truck ops), art (7 inc. truck), wardrobe (5 inc. truck), MUA/hair (4), sound (3), ADs (3), production office (4), productor técnico, craft, medic, PAs, camera truck, drivers.'
         },
         streaming_series: {
             label: 'Streaming / Series',
             crewPerDay: [
+                // Direction
                 { role: 'Director (episodic)', rate: 1800 },
                 { role: '1st AD', rate: 650 },
                 { role: '2nd AD', rate: 320 },
+                { role: '3rd AD', rate: 180 },
+                // Production
                 { role: 'Line Producer', rate: 900 },
+                { role: 'UPM', rate: 550 },
+                { role: 'Prod. Coordinator', rate: 350 },
+                { role: 'Prod. Secretary', rate: 200 },
+                // Camera
                 { role: 'DP', rate: 850 },
                 { role: 'A-Cam Op', rate: 400 },
                 { role: 'B-Cam Op', rate: 380 },
-                { role: '1st AC (x2)', rate: 500 },
-                { role: '2nd AC (x2)', rate: 360 },
+                { role: 'C-Cam Op (Steadicam)', rate: 450 },
+                { role: '1st AC x3', rate: 750 },
+                { role: '2nd AC x3', rate: 540 },
                 { role: 'DIT', rate: 380 },
+                { role: 'Video Assist', rate: 250 },
+                // Grip & Electric
                 { role: 'Gaffer', rate: 320 },
-                { role: 'Best Boy + 2 Electrics', rate: 520 },
-                { role: 'Key Grip + 2 Grips', rate: 600 },
-                { role: 'Sound Mixer + Boom', rate: 550 },
-                { role: 'Script Supervisor', rate: 320 },
+                { role: 'Best Boy Electric', rate: 240 },
+                { role: 'Electric x4', rate: 640 },
+                { role: 'Generator Operator', rate: 200 },
+                { role: 'Lighting Truck Op', rate: 180 },
+                { role: 'Key Grip', rate: 300 },
+                { role: 'Best Boy Grip', rate: 220 },
+                { role: 'Dolly Grip', rate: 240 },
+                { role: 'Grip x4', rate: 640 },
+                // Sound
+                { role: 'Sound Mixer', rate: 380 },
+                { role: 'Boom x2', rate: 360 },
+                { role: 'Sound Utility', rate: 160 },
+                // Art Department
+                { role: 'Production Designer', rate: 650 },
                 { role: 'Art Director', rate: 500 },
-                { role: 'Set Dresser', rate: 250 },
-                { role: 'Props', rate: 200 },
-                { role: 'Prod. Coordinator', rate: 350 },
-                { role: 'Prod. Secretary', rate: 200 },
-                { role: '4x PA', rate: 400 },
+                { role: 'Set Decorator', rate: 350 },
+                { role: 'Set Dresser x3', rate: 540 },
+                { role: 'Props Master', rate: 300 },
+                { role: 'Props x2', rate: 320 },
+                { role: 'Construction Coord', rate: 350 },
+                { role: 'Art Truck Op', rate: 180 },
+                // Wardrobe
+                { role: 'Costume Designer', rate: 450 },
+                { role: 'Wardrobe Supervisor', rate: 300 },
+                { role: 'Wardrobe Asst x2', rate: 360 },
+                { role: 'Wardrobe Truck Op', rate: 180 },
+                // MUA & Hair
+                { role: 'Key MUA', rate: 350 },
+                { role: 'MUA x2', rate: 500 },
+                { role: 'Key Hair', rate: 320 },
+                { role: 'Hair Assistant', rate: 180 },
+                // Script
+                { role: 'Script Supervisor', rate: 320 },
+                // Chile-specific
+                { role: 'Productor Técnico', rate: 550 },
+                // Support
+                { role: 'Craft Services x2', rate: 360 },
+                { role: 'Medic', rate: 200 },
+                { role: 'Security', rate: 150 },
+                { role: 'PA x5', rate: 500 },
+                { role: 'Camera Truck Op', rate: 180 },
+                { role: 'Driver x4', rate: 400 },
+                { role: 'Location Manager', rate: 400 },
+                { role: 'Asst Location Mgr', rate: 250 },
             ],
-            extraEquipPerDay: 800,
-            postProduction: 20000,
-            cateringMultiplier: 2.2,
-            headcount: 32,
-            description: 'Large-scale crew (28-32 people). Episodic post, VFX, extensive sound design.'
+            extraEquipPerDay: 1200,
+            postProduction: 25000,
+            cateringMultiplier: 3.5,
+            headcount: 68,
+            description: 'Full-scale series crew (65-68 people). 3-cam (10), G&E (14 inc. generator, trucks), art (9 inc. truck), wardrobe (5 inc. truck), MUA/hair (4), sound (3), productor técnico, locations (2), construction, security, craft, medic, PAs, camera truck, drivers.'
         },
         music_video: {
             label: 'Music Video',
@@ -929,73 +1055,92 @@
                 { role: 'Director', rate: 800 },
                 { role: 'DP', rate: 550 },
                 { role: 'Camera Op / Steadicam', rate: 400 },
+                { role: '1st AC', rate: 220 },
                 { role: 'Gaffer', rate: 250 },
-                { role: 'Grip', rate: 200 },
-                { role: 'PA', rate: 100 },
+                { role: 'Electric', rate: 160 },
+                { role: 'Key Grip', rate: 220 },
+                { role: 'Grip', rate: 160 },
+                { role: 'MUA', rate: 280 },
+                { role: 'Stylist', rate: 300 },
+                { role: 'Prod. Coordinator', rate: 220 },
+                { role: 'PA x2', rate: 200 },
             ],
             extraEquipPerDay: 0,
-            postProduction: 2500, // Creative edit + color + graphics
-            cateringMultiplier: 0.5,
-            headcount: 7,
-            description: 'Creative crew (6-7 people). Stylized edit + color grade + motion graphics.'
+            postProduction: 3000, // Creative edit + color + graphics + VFX
+            cateringMultiplier: 0.6,
+            headcount: 13,
+            description: 'Creative crew (12-13 people). Camera, G&E (4), MUA, stylist, PAs. Stylized edit + color + motion graphics.'
         },
         documentary: {
             label: 'Documentary',
             crewPerDay: [
                 { role: 'Director / Interviewer', rate: 800 },
                 { role: 'DP / Camera', rate: 550 },
+                { role: '1st AC', rate: 220 },
+                { role: 'Gaffer', rate: 250 },
                 { role: 'Sound Recordist', rate: 300 },
+                { role: 'Boom / Utility', rate: 160 },
+                { role: 'Prod. Coordinator', rate: 220 },
                 { role: 'PA / Fixer', rate: 150 },
             ],
             extraEquipPerDay: 0,
-            postProduction: 3000, // Long-form edit + sound + color
-            cateringMultiplier: 0.4,
-            headcount: 4,
-            description: 'Lean crew (3-4 people). Long-form edit + sound design + color.'
+            postProduction: 4000, // Long-form edit + sound design + color + transcription
+            cateringMultiplier: 0.5,
+            headcount: 8,
+            description: 'Lean crew (7-8 people). Camera, gaffer, sound (2), fixer. Long-form edit + sound design + color.'
         },
         fashion_lookbook: {
             label: 'Fashion / Lookbook',
             crewPerDay: [
                 { role: 'Creative Director', rate: 800 },
                 { role: 'Photographer', rate: 650 },
-                { role: 'Photo Assistant / Digi Tech', rate: 300 },
+                { role: 'Photo Asst / Digi Tech', rate: 300 },
                 { role: 'Videographer', rate: 450 },
+                { role: 'Video 1st AC', rate: 220 },
                 { role: 'Gaffer', rate: 250 },
-                { role: 'Stylist', rate: 400 },
-                { role: 'MUA / Hair', rate: 350 },
+                { role: 'Electric', rate: 160 },
+                { role: 'Grip x2', rate: 320 },
+                { role: 'Stylist (Key)', rate: 400 },
+                { role: 'Stylist Assistant x2', rate: 300 },
+                { role: 'Key MUA', rate: 300 },
+                { role: 'MUA Assistant', rate: 180 },
+                { role: 'Hair Stylist', rate: 280 },
                 { role: 'Producer / Coordinator', rate: 350 },
-                { role: 'PA', rate: 100 },
+                { role: 'PA x2', rate: 200 },
+                { role: 'Driver', rate: 100 },
             ],
-            extraEquipPerDay: 200, // Photo equipment, tethered setup
-            postProduction: 3000, // Photo retouching + video edit + color
-            cateringMultiplier: 0.8,
-            headcount: 10,
-            description: 'Photo + video crew (9-10 people). Retouching + video edit + color.'
+            extraEquipPerDay: 300, // Photo strobes, tethered station, steam, hangers, racks
+            postProduction: 4000, // Photo retouching (80-120 images) + video edit + color
+            cateringMultiplier: 1.0,
+            headcount: 18,
+            description: 'Photo + video crew (17-18 people). Photographer, videographer, G&E (4), styling team (3), MUA/hair (3), digi tech, PAs. Retouching + video edit + color.'
         },
         bts: {
             label: 'Behind the Scenes',
             crewPerDay: [
                 { role: 'BTS Cameraman', rate: 350 },
-                { role: 'BTS PA / Sound', rate: 150 },
+                { role: 'BTS Sound / PA', rate: 150 },
             ],
-            extraEquipPerDay: 100, // Small camera, wireless lav
-            postProduction: 800, // Quick edit of BTS reel
-            cateringMultiplier: 0.15, // Just 2 more mouths
+            extraEquipPerDay: 100,
+            postProduction: 1000,
+            cateringMultiplier: 0.15,
             headcount: 2,
-            description: '+2 people on set. BTS reel edit.'
+            description: '+2 people on set. BTS reel edit + social cuts.'
         },
         stills: {
             label: 'Photography / Stills',
             crewPerDay: [
                 { role: 'Photographer', rate: 600 },
-                { role: 'Digi Tech / Photo Asst', rate: 280 },
-                { role: 'Photo PA', rate: 120 },
+                { role: 'Digi Tech', rate: 280 },
+                { role: 'Photo Assistant', rate: 150 },
+                { role: 'MUA (stills)', rate: 280 },
+                { role: 'Stylist (stills)', rate: 300 },
             ],
-            extraEquipPerDay: 250, // Photo bodies, lenses, tethered station, strobes
-            postProduction: 1500, // Culling + retouching (50-80 images)
-            cateringMultiplier: 0.2, // 3 more mouths
-            headcount: 3,
-            description: '+3 people on set. Culling + retouching 50-80 selects.'
+            extraEquipPerDay: 300, // Photo bodies, lenses, tethered station, strobes, reflectors
+            postProduction: 2000, // Culling + retouching 80-120 selects
+            cateringMultiplier: 0.3,
+            headcount: 5,
+            description: '+5 people on set. Photographer, digi tech, assistant, MUA, stylist. Culling + retouching 80-120 selects.'
         }
     };
 
