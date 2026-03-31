@@ -41,10 +41,23 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .chip { padding: 8px 14px; border-radius: 20px; background: #1a1a1a; border: 1px solid #333; font-size: 13px; cursor: pointer; transition: all 0.15s; }
 .chip.selected { background: #74b563; color: #000; border-color: #74b563; font-weight: 600; }
 .divider { height: 1px; background: #1a1a1a; margin: 20px 0; }
+#lock-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 20px; }
+#lock-screen h1 { font-size: 28px; }
+#pin-input { width: 200px; text-align: center; font-size: 28px; letter-spacing: 12px; padding: 16px; background: #141414; border: 1px solid #222; border-radius: 12px; color: #fff; }
+#pin-input:focus { border-color: #74b563; outline: none; }
+#pin-error { color: #ff6b6b; font-size: 13px; display: none; }
+#app-content { display: none; }
 </style>
 </head>
 <body>
 
+<div id="lock-screen">
+  <h1>PVB Studio</h1>
+  <input type="password" id="pin-input" maxlength="4" placeholder="----" inputmode="numeric" autocomplete="off">
+  <div id="pin-error">PIN incorrecto</div>
+</div>
+
+<div id="app-content">
 <h1>PVB Studio</h1>
 
 <div class="tabs">
@@ -232,6 +245,36 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 </div>
 
 <div id="status" class="status"></div>
+
+</div><!-- /app-content -->
+
+<script>
+// PIN lock
+const PIN_HASH = '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'; // sha256 of '1234' — change this
+async function hashPin(pin) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const pinInput = document.getElementById('pin-input');
+pinInput.addEventListener('input', async () => {
+  if (pinInput.value.length === 4) {
+    const h = await hashPin(pinInput.value);
+    if (h === PIN_HASH) {
+      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementById('app-content').style.display = 'block';
+      sessionStorage.setItem('pvb_unlocked', '1');
+    } else {
+      document.getElementById('pin-error').style.display = 'block';
+      pinInput.value = '';
+      if (navigator.vibrate) navigator.vibrate(200);
+    }
+  }
+});
+if (sessionStorage.getItem('pvb_unlocked') === '1') {
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('app-content').style.display = 'block';
+}
+</script>
 
 <script>
 const DB = {
