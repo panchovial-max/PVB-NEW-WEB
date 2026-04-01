@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://panchovial.com/sitemap.xml
+
+# Private pages
+Disallow: /dashboard.html
+Disallow: /settings.html
+Disallow: /client-login.html
+Disallow: /client-onboarding.html
+Disallow: /login.html
+Disallow: /kaya-callsheet.html
+Disallow: /whatsapp_agent_dashboard.html
+Disallow: /test_settings_link.html
+Disallow: /.netlify/
