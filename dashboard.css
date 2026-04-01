@@ -102,6 +102,28 @@ body {
 }
 
 .btn-refresh,
+.btn-report {
+    background: linear-gradient(135deg, #E53935 0%, #C62828 100%);
+    border: none;
+    color: var(--white);
+    padding: 0.5rem 1.2rem;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.btn-report:hover {
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4);
+}
+
 .btn-export {
     background: transparent;
     border: 2px solid var(--white);
@@ -2883,6 +2905,23 @@ input[type="password"].form-control::placeholder {
 
 .whatsapp-send-button:hover svg {
     transform: translateX(4px);
+}
+
+/* ── Print Styles ── */
+@media print {
+    body { background: white !important; color: #1a1a1a !important; }
+    .dashboard-nav { background: white !important; color: #1a1a1a !important; border-bottom: 2px solid #1a1a1a; }
+    .dashboard-nav .logo-text, .dashboard-nav .logo-name, .nav-title { color: #1a1a1a !important; }
+    .btn-refresh, .btn-report, .btn-export, .btn-settings, #logoutBtn,
+    .whatsapp-widget, .inbox-reply-btn, .inbox-reply-box,
+    .btn-add, .calendar-nav { display: none !important; }
+    .dashboard-main { padding: 0; }
+    .stat-card, .inbox-message, .campaigns-table { break-inside: avoid; }
+    .stat-card { border: 1px solid #ddd !important; background: white !important; color: #1a1a1a !important; }
+    .stat-value, .stat-label { color: #1a1a1a !important; }
+    .section-title { color: #1a1a1a !important; }
+    .inbox-section, .calendar-section { page-break-before: always; }
+    @page { margin: 1.5cm; }
 }
 
 /* Ensure WhatsApp widget is on top of everything */
