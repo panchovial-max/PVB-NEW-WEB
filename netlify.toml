@@ -32,6 +32,11 @@
   to = "/settings.html"
   status = 200
 
+[[redirects]]
+  from = "/conta"
+  to = "/studio.html"
+  status = 200
+
 # Headers for security
 [[headers]]
   for = "/*"
