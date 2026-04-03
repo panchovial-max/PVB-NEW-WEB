@@ -100,7 +100,7 @@ export const handler = async (event) => {
 
     const { data: buckets } = await supabase.storage.listBuckets();
     if (!buckets?.find(b => b.name === 'boletas')) {
-      await supabase.storage.createBucket('boletas', { public: false });
+      await supabase.storage.createBucket('boletas', { public: true });
     }
 
     const { error: uploadError } = await supabase.storage
@@ -111,8 +111,9 @@ export const handler = async (event) => {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Upload failed: ' + uploadError.message }) };
     }
 
-    const { data: urlData } = await supabase.storage.from('boletas').createSignedUrl(storagePath, 86400);
-    const publicUrl = urlData?.signedUrl || storagePath;
+    // Generate permanent public URL
+    const { data: urlData } = supabase.storage.from('boletas').getPublicUrl(storagePath);
+    const publicUrl = urlData?.publicUrl || `${process.env.SUPABASE_URL}/storage/v1/object/public/boletas/${storagePath}`;
 
     // 2. Analyze image with Claude Vision (if API key available)
     const analysis = await analyzeImage(base64Data, contentType);
