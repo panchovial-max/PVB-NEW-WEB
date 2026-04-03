@@ -11,7 +11,7 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif; background: #0a0a0a; color: #f0f0f0; min-height: 100vh; padding: 16px; padding-top: env(safe-area-inset-top, 16px); }
-h1 { font-size: 22px; margin-bottom: 16px; text-align: center; font-weight: 700; letter-spacing: -0.5px; }
+h1 { font-size: 22px; margin-bottom: 8px; text-align: center; font-weight: 700; letter-spacing: -0.5px; }
 .campo { margin-bottom: 14px; }
 label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
 input, select, textarea { width: 100%; padding: 12px 14px; border: 1px solid #222; border-radius: 10px; background: #141414; color: #fff; font-size: 16px; -webkit-appearance: none; }
@@ -30,7 +30,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .status.ok { display: block; background: #0d1f0d; color: #74b563; border: 1px solid #1a3a1a; }
 .status.err { display: block; background: #1f0d0d; color: #ff6b6b; border: 1px solid #3a1a1a; }
 .status.loading { display: block; background: #0d0d1f; color: #6b9fff; border: 1px solid #1a1a3a; }
-.tabs { display: flex; gap: 6px; margin-bottom: 18px; background: #141414; border-radius: 12px; padding: 4px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 14px; background: #141414; border-radius: 12px; padding: 4px; }
 .tab { flex: 1; padding: 10px 8px; text-align: center; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 600; color: #666; transition: all 0.15s; }
 .tab.active { background: #74b563; color: #000; }
 .form-section { display: none; }
@@ -40,13 +40,22 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { padding: 8px 14px; border-radius: 20px; background: #1a1a1a; border: 1px solid #333; font-size: 13px; cursor: pointer; transition: all 0.15s; }
 .chip.selected { background: #74b563; color: #000; border-color: #74b563; font-weight: 600; }
-.divider { height: 1px; background: #1a1a1a; margin: 20px 0; }
 #lock-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 20px; }
 #lock-screen h1 { font-size: 28px; }
 #pin-input { width: 200px; text-align: center; font-size: 28px; letter-spacing: 12px; padding: 16px; background: #141414; border: 1px solid #222; border-radius: 12px; color: #fff; }
 #pin-input:focus { border-color: #74b563; outline: none; }
 #pin-error { color: #ff6b6b; font-size: 13px; display: none; }
 #app-content { display: none; }
+
+/* Proyecto activo */
+.proyecto-selector { margin-bottom: 14px; padding: 12px; background: #141414; border-radius: 12px; border: 1px solid #222; }
+.proyecto-selector label { margin-bottom: 6px; color: #74b563; font-size: 11px; }
+.proyecto-selector select { background: #0a0a0a; border-color: #333; font-size: 15px; }
+.proyecto-none { font-size: 12px; color: #555; text-align: center; margin-top: 6px; }
+
+/* Entrega fields (show/hide) */
+.entrega-fields { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid #1a1a1a; }
+.entrega-fields.visible { display: block; }
 </style>
 </head>
 <body>
@@ -60,15 +69,23 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 <div id="app-content">
 <h1>PVB Studio</h1>
 
-<div class="tabs">
-  <div class="tab active" data-tab="boleta">Boleta</div>
-  <div class="tab" data-tab="proyecto">Proyecto</div>
-  <div class="tab" data-tab="asset">Asset</div>
-  <div class="tab" data-tab="entrega">Entrega</div>
+<!-- PROYECTO ACTIVO -->
+<div class="proyecto-selector">
+  <label>Proyecto activo</label>
+  <select id="proyecto-activo">
+    <option value="">Sin proyecto (general)</option>
+  </select>
+  <div class="proyecto-none" id="proyecto-none-hint">Cargando proyectos...</div>
 </div>
 
-<!-- BOLETA -->
-<div id="form-boleta" class="form-section active">
+<div class="tabs">
+  <div class="tab active" data-tab="gasto">+ Gasto</div>
+  <div class="tab" data-tab="asset">+ Asset</div>
+  <div class="tab" data-tab="proyecto">+ Proyecto</div>
+</div>
+
+<!-- GASTO (boleta/factura) -->
+<div id="form-gasto" class="form-section active">
   <div class="campo">
     <label>Foto de boleta</label>
     <div class="foto-btns">
@@ -92,6 +109,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <select id="b-tipo">
         <option value="Boleta">Boleta</option>
         <option value="Factura">Factura</option>
+        <option value="Orden de Compra">Orden de Compra</option>
         <option value="Nota Credito">Nota Credito</option>
         <option value="Otro">Otro</option>
       </select>
@@ -112,10 +130,77 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <label>Descripcion</label>
     <input type="text" id="b-desc" placeholder="Ej: Almuerzo equipo rodaje">
   </div>
-  <button class="btn btn-primary" id="btn-boleta">Registrar Boleta</button>
+  <button class="btn btn-primary" id="btn-boleta">Registrar Gasto</button>
 </div>
 
-<!-- PROYECTO -->
+<!-- ASSET (fusionado con entrega) -->
+<div id="form-asset" class="form-section">
+  <div class="campo">
+    <label>Nombre</label>
+    <input type="text" id="a-nombre" placeholder="Reel Kaya 30s v1">
+  </div>
+  <div class="row">
+    <div class="campo">
+      <label>App</label>
+      <select id="a-app">
+        <option value="Premiere Pro">Premiere</option>
+        <option value="After Effects">After Effects</option>
+        <option value="Photoshop">Photoshop</option>
+        <option value="Illustrator">Illustrator</option>
+        <option value="InDesign">InDesign</option>
+        <option value="Lightroom">Lightroom</option>
+        <option value="DaVinci Resolve">Resolve</option>
+        <option value="Figma">Figma</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label>Estado</label>
+      <select id="a-estado">
+        <option value="En progreso">En progreso</option>
+        <option value="Review">Review</option>
+        <option value="Aprobado">Aprobado</option>
+        <option value="Entregado">Entregado</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Campos de entrega — aparecen cuando estado = Entregado -->
+  <div class="entrega-fields" id="entrega-fields">
+    <div class="row">
+      <div class="campo">
+        <label>Formato</label>
+        <select id="e-formato">
+          <option value="H.264 MP4">H.264 MP4</option>
+          <option value="ProRes">ProRes</option>
+          <option value="PNG">PNG</option>
+          <option value="JPEG">JPEG</option>
+          <option value="PDF">PDF</option>
+        </select>
+      </div>
+    </div>
+    <div class="campo">
+      <label>Plataforma destino</label>
+      <div class="chips multi" id="e-plats">
+        <div class="chip" data-v="Instagram Reels">IG Reels</div>
+        <div class="chip" data-v="Instagram Feed">IG Feed</div>
+        <div class="chip" data-v="Instagram Stories">IG Stories</div>
+        <div class="chip" data-v="TikTok">TikTok</div>
+        <div class="chip" data-v="YouTube">YouTube</div>
+        <div class="chip" data-v="LinkedIn">LinkedIn</div>
+        <div class="chip" data-v="Web">Web</div>
+        <div class="chip" data-v="Cliente directo">Cliente</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="campo">
+    <label>Notas</label>
+    <textarea id="a-notas" rows="2" placeholder="Detalles..."></textarea>
+  </div>
+  <button class="btn btn-primary" id="btn-asset">Registrar Asset</button>
+</div>
+
+<!-- PROYECTO (nuevo) -->
 <div id="form-proyecto" class="form-section">
   <div class="campo">
     <label>Nombre</label>
@@ -158,98 +243,12 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <button class="btn btn-primary" id="btn-proyecto">Crear Proyecto</button>
 </div>
 
-<!-- ASSET -->
-<div id="form-asset" class="form-section">
-  <div class="campo">
-    <label>Nombre</label>
-    <input type="text" id="a-nombre" placeholder="Logo cliente v2">
-  </div>
-  <div class="row">
-    <div class="campo">
-      <label>App</label>
-      <select id="a-app">
-        <option value="Premiere Pro">Premiere</option>
-        <option value="After Effects">After Effects</option>
-        <option value="Photoshop">Photoshop</option>
-        <option value="Illustrator">Illustrator</option>
-        <option value="InDesign">InDesign</option>
-        <option value="Lightroom">Lightroom</option>
-        <option value="DaVinci Resolve">Resolve</option>
-        <option value="Figma">Figma</option>
-      </select>
-    </div>
-    <div class="campo">
-      <label>Estado</label>
-      <select id="a-estado">
-        <option value="En progreso">En progreso</option>
-        <option value="Review">Review</option>
-        <option value="Aprobado">Aprobado</option>
-        <option value="Entregado">Entregado</option>
-      </select>
-    </div>
-  </div>
-  <div class="campo">
-    <label>Notas</label>
-    <textarea id="a-notas" rows="2" placeholder="Detalles..."></textarea>
-  </div>
-  <button class="btn btn-primary" id="btn-asset">Registrar Asset</button>
-</div>
-
-<!-- ENTREGA -->
-<div id="form-entrega" class="form-section">
-  <div class="campo">
-    <label>Nombre</label>
-    <input type="text" id="e-nombre" placeholder="Reel Kaya v3 final">
-  </div>
-  <div class="row">
-    <div class="campo">
-      <label>Formato</label>
-      <select id="e-formato">
-        <option value="H.264 MP4">H.264 MP4</option>
-        <option value="ProRes">ProRes</option>
-        <option value="PNG">PNG</option>
-        <option value="JPEG">JPEG</option>
-        <option value="PDF">PDF</option>
-      </select>
-    </div>
-    <div class="campo">
-      <label>Exportado desde</label>
-      <select id="e-app">
-        <option value="Premiere Pro">Premiere</option>
-        <option value="After Effects">After Effects</option>
-        <option value="Photoshop">Photoshop</option>
-        <option value="DaVinci Resolve">Resolve</option>
-        <option value="Illustrator">Illustrator</option>
-        <option value="InDesign">InDesign</option>
-      </select>
-    </div>
-  </div>
-  <div class="campo">
-    <label>Plataforma destino</label>
-    <div class="chips multi" id="e-plats">
-      <div class="chip" data-v="Instagram Reels">IG Reels</div>
-      <div class="chip" data-v="Instagram Feed">IG Feed</div>
-      <div class="chip" data-v="Instagram Stories">IG Stories</div>
-      <div class="chip" data-v="TikTok">TikTok</div>
-      <div class="chip" data-v="YouTube">YouTube</div>
-      <div class="chip" data-v="LinkedIn">LinkedIn</div>
-      <div class="chip" data-v="Web">Web</div>
-      <div class="chip" data-v="Cliente directo">Cliente</div>
-    </div>
-  </div>
-  <div class="campo">
-    <label>Notas</label>
-    <textarea id="e-notas" rows="2" placeholder="Detalles de entrega..."></textarea>
-  </div>
-  <button class="btn btn-primary" id="btn-entrega">Registrar Entrega</button>
-</div>
-
 <div id="status" class="status"></div>
 
 </div><!-- /app-content -->
 
 <script>
-// PIN lock — server-side validation
+// PIN lock
 let STUDIO_TOKEN = sessionStorage.getItem('pvb_token') || null;
 
 const pinInput = document.getElementById('pin-input');
@@ -268,6 +267,7 @@ pinInput.addEventListener('input', async () => {
         sessionStorage.setItem('pvb_unlocked', '1');
         document.getElementById('lock-screen').style.display = 'none';
         document.getElementById('app-content').style.display = 'block';
+        loadProyectos();
       } else {
         document.getElementById('pin-error').style.display = 'block';
         pinInput.value = '';
@@ -282,6 +282,7 @@ pinInput.addEventListener('input', async () => {
 if (sessionStorage.getItem('pvb_unlocked') === '1' && STUDIO_TOKEN) {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
+  setTimeout(loadProyectos, 300);
 }
 </script>
 
@@ -293,7 +294,49 @@ const DB = {
   entregas: '3337ab7f-975e-812c-a0ed-e6af65288d67'
 };
 
-// Tabs
+// ─── Load proyectos from Notion ───
+async function loadProyectos() {
+  const hint = document.getElementById('proyecto-none-hint');
+  const select = document.getElementById('proyecto-activo');
+  try {
+    const res = await fetch('/.netlify/functions/notion-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STUDIO_TOKEN}` },
+      body: JSON.stringify({
+        endpoint: '/v1/databases/' + DB.proyectos + '/query',
+        payload: { sorts: [{ property: 'Fecha Inicio', direction: 'descending' }], page_size: 20 }
+      })
+    });
+    const data = await res.json();
+    const results = data.results || [];
+    if (results.length === 0) {
+      hint.textContent = 'No hay proyectos. Crea uno en "+ Proyecto"';
+      return;
+    }
+    hint.style.display = 'none';
+    // Keep "Sin proyecto" option, add projects
+    results.forEach(p => {
+      const name = p.properties?.Nombre?.title?.[0]?.text?.content || 'Sin nombre';
+      const cliente = p.properties?.Cliente?.rich_text?.[0]?.text?.content || '';
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = cliente ? `${name} — ${cliente}` : name;
+      select.appendChild(opt);
+    });
+    // Restore last selection
+    const last = localStorage.getItem('pvb_proyecto_activo');
+    if (last) select.value = last;
+  } catch (e) {
+    hint.textContent = 'Error cargando proyectos';
+  }
+}
+
+// Persist project selection
+document.getElementById('proyecto-activo').addEventListener('change', function() {
+  localStorage.setItem('pvb_proyecto_activo', this.value);
+});
+
+// ─── Tabs ───
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -321,7 +364,12 @@ document.querySelectorAll('.chips.multi').forEach(container => {
   });
 });
 
-// Foto
+// ─── Show/hide entrega fields based on asset estado ───
+document.getElementById('a-estado').addEventListener('change', function() {
+  document.getElementById('entrega-fields').classList.toggle('visible', this.value === 'Entregado');
+});
+
+// ─── Foto ───
 function handleFoto(input) {
   if (input.files && input.files[0]) {
     const file = input.files[0];
@@ -346,6 +394,7 @@ document.getElementById('btn-biblioteca').addEventListener('click', () => docume
 document.getElementById('foto-camara').addEventListener('change', function() { handleFoto(this); });
 document.getElementById('foto-biblioteca').addEventListener('change', function() { handleFoto(this); });
 
+// ─── Helpers ───
 function showStatus(msg, type) {
   const el = document.getElementById('status');
   el.textContent = msg;
@@ -363,6 +412,20 @@ function getChipValues(containerId) {
 
 const hoy = () => new Date().toISOString().split('T')[0];
 
+function getProyectoRelation() {
+  const pid = document.getElementById('proyecto-activo').value;
+  return pid ? { 'Proyecto': { relation: [{ id: pid }] } } : {};
+}
+
+function resetForm(formId) {
+  const form = document.getElementById(formId);
+  form.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(el => el.value = '');
+  form.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  form.querySelectorAll('input[type="file"]').forEach(el => el.value = '');
+  const fotoArea = form.querySelector('.foto-area');
+  if (fotoArea) fotoArea.style.display = 'none';
+}
+
 async function notionCreate(dbId, properties) {
   showStatus('Enviando...', 'loading');
   try {
@@ -375,25 +438,26 @@ async function notionCreate(dbId, properties) {
     if (data.id) {
       showStatus('✅ Registrado correctamente', 'ok');
       if (navigator.vibrate) navigator.vibrate(100);
-      return true;
+      return data;
     }
     showStatus('Error: ' + (data.message || 'desconocido'), 'err');
-    return false;
+    return null;
   } catch (e) {
     showStatus('Sin conexion', 'err');
-    return false;
+    return null;
   }
 }
 
+// ─── GASTO (boleta/factura) ───
 document.getElementById('btn-boleta').addEventListener('click', async () => {
   const desc = document.getElementById('b-desc').value || 'Sin descripcion';
   const monto = parseInt(document.getElementById('b-monto').value) || 0;
   const categoria = getChipValue('b-cats') || 'Otro';
   const tipo = document.getElementById('b-tipo').value;
   const fotoFile = document.getElementById('foto-camara').files[0] || document.getElementById('foto-biblioteca').files[0];
+  const proyRel = getProyectoRelation();
 
   if (fotoFile) {
-    // Con foto: upload a Supabase + Claude Vision OCR + Notion
     showStatus('Analizando documento...', 'loading');
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -407,22 +471,18 @@ document.getElementById('btn-boleta').addEventListener('click', async () => {
             descripcion: desc,
             monto,
             categoria,
-            tipo_documento: tipo
+            tipo_documento: tipo,
+            proyecto_id: document.getElementById('proyecto-activo').value || null
           })
         });
         const data = await res.json();
         if (data.ok) {
           const msg = data.analysis
             ? `✅ ${data.analysis.tipo_documento}: $${(data.analysis.monto_total||0).toLocaleString('es-CL')} — ${data.analysis.descripcion||'OK'}`
-            : '✅ Boleta registrada correctamente';
+            : '✅ Gasto registrado correctamente';
           showStatus(msg, 'ok');
           if (navigator.vibrate) navigator.vibrate(100);
-          // Reset form to prevent double submission
-          document.getElementById('b-desc').value = '';
-          document.getElementById('b-monto').value = '';
-          document.getElementById('foto-camara').value = '';
-          document.getElementById('foto-biblioteca').value = '';
-          document.querySelectorAll('#b-cats .chip').forEach(c => c.classList.remove('selected'));
+          resetForm('form-gasto');
           document.getElementById('btn-boleta').disabled = true;
           setTimeout(() => { document.getElementById('btn-boleta').disabled = false; }, 3000);
         } else {
@@ -434,22 +494,78 @@ document.getElementById('btn-boleta').addEventListener('click', async () => {
     };
     reader.readAsDataURL(fotoFile);
   } else {
-    // Sin foto: solo crear en Notion
-    notionCreate(DB.boletas, {
+    const props = {
       'Descripcion': { title: [{ text: { content: desc } }] },
       'Fecha': { date: { start: hoy() } },
       'Monto CLP': { number: monto },
       'Categoria': { select: { name: categoria } },
       'Tipo Documento': { select: { name: tipo } },
-      'Estado': { select: { name: 'Pendiente' } }
-    });
+      'Estado': { select: { name: 'Pendiente' } },
+      ...proyRel
+    };
+    const result = await notionCreate(DB.boletas, props);
+    if (result) {
+      resetForm('form-gasto');
+      document.getElementById('btn-boleta').disabled = true;
+      setTimeout(() => { document.getElementById('btn-boleta').disabled = false; }, 3000);
+    }
   }
 });
 
-document.getElementById('btn-proyecto').addEventListener('click', () => {
+// ─── ASSET (+ entrega si estado = Entregado) ───
+document.getElementById('btn-asset').addEventListener('click', async () => {
+  const nombre = document.getElementById('a-nombre').value;
+  const app = document.getElementById('a-app').value;
+  const estado = document.getElementById('a-estado').value;
+  const notas = document.getElementById('a-notas').value;
+  const proyRel = getProyectoRelation();
+
+  if (!nombre) { showStatus('Falta el nombre del asset', 'err'); return; }
+
+  // Create asset
+  const assetProps = {
+    'Nombre': { title: [{ text: { content: nombre } }] },
+    'App': { select: { name: app } },
+    'Estado': { select: { name: estado } },
+    'Notas': { rich_text: [{ text: { content: notas } }] },
+    ...proyRel
+  };
+  const assetResult = await notionCreate(DB.assets, assetProps);
+
+  // If Entregado, also create entrega
+  if (assetResult && estado === 'Entregado') {
+    const formato = document.getElementById('e-formato').value;
+    const plats = getChipValues('e-plats').map(v => ({ name: v }));
+    await notionCreate(DB.entregas, {
+      'Nombre': { title: [{ text: { content: nombre + ' — ENTREGA' } }] },
+      'Formato': { select: { name: formato } },
+      'Exportado desde': { select: { name: app } },
+      'Plataforma': { multi_select: plats.length ? plats : [{ name: 'Cliente directo' }] },
+      'Fecha Entrega': { date: { start: hoy() } },
+      'Estado': { select: { name: 'Exportado' } },
+      'Notas': { rich_text: [{ text: { content: notas } }] },
+      ...proyRel
+    });
+    showStatus('✅ Asset + Entrega registrados', 'ok');
+  }
+
+  if (assetResult) {
+    resetForm('form-asset');
+    document.getElementById('entrega-fields').classList.remove('visible');
+    document.getElementById('a-estado').value = 'En progreso';
+    document.getElementById('btn-asset').disabled = true;
+    setTimeout(() => { document.getElementById('btn-asset').disabled = false; }, 3000);
+  }
+});
+
+// ─── PROYECTO (nuevo) ───
+document.getElementById('btn-proyecto').addEventListener('click', async () => {
+  const nombre = document.getElementById('p-nombre').value;
+  if (!nombre) { showStatus('Falta el nombre del proyecto', 'err'); return; }
+
   const tipos = getChipValues('p-tipos').map(v => ({ name: v }));
-  notionCreate(DB.proyectos, {
-    'Nombre': { title: [{ text: { content: document.getElementById('p-nombre').value } }] },
+  const result = await notionCreate(DB.proyectos, {
+    'Nombre': { title: [{ text: { content: nombre } }] },
     'Cliente': { rich_text: [{ text: { content: document.getElementById('p-cliente').value } }] },
     'Estado': { select: { name: document.getElementById('p-estado').value } },
     'Tipo': { multi_select: tipos.length ? tipos : [{ name: 'Video' }] },
@@ -457,28 +573,23 @@ document.getElementById('btn-proyecto').addEventListener('click', () => {
     'Fecha Inicio': { date: { start: hoy() } },
     'Notas': { rich_text: [{ text: { content: document.getElementById('p-notas').value } }] }
   });
-});
 
-document.getElementById('btn-asset').addEventListener('click', () => {
-  notionCreate(DB.assets, {
-    'Nombre': { title: [{ text: { content: document.getElementById('a-nombre').value } }] },
-    'App': { select: { name: document.getElementById('a-app').value } },
-    'Estado': { select: { name: document.getElementById('a-estado').value } },
-    'Notas': { rich_text: [{ text: { content: document.getElementById('a-notas').value } }] }
-  });
-});
+  if (result) {
+    // Add new project to dropdown and select it
+    const select = document.getElementById('proyecto-activo');
+    const opt = document.createElement('option');
+    opt.value = result.id;
+    opt.textContent = nombre;
+    select.insertBefore(opt, select.options[1]); // after "Sin proyecto"
+    select.value = result.id;
+    localStorage.setItem('pvb_proyecto_activo', result.id);
+    document.getElementById('proyecto-none-hint').style.display = 'none';
 
-document.getElementById('btn-entrega').addEventListener('click', () => {
-  const plats = getChipValues('e-plats').map(v => ({ name: v }));
-  notionCreate(DB.entregas, {
-    'Nombre': { title: [{ text: { content: document.getElementById('e-nombre').value } }] },
-    'Formato': { select: { name: document.getElementById('e-formato').value } },
-    'Exportado desde': { select: { name: document.getElementById('e-app').value } },
-    'Plataforma': { multi_select: plats.length ? plats : [{ name: 'Cliente directo' }] },
-    'Fecha Entrega': { date: { start: hoy() } },
-    'Estado': { select: { name: 'Exportado' } },
-    'Notas': { rich_text: [{ text: { content: document.getElementById('e-notas').value } }] }
-  });
+    showStatus(`✅ Proyecto "${nombre}" creado y seleccionado`, 'ok');
+    resetForm('form-proyecto');
+    document.getElementById('btn-proyecto').disabled = true;
+    setTimeout(() => { document.getElementById('btn-proyecto').disabled = false; }, 3000);
+  }
 });
 </script>
 </body>
