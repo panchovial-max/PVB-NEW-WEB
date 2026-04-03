@@ -373,7 +373,7 @@ async function notionCreate(dbId, properties) {
     });
     const data = await res.json();
     if (data.id) {
-      showStatus('Registrado', 'ok');
+      showStatus('✅ Registrado correctamente', 'ok');
       if (navigator.vibrate) navigator.vibrate(100);
       return true;
     }
@@ -413,10 +413,18 @@ document.getElementById('btn-boleta').addEventListener('click', async () => {
         const data = await res.json();
         if (data.ok) {
           const msg = data.analysis
-            ? `${data.analysis.tipo_documento}: $${(data.analysis.monto_total||0).toLocaleString('es-CL')} — ${data.analysis.descripcion||'OK'}`
-            : 'Boleta registrada (sin OCR)';
+            ? `✅ ${data.analysis.tipo_documento}: $${(data.analysis.monto_total||0).toLocaleString('es-CL')} — ${data.analysis.descripcion||'OK'}`
+            : '✅ Boleta registrada correctamente';
           showStatus(msg, 'ok');
           if (navigator.vibrate) navigator.vibrate(100);
+          // Reset form to prevent double submission
+          document.getElementById('b-desc').value = '';
+          document.getElementById('b-monto').value = '';
+          document.getElementById('foto-camara').value = '';
+          document.getElementById('foto-biblioteca').value = '';
+          document.querySelectorAll('#b-cats .chip').forEach(c => c.classList.remove('selected'));
+          document.getElementById('btn-boleta').disabled = true;
+          setTimeout(() => { document.getElementById('btn-boleta').disabled = false; }, 3000);
         } else {
           showStatus('Error: ' + (data.error || 'desconocido'), 'err');
         }
