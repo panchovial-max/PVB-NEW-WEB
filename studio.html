@@ -202,6 +202,16 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
 <!-- PROYECTO (nuevo) -->
 <div id="form-proyecto" class="form-section">
+  <!-- Brief rápido con IA -->
+  <div class="campo">
+    <label>Brief rapido</label>
+    <textarea id="p-brief" rows="4" placeholder="Ej: Kaya Unite quiere 3 reels y 10 fotos para campaña invierno, presupuesto 2 millones, empezamos la proxima semana"></textarea>
+    <div style="font-size:11px;color:#555;margin-top:4px;">Escribe el brief libre — la IA extrae nombre, cliente, tipo y presupuesto</div>
+  </div>
+  <button class="btn btn-primary" id="btn-brief-ia" style="margin-bottom:14px;">Crear con IA</button>
+
+  <div style="text-align:center;font-size:12px;color:#333;margin-bottom:14px;">— o completar manual —</div>
+
   <div class="campo">
     <label>Nombre</label>
     <input type="text" id="p-nombre" placeholder="Campana Verano 2027">
@@ -555,6 +565,48 @@ document.getElementById('btn-asset').addEventListener('click', async () => {
     document.getElementById('a-estado').value = 'En progreso';
     document.getElementById('btn-asset').disabled = true;
     setTimeout(() => { document.getElementById('btn-asset').disabled = false; }, 3000);
+  }
+});
+
+// ─── BRIEF RÁPIDO CON IA ───
+document.getElementById('btn-brief-ia').addEventListener('click', async () => {
+  const brief = document.getElementById('p-brief').value.trim();
+  if (!brief) { showStatus('Escribe un brief primero', 'err'); return; }
+
+  showStatus('Analizando brief con IA...', 'loading');
+  document.getElementById('btn-brief-ia').disabled = true;
+
+  try {
+    const res = await fetch('/.netlify/functions/brief-parse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STUDIO_TOKEN}` },
+      body: JSON.stringify({ brief })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      // Fill form fields
+      document.getElementById('p-nombre').value = data.nombre || '';
+      document.getElementById('p-cliente').value = data.cliente || '';
+      document.getElementById('p-presupuesto').value = data.presupuesto || '';
+      document.getElementById('p-notas').value = data.notas || '';
+      if (data.estado) document.getElementById('p-estado').value = data.estado;
+
+      // Select chips
+      document.querySelectorAll('#p-tipos .chip').forEach(c => c.classList.remove('selected'));
+      (data.tipos || []).forEach(tipo => {
+        const chip = document.querySelector(`#p-tipos .chip[data-v="${tipo}"]`);
+        if (chip) chip.classList.add('selected');
+      });
+
+      showStatus('✅ Brief parseado — revisa los datos y click "Crear Proyecto"', 'ok');
+    } else {
+      showStatus('Error: ' + (data.error || 'no se pudo parsear'), 'err');
+    }
+  } catch (e) {
+    showStatus('Error de conexión', 'err');
+  } finally {
+    document.getElementById('btn-brief-ia').disabled = false;
   }
 });
 
