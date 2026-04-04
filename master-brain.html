@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVB Master Brain — Agent Command Center</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="master-brain.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="theme-dark">
+    <!-- Navigation -->
+    <nav class="dashboard-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <span class="logo-text">PVB</span>
+                    <span class="logo-dot">●</span>
+                    <span class="logo-name">MASTER BRAIN</span>
+                </a>
+            </div>
+            <div class="nav-title" id="userGreeting">AGENT COMMAND CENTER</div>
+            <div class="nav-actions">
+                <div class="brain-pulse-indicator">
+                    <span class="pulse-dot"></span>
+                    <span class="pulse-label"><span id="activeAgentCount">0</span> agents</span>
+                </div>
+                <button class="btn-refresh" id="refreshData">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C11.5358 3 12.9476 3.5 14.0711 4.34315" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M17 3V7H13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Sync
+                </button>
+                <button class="btn-export" id="backDashboard" onclick="window.location.href='dashboard.html'">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M7 3L3 10L7 17M3 10H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Dashboard
+                </button>
+                <button class="btn-export" id="logoutBtn">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M13 3H17V17H13M7 7L3 10L7 13M3 10H13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard-main brain-main">
+
+        <!-- KPI Strip -->
+        <section class="brain-kpis">
+            <div class="brain-kpi">
+                <div class="brain-kpi-value" id="kpiTotalAgents">68</div>
+                <div class="brain-kpi-label">AGENTS</div>
+            </div>
+            <div class="brain-kpi">
+                <div class="brain-kpi-value" id="kpiDepartments">8</div>
+                <div class="brain-kpi-label">DEPARTMENTS</div>
+            </div>
+            <div class="brain-kpi">
+                <div class="brain-kpi-value" id="kpiBudgetUsed">$0</div>
+                <div class="brain-kpi-label">BUDGET USED</div>
+            </div>
+            <div class="brain-kpi">
+                <div class="brain-kpi-value" id="kpiBudgetTotal">$500</div>
+                <div class="brain-kpi-label">MONTHLY CAP</div>
+            </div>
+            <div class="brain-kpi">
+                <div class="brain-kpi-value" id="kpiTasksCompleted">0</div>
+                <div class="brain-kpi-label">TASKS DONE</div>
+            </div>
+            <div class="brain-kpi">
+                <div class="brain-kpi-value" id="kpiRoutinesActive">9</div>
+                <div class="brain-kpi-label">ROUTINES</div>
+            </div>
+        </section>
+
+        <!-- Tab Navigation -->
+        <div class="brain-tabs">
+            <button class="brain-tab active" data-tab="neural-map">Neural Map</button>
+            <button class="brain-tab" data-tab="departments">Departments</button>
+            <button class="brain-tab" data-tab="agents">All Agents</button>
+            <button class="brain-tab" data-tab="budgets">Budgets</button>
+            <button class="brain-tab" data-tab="routines">Routines</button>
+            <button class="brain-tab" data-tab="audit">Audit Log</button>
+        </div>
+
+        <!-- TAB: Neural Map (Org Chart) -->
+        <section class="brain-tab-content active" id="tab-neural-map">
+            <div class="neural-map-container">
+                <!-- CEO Node -->
+                <div class="neural-ceo">
+                    <div class="neural-node ceo-node" data-agent="agents-orchestrator">
+                        <div class="node-pulse"></div>
+                        <div class="node-icon">&#9678;</div>
+                        <div class="node-name">PANCHO</div>
+                        <div class="node-title">Orchestrator / CEO</div>
+                        <div class="node-budget">$100/mo</div>
+                    </div>
+                </div>
+
+                <!-- Synaptic Lines -->
+                <div class="synapse-lines">
+                    <svg class="synapse-svg" preserveAspectRatio="none"></svg>
+                </div>
+
+                <!-- Department Ring -->
+                <div class="neural-departments" id="neuralDepartments">
+                    <!-- Departments rendered by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Departments -->
+        <section class="brain-tab-content" id="tab-departments">
+            <div class="departments-grid" id="departmentsGrid">
+                <!-- Rendered by JS -->
+            </div>
+        </section>
+
+        <!-- TAB: All Agents -->
+        <section class="brain-tab-content" id="tab-agents">
+            <div class="agents-toolbar">
+                <input type="text" class="agents-search" id="agentSearch" placeholder="Search agents...">
+                <select class="filter-select agents-filter" id="agentDeptFilter">
+                    <option value="all">All Departments</option>
+                </select>
+            </div>
+            <div class="agents-grid" id="agentsGrid">
+                <!-- Rendered by JS -->
+            </div>
+        </section>
+
+        <!-- TAB: Budgets -->
+        <section class="brain-tab-content" id="tab-budgets">
+            <div class="budgets-container" id="budgetsContainer">
+                <!-- Rendered by JS -->
+            </div>
+        </section>
+
+        <!-- TAB: Routines -->
+        <section class="brain-tab-content" id="tab-routines">
+            <div class="routines-list" id="routinesList">
+                <!-- Rendered by JS -->
+            </div>
+        </section>
+
+        <!-- TAB: Audit Log -->
+        <section class="brain-tab-content" id="tab-audit">
+            <div class="audit-toolbar">
+                <select class="filter-select" id="auditFilter">
+                    <option value="all">All Actions</option>
+                    <option value="execution">Executions</option>
+                    <option value="budget">Budget</option>
+                    <option value="task">Tasks</option>
+                    <option value="routine">Routines</option>
+                </select>
+            </div>
+            <div class="audit-log" id="auditLog">
+                <!-- Rendered by JS -->
+            </div>
+        </section>
+
+        <!-- Agent Detail Modal -->
+        <div class="agent-modal-overlay" id="agentModal">
+            <div class="agent-modal">
+                <button class="modal-close" id="modalClose">&times;</button>
+                <div class="modal-header">
+                    <div class="modal-agent-icon" id="modalIcon"></div>
+                    <div>
+                        <h2 class="modal-agent-name" id="modalName"></h2>
+                        <p class="modal-agent-title" id="modalTitle"></p>
+                        <span class="modal-agent-dept" id="modalDept"></span>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-section">
+                        <h3>Capabilities</h3>
+                        <div class="modal-capabilities" id="modalCapabilities"></div>
+                    </div>
+                    <div class="modal-section">
+                        <h3>Skills</h3>
+                        <div class="modal-skills" id="modalSkills"></div>
+                    </div>
+                    <div class="modal-section">
+                        <h3>Budget</h3>
+                        <div class="modal-budget-bar">
+                            <div class="budget-bar-fill" id="modalBudgetFill"></div>
+                        </div>
+                        <div class="modal-budget-text" id="modalBudgetText"></div>
+                    </div>
+                    <div class="modal-section">
+                        <h3>Recent Tasks</h3>
+                        <div class="modal-tasks" id="modalTasks"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <script src="master-brain.js"></script>
+</body>
+</html>

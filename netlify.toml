@@ -37,6 +37,21 @@
   to = "/studio.html"
   status = 200
 
+[[redirects]]
+  from = "/masterbrain"
+  to = "/master-brain.html"
+  status = 200
+
+[[redirects]]
+  from = "/master-brain"
+  to = "/master-brain.html"
+  status = 200
+
+[[redirects]]
+  from = "/brain"
+  to = "/master-brain.html"
+  status = 200
+
 # Headers for security
 [[headers]]
   for = "/*"
