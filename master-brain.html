@@ -83,7 +83,7 @@
 
         <!-- Tab Navigation -->
         <div class="brain-tabs">
-            <button class="brain-tab active" data-tab="neural-map">Neural Map</button>
+            <button class="brain-tab active" data-tab="neural-map">Office</button>
             <button class="brain-tab" data-tab="departments">Departments</button>
             <button class="brain-tab" data-tab="agents">All Agents</button>
             <button class="brain-tab" data-tab="activity">Activity</button>
@@ -91,28 +91,35 @@
             <button class="brain-tab" data-tab="audit">Audit Log</button>
         </div>
 
-        <!-- TAB: Neural Map (Org Chart) -->
+        <!-- TAB: Office Canvas -->
         <section class="brain-tab-content active" id="tab-neural-map">
-            <div class="neural-map-container">
-                <!-- CEO Node -->
-                <div class="neural-ceo">
-                    <div class="neural-node ceo-node" data-agent="agents-orchestrator">
-                        <div class="node-pulse"></div>
-                        <div class="node-icon">&#9678;</div>
-                        <div class="node-name">PANCHO</div>
-                        <div class="node-title">Orchestrator / CEO</div>
-                        <div class="node-budget">$100/mo</div>
+            <div class="office-canvas" id="officeCanvas">
+                <!-- CEO Office -->
+                <div class="office-ceo-room" data-agent-id="agents-orchestrator">
+                    <div class="room-lamp on"></div>
+                    <div class="ceo-desk">
+                        <div class="desk-screen active"></div>
+                        <div class="desk-nameplate">PANCHO</div>
+                        <div class="desk-role">Orchestrator / CEO</div>
+                        <div class="desk-docs">
+                            <span class="doc-icon" title="8 departments">&#9635;</span>
+                            <span class="doc-icon" title="68 agents">&#9678;</span>
+                            <span class="doc-icon" title="9 routines">&#9200;</span>
+                        </div>
                     </div>
+                    <div class="room-label">CEO OFFICE</div>
                 </div>
 
-                <!-- Synaptic Lines -->
-                <div class="synapse-lines">
-                    <svg class="synapse-svg" preserveAspectRatio="none"></svg>
+                <!-- Hallway -->
+                <div class="office-hallway">
+                    <div class="hallway-line"></div>
+                    <div class="hallway-label">PVB MASTER BRAIN HQ</div>
+                    <div class="hallway-line"></div>
                 </div>
 
-                <!-- Department Ring -->
-                <div class="neural-departments" id="neuralDepartments">
-                    <!-- Departments rendered by JS -->
+                <!-- Department Rooms -->
+                <div class="office-floor" id="officeFloor">
+                    <!-- Rendered by JS -->
                 </div>
             </div>
         </section>

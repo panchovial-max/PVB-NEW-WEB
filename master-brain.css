@@ -155,109 +155,368 @@ body.theme-dark .logo-dot {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Neural Map (Org Chart) ── */
-.neural-map-container {
+/* ── Office Canvas ── */
+.office-canvas {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-    padding: 2rem 0;
-    position: relative;
+    gap: 0;
+    padding: 1rem 0;
 }
 
-.neural-ceo {
+/* CEO Office */
+.office-ceo-room {
+    background: linear-gradient(135deg, var(--brain-surface) 0%, rgba(201,169,110,0.06) 100%);
+    border: 1px solid var(--brain-accent);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+    max-width: 340px;
+    margin: 0 auto;
+}
+
+.office-ceo-room:hover {
+    box-shadow: 0 0 30px var(--brain-accent-glow);
+    transform: translateY(-2px);
+}
+
+.room-lamp {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--brain-text-dim);
+}
+
+.room-lamp.on {
+    background: var(--brain-green);
+    box-shadow: 0 0 8px var(--brain-green), 0 0 20px rgba(0,200,83,0.2);
+    animation: lamp-flicker 4s ease-in-out infinite;
+}
+
+@keyframes lamp-flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+}
+
+.ceo-desk {
+    text-align: center;
+}
+
+.desk-screen {
+    width: 60px;
+    height: 36px;
+    background: var(--brain-bg);
+    border: 2px solid var(--brain-border);
+    border-radius: 4px;
+    margin: 0 auto 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.desk-screen.active::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    right: 4px;
+    bottom: 3px;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(201,169,110,0.15) 3px,
+        rgba(201,169,110,0.15) 4px
+    );
+    border-radius: 2px;
+    animation: screen-scroll 3s linear infinite;
+}
+
+@keyframes screen-scroll {
+    from { transform: translateY(0); }
+    to { transform: translateY(-8px); }
+}
+
+.desk-nameplate {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--brain-accent);
+    letter-spacing: 2px;
+}
+
+.desk-role {
+    font-size: 10px;
+    color: var(--brain-text-dim);
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.desk-docs {
     display: flex;
     justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
 }
 
-.neural-node {
-    background: var(--brain-surface);
-    border: 2px solid var(--brain-border);
-    border-radius: 12px;
-    padding: 1.2rem 1.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    min-width: 140px;
-}
-
-.neural-node:hover {
-    border-color: var(--brain-accent);
-    box-shadow: 0 0 20px var(--brain-accent-glow);
-    transform: translateY(-3px);
-}
-
-.ceo-node {
-    border-color: var(--brain-accent);
-    background: linear-gradient(135deg, var(--brain-surface) 0%, rgba(201,169,110,0.08) 100%);
-    min-width: 180px;
-}
-
-.ceo-node .node-pulse {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--brain-green);
-    animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.node-icon {
-    font-size: 28px;
-    color: var(--brain-accent);
-    margin-bottom: 6px;
-}
-
-.node-name {
+.doc-icon {
     font-size: 14px;
+    color: var(--brain-text-dim);
+    cursor: help;
+    transition: color 0.2s;
+}
+
+.doc-icon:hover {
+    color: var(--brain-accent);
+}
+
+.room-label {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--brain-bg);
+    padding: 2px 12px;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--brain-accent);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* Hallway */
+.office-hallway {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem 0;
+}
+
+.hallway-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--brain-border), transparent);
+}
+
+.hallway-label {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: var(--brain-text-dim);
+    white-space: nowrap;
+}
+
+/* Office Floor — Department Rooms */
+.office-floor {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.dept-room {
+    background: var(--brain-surface);
+    border: 1px solid var(--brain-border);
+    border-radius: 10px;
+    padding: 1rem;
+    position: relative;
+    transition: all 0.3s;
+    overflow: hidden;
+}
+
+.dept-room:hover {
+    border-color: var(--dept-color, var(--brain-accent));
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+/* Room sizes based on team size */
+.dept-room.room-lg {
+    grid-column: span 1;
+}
+
+.dept-room.room-xl {
+    grid-column: span 2;
+}
+
+/* Room header — like a door sign */
+.room-sign {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.7rem;
+    border-bottom: 1px solid var(--brain-border);
+}
+
+.room-sign-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.room-sign-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: color-mix(in srgb, var(--dept-color) 15%, transparent);
+    color: var(--dept-color);
+}
+
+.room-sign-name {
+    font-size: 12px;
     font-weight: 900;
     color: var(--brain-text);
     letter-spacing: 1px;
     text-transform: uppercase;
 }
 
-.node-title {
-    font-size: 11px;
+.room-sign-director {
+    font-size: 9px;
     color: var(--brain-text-dim);
-    margin-top: 2px;
+    font-weight: 500;
 }
 
-.node-budget {
-    font-size: 11px;
-    color: var(--brain-accent);
-    font-weight: 700;
-    margin-top: 6px;
-}
-
-.node-count {
-    display: inline-block;
-    background: var(--brain-accent);
-    color: var(--brain-bg);
+.room-sign-count {
     font-size: 10px;
-    font-weight: 900;
+    font-weight: 700;
+    color: var(--dept-color);
+    background: color-mix(in srgb, var(--dept-color) 10%, transparent);
     padding: 2px 8px;
     border-radius: 10px;
-    margin-top: 6px;
 }
 
-/* Department nodes in circular layout */
-.neural-departments {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    width: 100%;
-    max-width: 900px;
+/* Desks grid inside rooms */
+.room-desks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
-.dept-node {
-    border-left: 3px solid var(--dept-color, var(--brain-accent));
+.agent-desk {
+    background: var(--brain-surface-2);
+    border: 1px solid var(--brain-border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    min-width: 0;
 }
 
-.dept-node .node-icon {
-    color: var(--dept-color, var(--brain-accent));
+.agent-desk:hover {
+    border-color: var(--dept-color, var(--brain-accent));
+    background: color-mix(in srgb, var(--dept-color) 5%, var(--brain-surface-2));
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Desk sizes */
+.agent-desk.desk-sm {
+    flex: 0 0 auto;
+    max-width: 120px;
+}
+
+.agent-desk.desk-md {
+    flex: 1 1 130px;
+    max-width: 160px;
+}
+
+.agent-desk.desk-lg {
+    flex: 1 1 180px;
+    max-width: 220px;
+}
+
+/* Desk lamp indicator */
+.desk-lamp {
+    position: absolute;
+    top: 4px;
+    right: 5px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--brain-text-dim);
+}
+
+.desk-lamp.on {
+    background: var(--brain-green);
+    box-shadow: 0 0 4px var(--brain-green);
+}
+
+.desk-lamp.routine {
+    background: var(--brain-cyan);
+    box-shadow: 0 0 4px var(--brain-cyan);
+    animation: lamp-flicker 3s ease-in-out infinite;
+}
+
+.desk-agent-name {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--brain-text);
+    line-height: 1.2;
+    padding-right: 10px;
+}
+
+.desk-agent-title {
+    font-size: 8px;
+    color: var(--brain-text-dim);
+    line-height: 1.2;
+    margin-top: 1px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Desk items — visual indicators */
+.desk-items {
+    display: flex;
+    gap: 3px;
+    margin-top: 3px;
+}
+
+.desk-item {
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-weight: 600;
+}
+
+.desk-item.has-skills {
+    background: rgba(156,39,176,0.15);
+    color: var(--brain-purple);
+}
+
+.desk-item.has-routine {
+    background: rgba(0,188,212,0.15);
+    color: var(--brain-cyan);
+}
+
+.desk-item.has-tasks {
+    background: rgba(255,152,0,0.15);
+    color: var(--brain-orange);
+}
+
+/* Room ambient — subtle background pattern */
+.dept-room::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        circle at 80% 20%,
+        color-mix(in srgb, var(--dept-color) 3%, transparent) 0%,
+        transparent 60%
+    );
+    pointer-events: none;
+    border-radius: 10px;
 }
 
 /* Department colors */
@@ -269,30 +528,6 @@ body.theme-dark .logo-dot {
 .dept-analytics { --dept-color: #00BCD4; }
 .dept-product { --dept-color: #9C27B0; }
 .dept-support { --dept-color: #607D8B; }
-
-/* Synapse lines connecting CEO to departments */
-.synapse-lines {
-    width: 100%;
-    height: 40px;
-    position: relative;
-}
-
-.synapse-svg {
-    width: 100%;
-    height: 100%;
-}
-
-.synapse-line {
-    stroke: var(--brain-border);
-    stroke-width: 1;
-    stroke-dasharray: 4 4;
-    animation: synapse-flow 2s linear infinite;
-}
-
-@keyframes synapse-flow {
-    from { stroke-dashoffset: 0; }
-    to { stroke-dashoffset: -16; }
-}
 
 /* ── Departments Grid ── */
 .departments-grid {
@@ -1078,8 +1313,12 @@ body.theme-dark .logo-dot {
         grid-template-columns: repeat(3, 1fr);
     }
 
-    .neural-departments {
-        grid-template-columns: repeat(2, 1fr);
+    .office-floor {
+        grid-template-columns: 1fr;
+    }
+
+    .dept-room.room-xl {
+        grid-column: span 1;
     }
 
     .departments-grid {
@@ -1116,7 +1355,7 @@ body.theme-dark .logo-dot {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .neural-departments {
+    .office-floor {
         grid-template-columns: 1fr;
     }
 

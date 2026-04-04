@@ -330,18 +330,58 @@ function countTotalCapabilities() {
   return all.size;
 }
 
-// ─── Neural Map ───
+// ─── Office Canvas ───
 function renderNeuralMap() {
-  const container = document.getElementById('neuralDepartments');
-  container.innerHTML = departments.map(dept => `
-    <div class="neural-node dept-node dept-${dept.key}" data-dept="${dept.key}" style="--dept-color: ${dept.color}">
-      <div class="node-icon">${dept.icon}</div>
-      <div class="node-name">${dept.name}</div>
-      <div class="node-title">${dept.director}</div>
-      <div class="node-count">${dept.agents.length} agents</div>
-      <div class="node-skills">${countDeptSkills(dept)} skills</div>
-    </div>
-  `).join('');
+  const floor = document.getElementById('officeFloor');
+
+  // Agents with routines
+  const routineAgentIds = new Set(ROUTINES_DATA.map(r => r.agent));
+
+  floor.innerHTML = departments.map(dept => {
+    // Room size based on team count
+    const roomClass = dept.agents.length >= 10 ? 'room-xl' : 'room-lg';
+
+    const desksHtml = dept.agents.map(agent => {
+      const skills = (agent.skills || '').split(',').filter(s => s.trim());
+      const hasRoutine = routineAgentIds.has(agent.id);
+      // Desk size: agents with more skills/capabilities get bigger desks
+      const capCount = (agent.capabilities || '').split(',').filter(c => c.trim()).length;
+      const deskSize = capCount >= 5 ? 'desk-lg' : capCount >= 3 ? 'desk-md' : 'desk-sm';
+      // Lamp: routine = cyan, skills = on, else off
+      const lampClass = hasRoutine ? 'routine' : skills.length > 0 ? 'on' : '';
+
+      let itemsHtml = '';
+      if (skills.length) itemsHtml += `<span class="desk-item has-skills">${skills.length} skills</span>`;
+      if (hasRoutine) itemsHtml += `<span class="desk-item has-routine">routine</span>`;
+
+      return `
+        <div class="agent-desk ${deskSize}" data-agent-id="${agent.id}" title="${agent.title}">
+          <div class="desk-lamp ${lampClass}"></div>
+          <div class="desk-agent-name">${agent.name}</div>
+          <div class="desk-agent-title">${agent.title}</div>
+          ${itemsHtml ? `<div class="desk-items">${itemsHtml}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="dept-room ${roomClass} dept-${dept.key}" style="--dept-color: ${dept.color}">
+        <div class="room-sign">
+          <div class="room-sign-left">
+            <div class="room-sign-icon">${dept.icon}</div>
+            <div>
+              <div class="room-sign-name">${dept.name}</div>
+              <div class="room-sign-director">${dept.director}</div>
+            </div>
+          </div>
+          <span class="room-sign-count">${dept.agents.length}</span>
+        </div>
+        <div class="room-desks">
+          ${desksHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ─── Departments Tab ───
