@@ -360,12 +360,13 @@ body {
 }
 
 .hero-title {
-    font-size: 72px;
-    font-weight: 900;
-    line-height: 1.1;
+    font-size: clamp(52px, 10vw, 96px);
+    line-height: 0.95;
     color: var(--white);
-    margin-bottom: var(--spacing-md);
-    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    margin-bottom: var(--spacing-lg);
+    text-shadow: none;
+    letter-spacing: -0.03em;
+    text-transform: lowercase;
 }
 
 .hero-line {
@@ -374,13 +375,23 @@ body {
     animation: fadeInUp 0.8s ease forwards;
 }
 
+.hero-thin {
+    font-weight: 200;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.hero-bold {
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: var(--white);
+}
+
 .hero-line:nth-child(1) { animation-delay: 0.1s; }
-.hero-line:nth-child(2) { animation-delay: 0.2s; }
-.hero-line:nth-child(3) { animation-delay: 0.3s; }
-.hero-line:nth-child(4) { 
-    animation-delay: 0.4s;
-    color: var(--color-mid);
-    text-shadow: 0 4px 30px rgba(107, 107, 107, 0.6);
+.hero-line:nth-child(2) { animation-delay: 0.25s; }
+.hero-line:nth-child(3) { animation-delay: 0.4s; }
+.hero-line:nth-child(4) {
+    animation-delay: 0.55s;
 }
 
 .pulse {
@@ -1580,7 +1591,7 @@ body {
     }
 
     .hero-title {
-        font-size: 56px;
+        font-size: clamp(48px, 8vw, 72px);
     }
 
     .section-title {
@@ -1623,8 +1634,8 @@ body {
     }
     
     .hero-title {
-        font-size: 42px;
-        line-height: 1.2;
+        font-size: clamp(36px, 9vw, 48px);
+        line-height: 0.95;
     }
     
     .section-title {
@@ -1692,8 +1703,8 @@ body {
     }
 
     .hero-title {
-        font-size: 32px;
-        line-height: 1.1;
+        font-size: 28px;
+        line-height: 0.95;
     }
 
     .section-title {
@@ -1772,7 +1783,7 @@ body {
 
 @media (max-width: 480px) {
     .hero-title {
-        font-size: 36px;
+        font-size: 32px;
     }
     
     .section-title {
