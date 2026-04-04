@@ -6,33 +6,37 @@
 
 /* Force dark mode for brain interface */
 body.theme-dark {
-    --brain-bg: #0d0d0d;
-    --brain-surface: rgba(20, 20, 22, 0.75);
-    --brain-surface-solid: #141416;
-    --brain-surface-2: rgba(28, 28, 32, 0.6);
-    --brain-border: rgba(255, 255, 255, 0.06);
-    --brain-border-light: rgba(255, 255, 255, 0.1);
-    --brain-text: #f0ece4;
-    --brain-text-dim: #6b6b78;
-    --brain-accent: #c9a96e;
-    --brain-accent-glow: rgba(201, 169, 110, 0.4);
+    --brain-bg: #0a0a0a;
+    --brain-surface: rgba(18, 18, 20, 0.8);
+    --brain-surface-solid: #121214;
+    --brain-surface-2: rgba(25, 25, 30, 0.65);
+    --brain-border: rgba(255, 255, 255, 0.07);
+    --brain-border-light: rgba(255, 255, 255, 0.12);
+    --brain-text: #f5f0e8;
+    --brain-text-dim: #72727f;
+    --brain-accent: #d4b070;
+    --brain-accent-glow: rgba(212, 176, 112, 0.5);
     --brain-green: #34d399;
     --brain-blue: #60a5fa;
-    --brain-purple: #a78bfa;
+    --brain-purple: #c084fc;
     --brain-orange: #fbbf24;
-    --brain-red: #f87171;
+    --brain-red: #fb7185;
     --brain-cyan: #22d3ee;
-    --glass-blur: 16px;
-    --glass-bg: rgba(18, 18, 22, 0.55);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --neon-glow: 0 0 15px;
+    --brain-magenta: #f472b6;
+    --glass-blur: 20px;
+    --glass-bg: rgba(15, 15, 18, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.09);
+    --neon-glow: 0 0 20px;
 }
 
-/* Concrete texture background */
+/* Atmospheric background — dark loft with light spills */
 .brain-main {
     background:
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"),
-        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(201,169,110,0.04) 0%, transparent 60%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"),
+        radial-gradient(ellipse 50% 35% at 15% 10%, rgba(244,114,182,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 85% 20%, rgba(34,211,238,0.03) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 50% 5%, rgba(212,176,112,0.05) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 60% at 50% 100%, rgba(96,165,250,0.02) 0%, transparent 60%),
         var(--brain-bg);
     min-height: 100vh;
     padding-top: 1rem !important;
@@ -662,30 +666,31 @@ body.theme-dark .logo-dot {
     color: var(--brain-orange);
 }
 
-/* Room ambient — neon glow from ceiling */
+/* Room ambient — vivid neon ceiling strip */
 .dept-room::before {
     content: '';
     position: absolute;
     top: -1px;
-    left: 20%;
-    right: 20%;
-    height: 1px;
+    left: 15%;
+    right: 15%;
+    height: 2px;
     background: var(--dept-color);
-    opacity: 0.4;
+    opacity: 0.6;
     pointer-events: none;
     border-radius: 0 0 50% 50%;
     box-shadow:
-        0 0 15px color-mix(in srgb, var(--dept-color) 30%, transparent),
-        0 0 40px color-mix(in srgb, var(--dept-color) 15%, transparent),
-        0 0 80px color-mix(in srgb, var(--dept-color) 5%, transparent);
+        0 0 8px var(--dept-color),
+        0 0 25px color-mix(in srgb, var(--dept-color) 50%, transparent),
+        0 0 60px color-mix(in srgb, var(--dept-color) 25%, transparent),
+        0 0 120px color-mix(in srgb, var(--dept-color) 10%, transparent);
     transition: opacity 0.4s;
 }
 
 .dept-room:hover::before {
-    opacity: 0.7;
+    opacity: 1;
 }
 
-/* Room floor glow */
+/* Room floor glow — light spill from ceiling */
 .dept-room::after {
     content: '';
     position: absolute;
@@ -693,24 +698,22 @@ body.theme-dark .logo-dot {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(
-        ellipse 70% 50% at 50% 0%,
-        color-mix(in srgb, var(--dept-color) 4%, transparent) 0%,
-        transparent 70%
-    );
+    background:
+        radial-gradient(ellipse 80% 40% at 50% -5%, color-mix(in srgb, var(--dept-color) 8%, transparent) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 80% 10%, color-mix(in srgb, var(--dept-color) 3%, transparent) 0%, transparent 50%);
     pointer-events: none;
     border-radius: 14px;
 }
 
-/* Department colors */
-.dept-creative { --dept-color: #E91E63; }
-.dept-marketing { --dept-color: #FF9800; }
-.dept-engineering { --dept-color: #2196F3; }
-.dept-production { --dept-color: #4CAF50; }
-.dept-qa { --dept-color: #F44336; }
-.dept-analytics { --dept-color: #00BCD4; }
-.dept-product { --dept-color: #9C27B0; }
-.dept-support { --dept-color: #607D8B; }
+/* Department colors — vivid neon palette */
+.dept-creative { --dept-color: #f472b6; }
+.dept-marketing { --dept-color: #fbbf24; }
+.dept-engineering { --dept-color: #60a5fa; }
+.dept-production { --dept-color: #34d399; }
+.dept-qa { --dept-color: #fb7185; }
+.dept-analytics { --dept-color: #22d3ee; }
+.dept-product { --dept-color: #c084fc; }
+.dept-support { --dept-color: #94a3b8; }
 
 /* ── Departments Grid ── */
 .departments-grid {
