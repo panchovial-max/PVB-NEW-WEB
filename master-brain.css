@@ -24,8 +24,8 @@ body.theme-dark {
     --brain-cyan: #22d3ee;
     --brain-magenta: #f472b6;
     --glass-blur: 20px;
-    --glass-bg: rgba(15, 15, 18, 0.35);
-    --glass-border: rgba(255, 255, 255, 0.07);
+    --glass-bg: transparent;
+    --glass-border: rgba(255, 255, 255, 0.1);
     --neon-glow: 0 0 20px;
 }
 
@@ -474,21 +474,20 @@ body.theme-dark .logo-dot {
     background: var(--glass-bg);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
     backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-    border: 1px solid var(--glass-border);
+    border: 1px solid color-mix(in srgb, var(--dept-color, var(--brain-accent)) 25%, transparent);
     border-radius: 14px;
     padding: 1.2rem;
     position: relative;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+    box-shadow: 0 0 15px color-mix(in srgb, var(--dept-color) 5%, transparent);
 }
 
 .dept-room:hover {
-    border-color: color-mix(in srgb, var(--dept-color, var(--brain-accent)) 40%, transparent);
+    border-color: color-mix(in srgb, var(--dept-color, var(--brain-accent)) 50%, transparent);
     box-shadow:
-        0 8px 32px rgba(0,0,0,0.35),
-        inset 0 1px 0 rgba(255,255,255,0.05),
-        0 0 40px color-mix(in srgb, var(--dept-color) 8%, transparent);
+        0 0 30px color-mix(in srgb, var(--dept-color) 12%, transparent),
+        0 0 60px color-mix(in srgb, var(--dept-color) 5%, transparent);
     transform: translateY(-2px);
 }
 
@@ -562,8 +561,8 @@ body.theme-dark .logo-dot {
 }
 
 .agent-desk {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.04);
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 8px;
     padding: 8px 10px;
     cursor: pointer;
@@ -573,8 +572,8 @@ body.theme-dark .logo-dot {
 }
 
 .agent-desk:hover {
-    border-color: color-mix(in srgb, var(--dept-color, var(--brain-accent)) 30%, transparent);
-    background: rgba(255,255,255,0.04);
+    border-color: var(--dept-color, var(--brain-accent));
+    background: rgba(0,0,0,0.3);
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 0 20px color-mix(in srgb, var(--dept-color) 6%, transparent);
 }
