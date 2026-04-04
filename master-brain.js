@@ -9,20 +9,20 @@ let brainToken = null;
 
 // ─── Department Definitions ───
 const DEPT_CONFIG = {
-  creative:    { name: 'Creative',         icon: '&#9733;', color: '#E91E63', budget: 80_00, director: 'Creative Director' },
-  marketing:   { name: 'Marketing',        icon: '&#9752;', color: '#FF9800', budget: 80_00, director: 'Marketing Director' },
-  engineering: { name: 'Engineering',       icon: '&#9881;', color: '#2196F3', budget: 80_00, director: 'Engineering Lead' },
-  production:  { name: 'Production',        icon: '&#9734;', color: '#4CAF50', budget: 60_00, director: 'Production Lead' },
-  qa:          { name: 'QA & Testing',      icon: '&#9888;', color: '#F44336', budget: 40_00, director: 'QA Lead' },
-  analytics:   { name: 'Analytics & Data',  icon: '&#9670;', color: '#00BCD4', budget: 40_00, director: 'Analytics Lead' },
-  product:     { name: 'Product Strategy',  icon: '&#9830;', color: '#9C27B0', budget: 40_00, director: 'Product Strategy Lead' },
-  support:     { name: 'Operations & Legal',icon: '&#9635;', color: '#607D8B', budget: 30_00, director: 'Operations & Legal Lead' },
+  creative:    { name: 'Creative',         icon: '&#9733;', color: '#E91E63', director: 'Creative Director' },
+  marketing:   { name: 'Marketing',        icon: '&#9752;', color: '#FF9800', director: 'Marketing Director' },
+  engineering: { name: 'Engineering',       icon: '&#9881;', color: '#2196F3', director: 'Engineering Lead' },
+  production:  { name: 'Production',        icon: '&#9734;', color: '#4CAF50', director: 'Production Lead' },
+  qa:          { name: 'QA & Testing',      icon: '&#9888;', color: '#F44336', director: 'QA Lead' },
+  analytics:   { name: 'Analytics & Data',  icon: '&#9670;', color: '#00BCD4', director: 'Analytics Lead' },
+  product:     { name: 'Product Strategy',  icon: '&#9830;', color: '#9C27B0', director: 'Product Strategy Lead' },
+  support:     { name: 'Operations & Legal',icon: '&#9635;', color: '#607D8B', director: 'Operations & Legal Lead' },
 };
 
 // ─── All 68 Agents ───
 const AGENTS_DATA = [
   // CEO
-  { id: 'agents-orchestrator', name: 'Pancho — Orchestrator', title: 'Founder & CEO / Agents Orchestrator', dept: 'ceo', role: 'ceo', budget: 100_00,
+  { id: 'agents-orchestrator', name: 'Pancho — Orchestrator', title: 'Founder & CEO / Agents Orchestrator', dept: 'ceo', role: 'ceo',
     capabilities: 'workflow-orchestration, quality-gate-enforcement, multi-agent-coordination, autonomous-error-recovery, dev-qa-loops', skills: '' },
 
   // CREATIVE (8)
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderNeuralMap();
   renderDepartmentsTab();
   renderAgentsTab();
-  renderBudgets();
+  renderActivity();
   renderRoutines();
   renderAuditLog();
   updateKPIs();
@@ -314,6 +314,22 @@ function buildDepartments() {
   }));
 }
 
+function countDeptSkills(dept) {
+  return dept.agents.reduce((sum, a) => sum + (a.skills ? a.skills.split(',').filter(s => s.trim()).length : 0), 0);
+}
+
+function countTotalSkills() {
+  const all = new Set();
+  allAgents.forEach(a => { if (a.skills) a.skills.split(',').forEach(s => { if (s.trim()) all.add(s.trim()); }); });
+  return all.size;
+}
+
+function countTotalCapabilities() {
+  const all = new Set();
+  allAgents.forEach(a => { if (a.capabilities) a.capabilities.split(',').forEach(c => { if (c.trim()) all.add(c.trim()); }); });
+  return all.size;
+}
+
 // ─── Neural Map ───
 function renderNeuralMap() {
   const container = document.getElementById('neuralDepartments');
@@ -322,8 +338,8 @@ function renderNeuralMap() {
       <div class="node-icon">${dept.icon}</div>
       <div class="node-name">${dept.name}</div>
       <div class="node-title">${dept.director}</div>
-      <div class="node-budget">$${(dept.budget / 100).toFixed(0)}/mo</div>
       <div class="node-count">${dept.agents.length} agents</div>
+      <div class="node-skills">${countDeptSkills(dept)} skills</div>
     </div>
   `).join('');
 }
@@ -404,65 +420,64 @@ function renderAgentsTab(filter = 'all', search = '') {
   }
 }
 
-// ─── Budgets Tab ───
-function renderBudgets() {
-  const container = document.getElementById('budgetsContainer');
+// ─── Activity Tab (replaces Budgets) ───
+function renderActivity() {
+  const container = document.getElementById('activityContainer');
 
-  // Company-wide card
-  const totalBudget = 500_00;
-  const totalUsed = 0; // Will come from Supabase later
+  // Summary card
+  const totalCaps = countTotalCapabilities();
+  const totalSkills = countTotalSkills();
 
   let html = `
     <div class="budget-card" style="grid-column: 1 / -1">
       <div class="budget-card-header">
-        <div class="budget-card-name">PVB Master Brain — Total</div>
-        <div class="budget-card-amount">$${(totalUsed / 100).toFixed(0)} / $${(totalBudget / 100).toFixed(0)}</div>
+        <div class="budget-card-name">PVB Master Brain — Overview</div>
+        <div class="budget-card-amount">${allAgents.length} agents</div>
       </div>
-      <div class="budget-bar">
-        <div class="budget-bar-fill" style="width: ${(totalUsed / totalBudget * 100).toFixed(1)}%"></div>
-      </div>
-      <div class="budget-card-detail">
-        <span>${(totalUsed / totalBudget * 100).toFixed(1)}% used</span>
-        <span>$${((totalBudget - totalUsed) / 100).toFixed(0)} remaining</span>
-      </div>
-    </div>
-  `;
-
-  // CEO card
-  const ceo = allAgents.find(a => a.dept === 'ceo');
-  html += `
-    <div class="budget-card">
-      <div class="budget-card-header">
-        <div class="budget-card-name">${ceo.name}</div>
-        <div class="budget-card-amount">$0 / $${(ceo.budget / 100).toFixed(0)}</div>
-      </div>
-      <div class="budget-bar">
-        <div class="budget-bar-fill" style="width: 0%"></div>
-      </div>
-      <div class="budget-card-detail">
-        <span>0% used</span>
-        <span>$${(ceo.budget / 100).toFixed(0)} remaining</span>
+      <div class="activity-stats">
+        <div class="activity-stat">
+          <span class="activity-stat-value">${departments.length}</span>
+          <span class="activity-stat-label">Departments</span>
+        </div>
+        <div class="activity-stat">
+          <span class="activity-stat-value">${totalCaps}</span>
+          <span class="activity-stat-label">Capabilities</span>
+        </div>
+        <div class="activity-stat">
+          <span class="activity-stat-value">${totalSkills}</span>
+          <span class="activity-stat-label">Unique Skills</span>
+        </div>
+        <div class="activity-stat">
+          <span class="activity-stat-value">${ROUTINES_DATA.filter(r => r.status === 'active').length}</span>
+          <span class="activity-stat-label">Active Routines</span>
+        </div>
       </div>
     </div>
   `;
 
-  // Department cards
+  // Department cards with agent count + skills breakdown
   departments.forEach(dept => {
-    const used = 0;
-    const pct = dept.budget > 0 ? (used / dept.budget * 100) : 0;
-    const fillClass = pct > 90 ? 'danger' : pct > 75 ? 'warn' : '';
+    const deptSkills = countDeptSkills(dept);
+    const deptCaps = dept.agents.reduce((sum, a) => sum + (a.capabilities ? a.capabilities.split(',').filter(c => c.trim()).length : 0), 0);
+    const maxAgents = Math.max(...departments.map(d => d.agents.length));
+    const pct = maxAgents > 0 ? (dept.agents.length / maxAgents * 100) : 0;
+
     html += `
       <div class="budget-card" style="--dept-color: ${dept.color}">
         <div class="budget-card-header">
           <div class="budget-card-name">${dept.icon} ${dept.name}</div>
-          <div class="budget-card-amount">$${(used / 100).toFixed(0)} / $${(dept.budget / 100).toFixed(0)}</div>
+          <div class="budget-card-amount">${dept.agents.length} agents</div>
         </div>
         <div class="budget-bar">
-          <div class="budget-bar-fill ${fillClass}" style="width: ${pct.toFixed(1)}%; background: ${dept.color}"></div>
+          <div class="budget-bar-fill" style="width: ${pct.toFixed(0)}%; background: ${dept.color}"></div>
         </div>
         <div class="budget-card-detail">
-          <span>${pct.toFixed(1)}% used</span>
-          <span>$${((dept.budget - used) / 100).toFixed(0)} remaining</span>
+          <span>${deptCaps} capabilities</span>
+          <span>${deptSkills} skills</span>
+        </div>
+        <div class="activity-agent-list">
+          ${dept.agents.slice(0, 5).map(a => `<span class="activity-agent-chip">${a.name}</span>`).join('')}
+          ${dept.agents.length > 5 ? `<span class="activity-agent-chip more">+${dept.agents.length - 5} more</span>` : ''}
         </div>
       </div>
     `;
@@ -517,6 +532,9 @@ function renderAuditLog() {
 function updateKPIs() {
   document.getElementById('kpiTotalAgents').textContent = allAgents.length;
   document.getElementById('kpiDepartments').textContent = departments.length;
+  document.getElementById('kpiCapabilities').textContent = countTotalCapabilities();
+  document.getElementById('kpiSkills').textContent = countTotalSkills();
+  document.getElementById('kpiTasksCompleted').textContent = '0';
   document.getElementById('kpiRoutinesActive').textContent = ROUTINES_DATA.filter(r => r.status === 'active').length;
   document.getElementById('activeAgentCount').textContent = allAgents.length;
 }
@@ -548,9 +566,10 @@ function openAgentModal(agentId) {
     ? skills.map(s => `<span class="skill-tag">${s}</span>`).join('')
     : '<span class="no-data-text">No specific skills assigned</span>';
 
-  // Budget (placeholder)
-  document.getElementById('modalBudgetFill').style.width = '0%';
-  document.getElementById('modalBudgetText').textContent = '$0 used this month';
+  // Status
+  document.getElementById('modalBudgetFill').style.width = '100%';
+  document.getElementById('modalBudgetFill').style.background = '#00C853';
+  document.getElementById('modalBudgetText').textContent = 'Ready — available for tasks';
 
   // Tasks (placeholder)
   document.getElementById('modalTasks').innerHTML = '<span class="no-data-text">No recent tasks</span>';

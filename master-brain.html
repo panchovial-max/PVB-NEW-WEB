@@ -64,12 +64,12 @@
                 <div class="brain-kpi-label">DEPARTMENTS</div>
             </div>
             <div class="brain-kpi">
-                <div class="brain-kpi-value" id="kpiBudgetUsed">$0</div>
-                <div class="brain-kpi-label">BUDGET USED</div>
+                <div class="brain-kpi-value" id="kpiCapabilities">0</div>
+                <div class="brain-kpi-label">CAPABILITIES</div>
             </div>
             <div class="brain-kpi">
-                <div class="brain-kpi-value" id="kpiBudgetTotal">$500</div>
-                <div class="brain-kpi-label">MONTHLY CAP</div>
+                <div class="brain-kpi-value" id="kpiSkills">0</div>
+                <div class="brain-kpi-label">SKILLS</div>
             </div>
             <div class="brain-kpi">
                 <div class="brain-kpi-value" id="kpiTasksCompleted">0</div>
@@ -86,7 +86,7 @@
             <button class="brain-tab active" data-tab="neural-map">Neural Map</button>
             <button class="brain-tab" data-tab="departments">Departments</button>
             <button class="brain-tab" data-tab="agents">All Agents</button>
-            <button class="brain-tab" data-tab="budgets">Budgets</button>
+            <button class="brain-tab" data-tab="activity">Activity</button>
             <button class="brain-tab" data-tab="routines">Routines</button>
             <button class="brain-tab" data-tab="audit">Audit Log</button>
         </div>
@@ -137,9 +137,9 @@
             </div>
         </section>
 
-        <!-- TAB: Budgets -->
-        <section class="brain-tab-content" id="tab-budgets">
-            <div class="budgets-container" id="budgetsContainer">
+        <!-- TAB: Activity -->
+        <section class="brain-tab-content" id="tab-activity">
+            <div class="budgets-container" id="activityContainer">
                 <!-- Rendered by JS -->
             </div>
         </section>
@@ -189,7 +189,7 @@
                         <div class="modal-skills" id="modalSkills"></div>
                     </div>
                     <div class="modal-section">
-                        <h3>Budget</h3>
+                        <h3>Status</h3>
                         <div class="modal-budget-bar">
                             <div class="budget-bar-fill" id="modalBudgetFill"></div>
                         </div>
