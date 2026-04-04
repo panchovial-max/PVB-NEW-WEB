@@ -29,15 +29,14 @@ body.theme-dark {
     --neon-glow: 0 0 20px;
 }
 
-/* Atmospheric background — dark loft with light spills */
+/* Agency office background with dark overlay */
 .brain-main {
     background:
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"),
-        radial-gradient(ellipse 50% 35% at 15% 10%, rgba(244,114,182,0.04) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 30% at 85% 20%, rgba(34,211,238,0.03) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 40% at 50% 5%, rgba(212,176,112,0.05) 0%, transparent 50%),
-        radial-gradient(ellipse 80% 60% at 50% 100%, rgba(96,165,250,0.02) 0%, transparent 60%),
-        var(--brain-bg);
+        linear-gradient(180deg, rgba(10,10,10,0.82) 0%, rgba(10,10,10,0.72) 30%, rgba(10,10,10,0.85) 100%),
+        url("assets/agency-bg.jpg");
+    background-size: cover;
+    background-position: center top;
+    background-attachment: fixed;
     min-height: 100vh;
     padding-top: 1rem !important;
 }
@@ -1413,9 +1412,10 @@ body.theme-dark .logo-dot {
     align-items: center;
     min-height: 100vh;
     background:
-        radial-gradient(ellipse 60% 40% at 50% 40%, rgba(201,169,110,0.04) 0%, transparent 70%),
-        url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"),
-        var(--brain-bg);
+        linear-gradient(180deg, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.7) 50%, rgba(10,10,10,0.88) 100%),
+        url("assets/agency-bg.jpg");
+    background-size: cover;
+    background-position: center;
 }
 
 .pin-box {
@@ -1594,4 +1594,551 @@ body.theme-dark .logo-dot {
         padding: 0.6rem 0.8rem;
         font-size: 11px;
     }
+}
+
+/* ========================================
+   PROPOSALS FEED
+   ======================================== */
+
+.proposals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.proposals-filters {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.proposals-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.proposal-card {
+    display: flex;
+    background: var(--brain-surface);
+    border: 1px solid var(--brain-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+}
+
+.proposal-card:hover {
+    border-color: var(--brain-border-light);
+    transform: translateY(-1px);
+}
+
+.proposal-priority-bar {
+    width: 4px;
+    flex-shrink: 0;
+}
+
+.proposal-content {
+    padding: 1.25rem 1.5rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.proposal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    gap: 1rem;
+}
+
+.proposal-agent {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.proposal-agent-icon {
+    font-size: 14px;
+}
+
+.proposal-agent-name {
+    color: var(--brain-text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.proposal-agent-name:hover {
+    color: var(--brain-accent);
+}
+
+.proposal-time {
+    color: var(--brain-text-dim);
+    font-size: 11px;
+}
+
+.proposal-badges {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.proposal-category {
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--brain-text-dim);
+    font-size: 11px;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+}
+
+.proposal-priority {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.proposal-title {
+    color: var(--brain-text);
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.3;
+}
+
+.proposal-desc {
+    color: var(--brain-text-dim);
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0 0 0.75rem 0;
+}
+
+.proposal-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.proposal-impact,
+.proposal-effort,
+.proposal-area {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--brain-text-dim);
+}
+
+.proposal-impact {
+    color: var(--brain-green);
+    background: rgba(52, 211, 153, 0.08);
+}
+
+.proposal-effort {
+    color: var(--brain-blue);
+    background: rgba(96, 165, 250, 0.08);
+}
+
+.proposal-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.proposal-btn {
+    padding: 6px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--brain-border);
+    background: transparent;
+    color: var(--brain-text-dim);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.proposal-btn.approve {
+    background: rgba(52, 211, 153, 0.1);
+    border-color: rgba(52, 211, 153, 0.3);
+    color: var(--brain-green);
+}
+
+.proposal-btn.approve:hover {
+    background: rgba(52, 211, 153, 0.2);
+}
+
+.proposal-btn.reject {
+    background: rgba(251, 113, 133, 0.08);
+    border-color: rgba(251, 113, 133, 0.2);
+    color: var(--brain-red);
+}
+
+.proposal-btn.reject:hover {
+    background: rgba(251, 113, 133, 0.15);
+}
+
+.proposal-btn.discuss {
+    color: var(--brain-accent);
+    border-color: rgba(212, 176, 112, 0.2);
+}
+
+.proposal-btn.discuss:hover {
+    background: rgba(212, 176, 112, 0.1);
+}
+
+.proposal-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.proposal-status-badge.status-approved {
+    background: rgba(52, 211, 153, 0.1);
+    color: var(--brain-green);
+}
+
+.proposal-status-badge.status-rejected {
+    background: rgba(251, 113, 133, 0.08);
+    color: var(--brain-red);
+}
+
+.tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: var(--brain-red);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* ========================================
+   CAMPAIGNS TRACKER
+   ======================================== */
+
+.campaigns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.25rem;
+}
+
+.campaign-card {
+    background: var(--brain-surface);
+    border: 1px solid var(--brain-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: border-color 0.2s;
+}
+
+.campaign-card:hover {
+    border-color: var(--brain-border-light);
+}
+
+.campaign-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+}
+
+.campaign-name {
+    color: var(--brain-text);
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+}
+
+.campaign-client {
+    color: var(--brain-text-dim);
+    font-size: 12px;
+}
+
+.campaign-deadline {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.campaign-deadline.urgent {
+    background: rgba(251, 113, 133, 0.12);
+    color: var(--brain-red);
+}
+
+.campaign-deadline.soon {
+    background: rgba(251, 191, 36, 0.12);
+    color: var(--brain-orange);
+}
+
+.campaign-deadline.ok {
+    background: rgba(52, 211, 153, 0.1);
+    color: var(--brain-green);
+}
+
+.campaign-progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.campaign-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--brain-accent), var(--brain-green));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.campaign-progress-label {
+    font-size: 11px;
+    color: var(--brain-text-dim);
+    margin-bottom: 1rem;
+}
+
+.campaign-task-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.task-stat {
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.task-stat.completed {
+    background: rgba(52, 211, 153, 0.1);
+    color: var(--brain-green);
+}
+
+.task-stat.in-progress {
+    background: rgba(96, 165, 250, 0.1);
+    color: var(--brain-blue);
+}
+
+.task-stat.blocked {
+    background: rgba(251, 113, 133, 0.1);
+    color: var(--brain-red);
+}
+
+.task-stat.total {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--brain-text-dim);
+}
+
+.campaign-agents {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.campaign-agents-label {
+    font-size: 11px;
+    color: var(--brain-text-dim);
+}
+
+.campaign-agent-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 12px;
+    border: 1px solid var(--brain-border);
+}
+
+/* ========================================
+   LIVE STATUS INDICATORS
+   ======================================== */
+
+.desk-active {
+    border-color: rgba(52, 211, 153, 0.25) !important;
+    background: rgba(52, 211, 153, 0.03) !important;
+}
+
+.desk-task-preview {
+    font-size: 10px;
+    color: var(--brain-green);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    opacity: 0.8;
+}
+
+.desk-item.status-working {
+    background: rgba(52, 211, 153, 0.12);
+    color: var(--brain-green);
+}
+
+.desk-item.status-reviewing {
+    background: rgba(96, 165, 250, 0.12);
+    color: var(--brain-blue);
+}
+
+.desk-item.status-proposing {
+    background: rgba(251, 191, 36, 0.12);
+    color: var(--brain-orange);
+}
+
+/* ========================================
+   MODAL UPGRADES
+   ======================================== */
+
+.modal-live-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid var(--brain-border);
+    margin-bottom: 1.25rem;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6B7280;
+    flex-shrink: 0;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.live-text {
+    font-size: 13px;
+    color: var(--brain-text-dim);
+}
+
+.modal-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.modal-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid var(--brain-border);
+}
+
+.modal-stat-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--brain-accent);
+}
+
+.modal-stat-label {
+    font-size: 10px;
+    color: var(--brain-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.modal-task-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--brain-border);
+    font-size: 13px;
+    color: var(--brain-text-dim);
+}
+
+.modal-task-row.active {
+    color: var(--brain-green);
+}
+
+.task-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brain-text-dim);
+    flex-shrink: 0;
+}
+
+.task-time {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--brain-text-dim);
+    opacity: 0.6;
+}
+
+.modal-proposal-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--brain-border);
+}
+
+.proposal-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.proposal-status-dot.status-pending {
+    background: var(--brain-orange);
+}
+
+.proposal-status-dot.status-approved {
+    background: var(--brain-green);
+}
+
+.proposal-status-dot.status-rejected {
+    background: var(--brain-red);
+}
+
+.modal-proposal-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.modal-proposal-title {
+    font-size: 13px;
+    color: var(--brain-text);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.modal-proposal-meta {
+    font-size: 11px;
+    color: var(--brain-text-dim);
 }
