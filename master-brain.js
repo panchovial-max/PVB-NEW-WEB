@@ -3,13 +3,9 @@
  * Visualizes 68 AI agents, budgets, routines, and audit logs
  */
 
-const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_siFuszUIw5ibS-2Y15O4-Q_k484kZ8i';
-
-let supabase = null;
-let userData = null;
 let allAgents = [];
 let departments = [];
+let brainToken = null;
 
 // ─── Department Definitions ───
 const DEPT_CONFIG = {
@@ -222,25 +218,80 @@ const DEPT_ICONS = {
   support: '&#9635;',      // shield-like
 };
 
-// ─── Init ───
-document.addEventListener('DOMContentLoaded', async () => {
-  if (typeof window.supabase !== 'undefined') {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ─── PIN Auth ───
+function checkBrainAuth() {
+  const token = localStorage.getItem('brain_token');
+  if (!token) return false;
+  try {
+    const data = JSON.parse(atob(token));
+    if (data.scope !== 'brain' || data.expires < Date.now()) {
+      localStorage.removeItem('brain_token');
+      return false;
+    }
+    brainToken = token;
+    return true;
+  } catch { return false; }
+}
+
+function showPinScreen() {
+  document.querySelector('.dashboard-nav').style.display = 'none';
+  document.querySelector('.brain-main').innerHTML = `
+    <div class="pin-screen">
+      <div class="pin-box">
+        <div class="pin-logo">PVB <span style="color: var(--brain-accent)">&#9679;</span></div>
+        <h1 class="pin-title">MASTER BRAIN</h1>
+        <p class="pin-subtitle">Agent Command Center</p>
+        <div class="pin-input-row">
+          <input type="password" id="pinInput" class="pin-input" maxlength="6" placeholder="PIN" autocomplete="off">
+        </div>
+        <button class="pin-btn" id="pinSubmit">ACCESS</button>
+        <p class="pin-error" id="pinError"></p>
+      </div>
+    </div>
+  `;
+
+  const pinInput = document.getElementById('pinInput');
+  const pinSubmit = document.getElementById('pinSubmit');
+  const pinError = document.getElementById('pinError');
+
+  pinInput.focus();
+
+  async function tryLogin() {
+    const pin = pinInput.value.trim();
+    if (!pin) return;
+    pinSubmit.textContent = '...';
+    pinSubmit.disabled = true;
+    try {
+      const res = await fetch('/.netlify/functions/brain-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        localStorage.setItem('brain_token', data.token);
+        window.location.reload();
+      } else {
+        pinError.textContent = 'PIN incorrecto';
+        pinInput.value = '';
+        pinInput.focus();
+      }
+    } catch {
+      pinError.textContent = 'Error de conexion';
+    }
+    pinSubmit.textContent = 'ACCESS';
+    pinSubmit.disabled = false;
   }
 
-  // Check auth
-  if (supabase) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      window.location.href = 'login.html';
-      return;
-    }
-    userData = {
-      session_token: session.access_token,
-      user_id: session.user.id,
-      email: session.user.email,
-      full_name: session.user.user_metadata?.full_name || session.user.email,
-    };
+  pinSubmit.addEventListener('click', tryLogin);
+  pinInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryLogin(); });
+}
+
+// ─── Init ───
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!checkBrainAuth()) {
+    showPinScreen();
+    return;
   }
 
   allAgents = AGENTS_DATA;
@@ -563,10 +614,9 @@ function setupEventListeners() {
   });
 
   // Logout
-  document.getElementById('logoutBtn').addEventListener('click', async () => {
-    if (supabase) await supabase.auth.signOut();
-    localStorage.clear();
-    window.location.href = 'login.html';
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('brain_token');
+    window.location.reload();
   });
 
   // Keyboard
