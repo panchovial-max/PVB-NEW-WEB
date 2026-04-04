@@ -32,7 +32,7 @@ body.theme-dark {
 /* Agency office background with dark overlay */
 .brain-main {
     background:
-        url("assets/agency-bg.jpg");
+        url("/assets/agency-bg.jpg");
     background-size: cover;
     background-position: center top;
     background-attachment: fixed;
@@ -1411,7 +1411,7 @@ body.theme-dark .logo-dot {
     min-height: 100vh;
     background:
         linear-gradient(180deg, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.7) 50%, rgba(10,10,10,0.88) 100%),
-        url("assets/agency-bg.jpg");
+        url("/assets/agency-bg.jpg");
     background-size: cover;
     background-position: center;
 }
