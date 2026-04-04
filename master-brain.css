@@ -54,6 +54,21 @@ body.theme-dark .logo-dot {
     text-shadow: var(--neon-glow) var(--brain-accent-glow), 0 0 40px rgba(201,169,110,0.15);
 }
 
+/* Nav title — 2026 minimalist weight contrast */
+body.theme-dark .nav-title {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--brain-text);
+    text-transform: lowercase;
+}
+
+.nav-title-thin {
+    font-weight: 200;
+    color: rgba(245, 240, 232, 0.5);
+    letter-spacing: 0.04em;
+}
+
 /* ── Pulse Indicator ── */
 .brain-pulse-indicator {
     display: flex;
@@ -125,19 +140,19 @@ body.theme-dark .logo-dot {
 }
 
 .brain-kpi-value {
-    font-size: 30px;
-    font-weight: 900;
+    font-size: 32px;
+    font-weight: 200;
     color: var(--brain-text);
     line-height: 1;
     margin-bottom: 6px;
-    letter-spacing: -1px;
+    letter-spacing: -2px;
 }
 
 .brain-kpi-label {
-    font-size: 9px;
-    font-weight: 600;
+    font-size: 8px;
+    font-weight: 700;
     color: var(--brain-text-dim);
-    letter-spacing: 2.5px;
+    letter-spacing: 3px;
     text-transform: uppercase;
 }
 
@@ -271,12 +286,12 @@ body.theme-dark .logo-dot {
 }
 
 .ceo-name {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 900;
     color: var(--brain-accent);
-    letter-spacing: 2px;
-    text-shadow: var(--neon-glow) var(--brain-accent-glow);
+    letter-spacing: 3px;
     line-height: 1;
+    text-transform: uppercase;
 }
 
 .ceo-role {
@@ -305,12 +320,12 @@ body.theme-dark .logo-dot {
 }
 
 .hq-title-text {
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 6px;
-    color: rgba(201,169,110,0.35);
+    font-size: 9px;
+    font-weight: 200;
+    letter-spacing: 8px;
+    color: rgba(201,169,110,0.3);
     white-space: nowrap;
-    text-shadow: 0 0 20px rgba(201,169,110,0.1);
+    text-transform: uppercase;
 }
 
 .room-lamp {
