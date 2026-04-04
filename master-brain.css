@@ -32,7 +32,7 @@ body.theme-dark {
 /* Agency office background with dark overlay */
 .brain-main {
     background:
-        linear-gradient(180deg, rgba(10,10,10,0.45) 0%, rgba(10,10,10,0.35) 30%, rgba(10,10,10,0.5) 100%),
+        linear-gradient(180deg, rgba(10,10,10,0.1) 0%, rgba(10,10,10,0.1) 50%, rgba(10,10,10,0.15) 100%),
         url("assets/agency-bg.jpg");
     background-size: cover;
     background-position: center top;
