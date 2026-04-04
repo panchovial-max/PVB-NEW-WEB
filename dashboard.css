@@ -2909,19 +2909,190 @@ input[type="password"].form-control::placeholder {
 
 /* ── Print Styles ── */
 @media print {
-    body { background: white !important; color: #1a1a1a !important; }
-    .dashboard-nav { background: white !important; color: #1a1a1a !important; border-bottom: 2px solid #1a1a1a; }
-    .dashboard-nav .logo-text, .dashboard-nav .logo-name, .nav-title { color: #1a1a1a !important; }
+    @page {
+        margin: 2cm 2.5cm;
+        size: A4;
+    }
+
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    body {
+        background: white !important;
+        color: #1a1a1a !important;
+        font-size: 11pt !important;
+        line-height: 1.6 !important;
+    }
+
+    /* ── Header: clean, branded ── */
+    .dashboard-nav {
+        background: white !important;
+        color: #1a1a1a !important;
+        border-bottom: 3px solid #1a1a1a !important;
+        padding: 20px 0 16px !important;
+        margin-bottom: 32px !important;
+        position: relative !important;
+    }
+
+    .dashboard-nav .nav-container {
+        padding: 0 !important;
+    }
+
+    .dashboard-nav .logo-text {
+        color: #1a1a1a !important;
+        font-size: 28px !important;
+        font-weight: 900 !important;
+    }
+
+    .dashboard-nav .logo-dot { color: #74b563 !important; }
+
+    .dashboard-nav .logo-name {
+        color: #1a1a1a !important;
+        font-size: 11px !important;
+        letter-spacing: 3px !important;
+    }
+
+    .nav-title {
+        color: #666 !important;
+        font-size: 10px !important;
+        letter-spacing: 4px !important;
+        text-transform: uppercase !important;
+    }
+
+    /* After the nav, inject report date via CSS */
+    .dashboard-nav::after {
+        content: "Reporte generado: " attr(data-date);
+        position: absolute;
+        bottom: -24px;
+        right: 0;
+        font-size: 9px;
+        color: #999;
+        letter-spacing: 0.5px;
+    }
+
+    /* ── Hide interactive elements ── */
     .btn-refresh, .btn-report, .btn-export, .btn-settings, #logoutBtn,
-    .whatsapp-widget, .inbox-reply-btn, .inbox-reply-box,
-    .btn-add, .calendar-nav { display: none !important; }
-    .dashboard-main { padding: 0; }
-    .stat-card, .inbox-message, .campaigns-table { break-inside: avoid; }
-    .stat-card { border: 1px solid #ddd !important; background: white !important; color: #1a1a1a !important; }
-    .stat-value, .stat-label { color: #1a1a1a !important; }
-    .section-title { color: #1a1a1a !important; }
-    .inbox-section, .calendar-section { page-break-before: always; }
-    @page { margin: 1.5cm; }
+    .whatsapp-widget, .inbox-reply-btn, .inbox-reply-box, .inbox-reply-row,
+    .btn-add, .calendar-nav, .campaign-filter, .nav-actions,
+    .inbox-controls, .btn-refresh-inbox,
+    #addCampaign { display: none !important; }
+
+    /* ── Main content: generous spacing ── */
+    .dashboard-main {
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+        color: #1a1a1a !important;
+        font-size: 16pt !important;
+        font-weight: 900 !important;
+        letter-spacing: 2px !important;
+        margin-top: 40px !important;
+        margin-bottom: 20px !important;
+        padding-bottom: 10px !important;
+        border-bottom: 1px solid #e0e0e0 !important;
+    }
+
+    .section-header {
+        margin-bottom: 24px !important;
+    }
+
+    /* ── Stat cards: clean grid ── */
+    .stat-card {
+        border: 1px solid #e0e0e0 !important;
+        background: white !important;
+        color: #1a1a1a !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        break-inside: avoid !important;
+    }
+
+    .stat-value {
+        color: #1a1a1a !important;
+        font-size: 22pt !important;
+        font-weight: 900 !important;
+        margin-bottom: 4px !important;
+    }
+
+    .stat-label {
+        color: #666 !important;
+        font-size: 9pt !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+    }
+
+    .stat-icon { opacity: 0.15 !important; }
+
+    /* ── Charts ── */
+    canvas { max-height: 300px !important; }
+
+    /* ── Inbox messages: clean list ── */
+    .inbox-message {
+        break-inside: avoid !important;
+        border-bottom: 1px solid #f0f0f0 !important;
+        padding: 14px 0 !important;
+    }
+
+    .inbox-sender { font-weight: 700 !important; color: #1a1a1a !important; }
+    .inbox-text { color: #333 !important; font-size: 10pt !important; line-height: 1.5 !important; }
+    .inbox-time { color: #999 !important; font-size: 8pt !important; }
+    .inbox-context { color: #888 !important; font-size: 8pt !important; }
+
+    .inbox-avatar {
+        background: #f0f0f0 !important;
+        color: #666 !important;
+    }
+
+    .inbox-platform-badge {
+        border: 1px solid #ccc !important;
+        background: white !important;
+        color: #666 !important;
+        font-size: 8pt !important;
+    }
+
+    /* ── Campaigns table ── */
+    .campaigns-table {
+        break-inside: avoid !important;
+        font-size: 9pt !important;
+    }
+
+    .campaigns-table th {
+        background: #f5f5f5 !important;
+        color: #1a1a1a !important;
+        font-weight: 700 !important;
+        border-bottom: 2px solid #1a1a1a !important;
+        padding: 10px 12px !important;
+    }
+
+    .campaigns-table td {
+        padding: 10px 12px !important;
+        border-bottom: 1px solid #eee !important;
+        color: #333 !important;
+    }
+
+    /* ── Calendar ── */
+    .calendar-grid { font-size: 9pt !important; }
+    .calendar-day { min-height: 50px !important; }
+    .calendar-event { font-size: 7pt !important; }
+
+    /* ── Page breaks ── */
+    .inbox-section { page-break-before: always !important; }
+    .calendar-section { page-break-before: always !important; }
+    .campaigns-section { page-break-before: always !important; }
+
+    /* ── Footer on print ── */
+    .dashboard-main::after {
+        content: "PVB Estudio Creativo — panchovial.com — Confidencial";
+        display: block;
+        text-align: center;
+        margin-top: 60px;
+        padding-top: 16px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 8pt;
+        color: #bbb;
+        letter-spacing: 1px;
+    }
 }
 
 /* Ensure WhatsApp widget is on top of everything */
