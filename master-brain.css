@@ -24,8 +24,8 @@ body.theme-dark {
     --brain-cyan: #22d3ee;
     --brain-magenta: #f472b6;
     --glass-blur: 20px;
-    --glass-bg: rgba(15, 15, 18, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.09);
+    --glass-bg: rgba(15, 15, 18, 0.35);
+    --glass-border: rgba(255, 255, 255, 0.07);
     --neon-glow: 0 0 20px;
 }
 
