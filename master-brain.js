@@ -20,167 +20,168 @@ const DEPT_CONFIG = {
 };
 
 // ─── All 68 Agents ───
+// Models: opus = Opus 4.6 (complex reasoning), sonnet = Sonnet 4.6 (balanced), haiku = Haiku 4.5 (fast/simple)
 const AGENTS_DATA = [
   // CEO
-  { id: 'agents-orchestrator', name: 'Pancho — Orchestrator', title: 'Founder & CEO / Agents Orchestrator', dept: 'ceo', role: 'ceo',
+  { id: 'agents-orchestrator', name: 'Pancho — Orchestrator', title: 'Founder & CEO / Agents Orchestrator', dept: 'ceo', role: 'ceo', model: 'opus',
     capabilities: 'workflow-orchestration, quality-gate-enforcement, multi-agent-coordination, autonomous-error-recovery, dev-qa-loops', skills: '' },
 
   // CREATIVE (8)
-  { id: 'design-brand-guardian', name: 'Brand Guardian', title: 'Identidad de marca, consistencia visual, brand systems', dept: 'creative',
+  { id: 'design-brand-guardian', name: 'Brand Guardian', title: 'Identidad de marca, consistencia visual, brand systems', dept: 'creative', model: 'sonnet',
     capabilities: 'brand-identity, visual-systems, brand-voice, consistency-monitoring, brand-evolution, style-guides', skills: '' },
-  { id: 'design-ui-designer', name: 'UI Designer', title: 'Design systems, component libraries, interfaces pixel-perfect', dept: 'creative',
+  { id: 'design-ui-designer', name: 'UI Designer', title: 'Design systems, component libraries, interfaces pixel-perfect', dept: 'creative', model: 'sonnet',
     capabilities: 'design-systems, component-libraries, dark-mode-theming, wcag-aa-accessibility, pixel-perfect-interfaces', skills: 'landing-page, page-cro' },
-  { id: 'design-ux-architect', name: 'UX Architect', title: 'Foundations para devs, CSS systems, layout frameworks', dept: 'creative',
+  { id: 'design-ux-architect', name: 'UX Architect', title: 'Foundations para devs, CSS systems, layout frameworks', dept: 'creative', model: 'opus',
     capabilities: 'css-design-systems, layout-frameworks, schema-compliance, developer-ready-foundations', skills: 'page-cro, onboarding-cro' },
-  { id: 'design-ux-researcher', name: 'UX Researcher', title: 'User behavior analysis, usability testing, data-driven design', dept: 'creative',
+  { id: 'design-ux-researcher', name: 'UX Researcher', title: 'User behavior analysis, usability testing, data-driven design', dept: 'creative', model: 'sonnet',
     capabilities: 'user-interviews, usability-testing, persona-development, journey-mapping', skills: '' },
-  { id: 'design-image-prompt-engineer', name: 'Image Prompt Engineer', title: 'Prompts de fotografia IA profesional', dept: 'creative',
+  { id: 'design-image-prompt-engineer', name: 'Image Prompt Engineer', title: 'Prompts de fotografia IA profesional', dept: 'creative', model: 'sonnet',
     capabilities: 'ai-image-prompts, photography-direction, visual-concept-translation, style-consistency', skills: 'ad-creative' },
-  { id: 'design-visual-storyteller', name: 'Visual Storyteller', title: 'Narrativa visual, multimedia, infografias', dept: 'creative',
+  { id: 'design-visual-storyteller', name: 'Visual Storyteller', title: 'Narrativa visual, multimedia, infografias', dept: 'creative', model: 'sonnet',
     capabilities: 'visual-narratives, multimedia-content, data-visualization, emotional-storytelling', skills: '' },
-  { id: 'design-inclusive-visuals-specialist', name: 'Inclusive Visuals', title: 'Representacion diversa, anti-bias, imagenes culturales', dept: 'creative',
+  { id: 'design-inclusive-visuals-specialist', name: 'Inclusive Visuals', title: 'Representacion diversa, anti-bias, imagenes culturales', dept: 'creative', model: 'haiku',
     capabilities: 'bias-detection, cultural-accuracy, intersectional-representation', skills: '' },
-  { id: 'design-whimsy-injector', name: 'Whimsy Injector', title: 'Personalidad de marca, micro-interacciones, deleite', dept: 'creative',
+  { id: 'design-whimsy-injector', name: 'Whimsy Injector', title: 'Personalidad de marca, micro-interacciones, deleite', dept: 'creative', model: 'haiku',
     capabilities: 'brand-personality, micro-interactions, easter-eggs, playful-ux', skills: '' },
 
   // MARKETING (12)
-  { id: 'marketing-content-creator', name: 'Content Creator', title: 'Estratega y creador de contenido multi-plataforma', dept: 'marketing',
+  { id: 'marketing-content-creator', name: 'Content Creator', title: 'Estratega y creador de contenido multi-plataforma', dept: 'marketing', model: 'sonnet',
     capabilities: 'content-strategy, editorial-calendars, brand-storytelling, seo-content, copywriting', skills: 'content-strategy, copywriting, email-sequence, cold-email, social-content' },
-  { id: 'marketing-social-media-strategist', name: 'Social Media Strategist', title: 'Estrategia cross-platform LinkedIn/Twitter', dept: 'marketing',
+  { id: 'marketing-social-media-strategist', name: 'Social Media Strategist', title: 'Estrategia cross-platform LinkedIn/Twitter', dept: 'marketing', model: 'sonnet',
     capabilities: 'cross-platform-campaigns, community-building, thought-leadership, real-time-engagement', skills: 'social-content' },
-  { id: 'marketing-instagram-curator', name: 'Instagram Curator', title: 'Visual storytelling, comunidad, multi-formato', dept: 'marketing',
+  { id: 'marketing-instagram-curator', name: 'Instagram Curator', title: 'Visual storytelling, comunidad, multi-formato', dept: 'marketing', model: 'haiku',
     capabilities: 'visual-brand-development, reels, stories, social-commerce, hashtag-strategy', skills: 'social-content, ad-creative' },
-  { id: 'marketing-tiktok-strategist', name: 'TikTok Strategist', title: 'Contenido viral, algoritmo TikTok, creators', dept: 'marketing',
+  { id: 'marketing-tiktok-strategist', name: 'TikTok Strategist', title: 'Contenido viral, algoritmo TikTok, creators', dept: 'marketing', model: 'haiku',
     capabilities: 'viral-content, algorithm-mastery, trend-analysis, creator-partnerships', skills: 'social-content, ad-creative' },
-  { id: 'marketing-twitter-engager', name: 'Twitter Engager', title: 'Thought leadership, threads virales en X', dept: 'marketing',
+  { id: 'marketing-twitter-engager', name: 'Twitter Engager', title: 'Thought leadership, threads virales en X', dept: 'marketing', model: 'haiku',
     capabilities: 'real-time-engagement, thought-leadership, thread-creation, community-growth', skills: 'social-content' },
-  { id: 'marketing-growth-hacker', name: 'Growth Hacker', title: 'Adquisicion de usuarios, growth loops, funnels', dept: 'marketing',
+  { id: 'marketing-growth-hacker', name: 'Growth Hacker', title: 'Adquisicion de usuarios, growth loops, funnels', dept: 'marketing', model: 'opus',
     capabilities: 'growth-strategy, ab-testing, viral-mechanics, channel-optimization', skills: 'referral-program, paid-ads, free-tool-strategy, ab-test-setup' },
-  { id: 'marketing-app-store-optimizer', name: 'App Store Optimizer', title: 'ASO, discoverability, conversion rate de apps', dept: 'marketing',
+  { id: 'marketing-app-store-optimizer', name: 'App Store Optimizer', title: 'ASO, discoverability, conversion rate de apps', dept: 'marketing', model: 'haiku',
     capabilities: 'aso-optimization, keyword-research, screenshot-optimization, review-management', skills: '' },
-  { id: 'specialized-developer-advocate', name: 'Developer Advocate', title: 'Comunidad de devs, DX, contenido tecnico', dept: 'marketing',
+  { id: 'specialized-developer-advocate', name: 'Developer Advocate', title: 'Comunidad de devs, DX, contenido tecnico', dept: 'marketing', model: 'sonnet',
     capabilities: 'developer-community, technical-content, dx-optimization, platform-adoption', skills: '' },
-  { id: 'marketing-xiaohongshu-specialist', name: 'Xiaohongshu Specialist', title: 'Marketing lifestyle, micro-contenido estetico', dept: 'marketing',
+  { id: 'marketing-xiaohongshu-specialist', name: 'Xiaohongshu Specialist', title: 'Marketing lifestyle, micro-contenido estetico', dept: 'marketing', model: 'haiku',
     capabilities: 'lifestyle-content, trend-driven-strategy, aesthetic-storytelling', skills: '' },
-  { id: 'marketing-wechat-official-account', name: 'WeChat Manager', title: 'WeChat OA, subscriber engagement', dept: 'marketing',
+  { id: 'marketing-wechat-official-account', name: 'WeChat Manager', title: 'WeChat OA, subscriber engagement', dept: 'marketing', model: 'haiku',
     capabilities: 'wechat-content, subscriber-engagement, mini-programs', skills: '' },
-  { id: 'marketing-zhihu-strategist', name: 'Zhihu Strategist', title: 'Thought leadership y autoridad en Zhihu', dept: 'marketing',
+  { id: 'marketing-zhihu-strategist', name: 'Zhihu Strategist', title: 'Thought leadership y autoridad en Zhihu', dept: 'marketing', model: 'haiku',
     capabilities: 'knowledge-marketing, qa-strategy, brand-authority', skills: '' },
-  { id: 'marketing-reddit-community-builder', name: 'Reddit Community Builder', title: 'Engagement autentico en Reddit', dept: 'marketing',
+  { id: 'marketing-reddit-community-builder', name: 'Reddit Community Builder', title: 'Engagement autentico en Reddit', dept: 'marketing', model: 'haiku',
     capabilities: 'community-engagement, reddit-culture, authentic-marketing', skills: '' },
 
   // ENGINEERING (10)
-  { id: 'engineering-frontend-developer', name: 'Frontend Developer', title: 'React/Vue/Angular, responsive, Core Web Vitals', dept: 'engineering',
+  { id: 'engineering-frontend-developer', name: 'Frontend Developer', title: 'React/Vue/Angular, responsive, Core Web Vitals', dept: 'engineering', model: 'sonnet',
     capabilities: 'modern-web-apps, responsive-design, performance-optimization, pwa, accessibility', skills: 'landing-page, page-cro' },
-  { id: 'engineering-backend-architect', name: 'Backend Architect', title: 'Scalable systems, Supabase, APIs, databases', dept: 'engineering',
+  { id: 'engineering-backend-architect', name: 'Backend Architect', title: 'Scalable systems, Supabase, APIs, databases', dept: 'engineering', model: 'opus',
     capabilities: 'system-design, database-architecture, api-design, event-driven-systems, security-first', skills: 'seo-audit, schema-markup, analytics-tracking' },
-  { id: 'engineering-senior-developer', name: 'Senior Developer', title: 'Laravel/Livewire/FluxUI, Three.js, premium web', dept: 'engineering',
+  { id: 'engineering-senior-developer', name: 'Senior Developer', title: 'Laravel/Livewire/FluxUI, Three.js, premium web', dept: 'engineering', model: 'opus',
     capabilities: 'laravel-livewire-fluxui, advanced-css, three-js, glass-morphism, organic-shapes', skills: '' },
-  { id: 'engineering-rapid-prototyper', name: 'Rapid Prototyper', title: 'MVPs ultra-rapidos, proof-of-concept', dept: 'engineering',
+  { id: 'engineering-rapid-prototyper', name: 'Rapid Prototyper', title: 'MVPs ultra-rapidos, proof-of-concept', dept: 'engineering', model: 'sonnet',
     capabilities: 'mvp-development, rapid-iteration, framework-selection', skills: '' },
-  { id: 'engineering-security-engineer', name: 'Security Engineer', title: 'Threat modeling, OWASP, secure code review', dept: 'engineering',
+  { id: 'engineering-security-engineer', name: 'Security Engineer', title: 'Threat modeling, OWASP, secure code review', dept: 'engineering', model: 'opus',
     capabilities: 'threat-modeling, vulnerability-assessment, secure-code-review, owasp-top-10', skills: '' },
-  { id: 'engineering-devops-automator', name: 'DevOps Automator', title: 'CI/CD, Netlify, cloud ops, automation', dept: 'engineering',
+  { id: 'engineering-devops-automator', name: 'DevOps Automator', title: 'CI/CD, Netlify, cloud ops, automation', dept: 'engineering', model: 'sonnet',
     capabilities: 'ci-cd-pipelines, cloud-infrastructure, containerization, monitoring', skills: '' },
-  { id: 'engineering-mobile-app-builder', name: 'Mobile App Builder', title: 'iOS/Android, React Native, Flutter', dept: 'engineering',
+  { id: 'engineering-mobile-app-builder', name: 'Mobile App Builder', title: 'iOS/Android, React Native, Flutter', dept: 'engineering', model: 'sonnet',
     capabilities: 'native-ios-android, react-native, flutter, cross-platform', skills: '' },
-  { id: 'engineering-ai-engineer', name: 'AI Engineer', title: 'ML models, Claude API, integraciones IA', dept: 'engineering',
+  { id: 'engineering-ai-engineer', name: 'AI Engineer', title: 'ML models, Claude API, integraciones IA', dept: 'engineering', model: 'opus',
     capabilities: 'ml-models, claude-api-integration, ai-features, data-pipelines', skills: '' },
-  { id: 'engineering-technical-writer', name: 'Technical Writer', title: 'Docs de desarrollador, API references, tutoriales', dept: 'engineering',
+  { id: 'engineering-technical-writer', name: 'Technical Writer', title: 'Docs de desarrollador, API references, tutoriales', dept: 'engineering', model: 'haiku',
     capabilities: 'developer-docs, api-references, readme-files, tutorials', skills: '' },
-  { id: 'engineering-data-engineer', name: 'Data Engineer', title: 'Pipelines ETL/ELT, Spark, dbt, lakehouse', dept: 'engineering',
+  { id: 'engineering-data-engineer', name: 'Data Engineer', title: 'Pipelines ETL/ELT, Spark, dbt, lakehouse', dept: 'engineering', model: 'sonnet',
     capabilities: 'etl-elt-pipelines, apache-spark, dbt, streaming-systems', skills: '' },
 
   // QA & TESTING (8)
-  { id: 'testing-reality-checker', name: 'Reality Checker', title: 'Default: NEEDS WORK. Requiere evidencia abrumadora', dept: 'qa',
+  { id: 'testing-reality-checker', name: 'Reality Checker', title: 'Default: NEEDS WORK. Requiere evidencia abrumadora', dept: 'qa', model: 'sonnet',
     capabilities: 'integration-testing, evidence-validation, visual-proof, fantasy-detection', skills: '' },
-  { id: 'testing-accessibility-auditor', name: 'Accessibility Auditor', title: 'WCAG, screen readers, inclusive design', dept: 'qa',
+  { id: 'testing-accessibility-auditor', name: 'Accessibility Auditor', title: 'WCAG, screen readers, inclusive design', dept: 'qa', model: 'sonnet',
     capabilities: 'wcag-audit, screen-reader-testing, inclusive-design, a11y-compliance', skills: '' },
-  { id: 'testing-performance-benchmarker', name: 'Performance Benchmarker', title: 'Core Web Vitals, load testing, optimization', dept: 'qa',
+  { id: 'testing-performance-benchmarker', name: 'Performance Benchmarker', title: 'Core Web Vitals, load testing, optimization', dept: 'qa', model: 'haiku',
     capabilities: 'performance-testing, core-web-vitals, load-testing', skills: '' },
-  { id: 'testing-api-tester', name: 'API Tester', title: 'API validation, performance, QA integraciones', dept: 'qa',
+  { id: 'testing-api-tester', name: 'API Tester', title: 'API validation, performance, QA integraciones', dept: 'qa', model: 'haiku',
     capabilities: 'api-validation, contract-testing, performance-testing, security-testing', skills: '' },
-  { id: 'testing-tool-evaluator', name: 'Tool Evaluator', title: 'Evaluacion de herramientas antes de adoptar', dept: 'qa',
+  { id: 'testing-tool-evaluator', name: 'Tool Evaluator', title: 'Evaluacion de herramientas antes de adoptar', dept: 'qa', model: 'sonnet',
     capabilities: 'tool-assessment, platform-evaluation, cost-benefit-analysis', skills: '' },
-  { id: 'testing-workflow-optimizer', name: 'Workflow Optimizer', title: 'Analisis y automatizacion de procesos', dept: 'qa',
+  { id: 'testing-workflow-optimizer', name: 'Workflow Optimizer', title: 'Analisis y automatizacion de procesos', dept: 'qa', model: 'sonnet',
     capabilities: 'process-analysis, bottleneck-detection, automation-opportunities', skills: '' },
-  { id: 'testing-test-results-analyzer', name: 'Test Results Analyzer', title: 'Analisis de resultados de tests, metricas QA', dept: 'qa',
+  { id: 'testing-test-results-analyzer', name: 'Test Results Analyzer', title: 'Analisis de resultados de tests, metricas QA', dept: 'qa', model: 'haiku',
     capabilities: 'test-evaluation, quality-metrics, ab-test-analysis', skills: 'ab-test-setup' },
-  { id: 'testing-evidence-collector', name: 'Evidence Collector', title: 'Screenshots, pruebas visuales, busca 3-5 issues', dept: 'qa',
+  { id: 'testing-evidence-collector', name: 'Evidence Collector', title: 'Screenshots, pruebas visuales, busca 3-5 issues', dept: 'qa', model: 'haiku',
     capabilities: 'visual-evidence, screenshot-capture, bug-documentation', skills: '' },
 
   // ANALYTICS & DATA (4)
-  { id: 'support-analytics-reporter', name: 'Analytics Reporter', title: 'Dashboards, GA4/GTM, KPIs, business intelligence', dept: 'analytics',
+  { id: 'support-analytics-reporter', name: 'Analytics Reporter', title: 'Dashboards, GA4/GTM, KPIs, business intelligence', dept: 'analytics', model: 'sonnet',
     capabilities: 'dashboards, statistical-analysis, predictive-modeling, data-visualization', skills: 'analytics-tracking, revops' },
-  { id: 'sales-data-extraction-agent', name: 'Sales Data Extractor', title: 'Monitoreo Excel, metricas MTD/YTD', dept: 'analytics',
+  { id: 'sales-data-extraction-agent', name: 'Sales Data Extractor', title: 'Monitoreo Excel, metricas MTD/YTD', dept: 'analytics', model: 'haiku',
     capabilities: 'excel-monitoring, sales-metrics, pipeline-analysis', skills: '' },
-  { id: 'data-consolidation-agent', name: 'Data Consolidator', title: 'Consolidacion en dashboards live', dept: 'analytics',
+  { id: 'data-consolidation-agent', name: 'Data Consolidator', title: 'Consolidacion en dashboards live', dept: 'analytics', model: 'haiku',
     capabilities: 'data-consolidation, live-dashboards, territory-summaries', skills: '' },
-  { id: 'report-distribution-agent', name: 'Report Distributor', title: 'Distribucion automatizada de reportes', dept: 'analytics',
+  { id: 'report-distribution-agent', name: 'Report Distributor', title: 'Distribucion automatizada de reportes', dept: 'analytics', model: 'haiku',
     capabilities: 'automated-distribution, territorial-routing, scheduled-reports', skills: '' },
 
   // PRODUCT STRATEGY (4)
-  { id: 'product-sprint-prioritizer', name: 'Sprint Prioritizer', title: 'Agile planning, RICE/MoSCoW/Kano, pricing', dept: 'product',
+  { id: 'product-sprint-prioritizer', name: 'Sprint Prioritizer', title: 'Agile planning, RICE/MoSCoW/Kano, pricing', dept: 'product', model: 'opus',
     capabilities: 'rice-moscow-kano, sprint-planning, capacity-planning, velocity-prediction', skills: 'pricing-strategy' },
-  { id: 'product-behavioral-nudge-engine', name: 'Behavioral Nudge Engine', title: 'Psicologia conductual, retencion, churn', dept: 'product',
+  { id: 'product-behavioral-nudge-engine', name: 'Behavioral Nudge Engine', title: 'Psicologia conductual, retencion, churn', dept: 'product', model: 'opus',
     capabilities: 'behavioral-psychology, user-motivation, interaction-adaptation', skills: 'churn-prevention, onboarding-cro' },
-  { id: 'product-trend-researcher', name: 'Trend Researcher', title: 'Market intelligence, tendencias, competitive analysis', dept: 'product',
+  { id: 'product-trend-researcher', name: 'Trend Researcher', title: 'Market intelligence, tendencias, competitive analysis', dept: 'product', model: 'sonnet',
     capabilities: 'market-research, trend-analysis, competitive-intelligence', skills: 'competitor-alternatives' },
-  { id: 'product-feedback-synthesizer', name: 'Feedback Synthesizer', title: 'Multi-channel feedback → insights accionables', dept: 'product',
+  { id: 'product-feedback-synthesizer', name: 'Feedback Synthesizer', title: 'Multi-channel feedback → insights accionables', dept: 'product', model: 'sonnet',
     capabilities: 'feedback-collection, qualitative-to-quantitative, sentiment-analysis', skills: '' },
 
   // PROJECT MANAGEMENT (5)
-  { id: 'project-management-studio-producer', name: 'Studio Producer', title: 'Orquestacion de portafolio, vision creativa', dept: 'production',
+  { id: 'project-management-studio-producer', name: 'Studio Producer', title: 'Orquestacion de portafolio, vision creativa', dept: 'production', model: 'opus',
     capabilities: 'portfolio-management, creative-vision-alignment, resource-allocation', skills: 'launch-strategy' },
-  { id: 'project-management-project-shepherd', name: 'Project Shepherd', title: 'Coordinacion cross-funcional, timeline, riesgos', dept: 'production',
+  { id: 'project-management-project-shepherd', name: 'Project Shepherd', title: 'Coordinacion cross-funcional, timeline, riesgos', dept: 'production', model: 'sonnet',
     capabilities: 'cross-functional-coordination, timeline-management, risk-mitigation', skills: '' },
-  { id: 'project-management-studio-operations', name: 'Studio Operations', title: 'Eficiencia operativa dia a dia, procesos', dept: 'production',
+  { id: 'project-management-studio-operations', name: 'Studio Operations', title: 'Eficiencia operativa dia a dia, procesos', dept: 'production', model: 'haiku',
     capabilities: 'daily-operations, process-optimization, resource-coordination', skills: '' },
-  { id: 'project-management-experiment-tracker', name: 'Experiment Tracker', title: 'Diseno de experimentos, A/B tests', dept: 'production',
+  { id: 'project-management-experiment-tracker', name: 'Experiment Tracker', title: 'Diseno de experimentos, A/B tests', dept: 'production', model: 'sonnet',
     capabilities: 'experiment-design, ab-testing, hypothesis-validation', skills: 'ab-test-setup' },
-  { id: 'project-manager-senior', name: 'Senior PM', title: 'Specs realistas, task decomposition, scope control', dept: 'production',
+  { id: 'project-manager-senior', name: 'Senior PM', title: 'Specs realistas, task decomposition, scope control', dept: 'production', model: 'opus',
     capabilities: 'spec-to-tasks, realistic-scope, exact-requirements', skills: '' },
 
   // SUPPORT & LEGAL (5)
-  { id: 'support-legal-compliance-checker', name: 'Legal & Compliance', title: 'GDPR/CCPA/HIPAA, contratos, multi-jurisdiccion', dept: 'support',
+  { id: 'support-legal-compliance-checker', name: 'Legal & Compliance', title: 'GDPR/CCPA/HIPAA, contratos, multi-jurisdiccion', dept: 'support', model: 'opus',
     capabilities: 'gdpr-ccpa-hipaa, risk-assessment, privacy-policies, content-compliance', skills: '' },
-  { id: 'support-finance-tracker', name: 'Finance Tracker', title: 'P&L, cash flow, budgeting, cost management', dept: 'support',
+  { id: 'support-finance-tracker', name: 'Finance Tracker', title: 'P&L, cash flow, budgeting, cost management', dept: 'support', model: 'sonnet',
     capabilities: 'budgeting, cash-flow-management, financial-reporting, cost-management', skills: '' },
-  { id: 'support-infrastructure-maintainer', name: 'Infrastructure Maintainer', title: 'System reliability, Supabase/Netlify monitoring', dept: 'support',
+  { id: 'support-infrastructure-maintainer', name: 'Infrastructure Maintainer', title: 'System reliability, Supabase/Netlify monitoring', dept: 'support', model: 'haiku',
     capabilities: 'system-reliability, performance-optimization, monitoring, security', skills: '' },
-  { id: 'support-executive-summary-generator', name: 'Executive Summary Gen', title: 'McKinsey SCQA + BCG Pyramid para C-suite', dept: 'support',
+  { id: 'support-executive-summary-generator', name: 'Executive Summary Gen', title: 'McKinsey SCQA + BCG Pyramid para C-suite', dept: 'support', model: 'opus',
     capabilities: 'scqa-framework, pyramid-principle, complexity-to-clarity', skills: 'sales-enablement' },
-  { id: 'support-support-responder', name: 'Support Responder', title: 'Atencion al cliente excepcional, multi-canal', dept: 'support',
+  { id: 'support-support-responder', name: 'Support Responder', title: 'Atencion al cliente excepcional, multi-canal', dept: 'support', model: 'haiku',
     capabilities: 'multi-channel-support, issue-resolution, proactive-care', skills: '' },
 
   // SPECIALIZED (4 — mapped to their departments)
-  { id: 'specialized-cultural-intelligence-strategist', name: 'Cultural Intelligence', title: 'Inclusion global e inteligencia cultural', dept: 'product',
+  { id: 'specialized-cultural-intelligence-strategist', name: 'Cultural Intelligence', title: 'Inclusion global e inteligencia cultural', dept: 'product', model: 'sonnet',
     capabilities: 'cultural-analysis, bias-detection, global-context', skills: '' },
-  { id: 'agentic-identity-trust', name: 'Identity & Trust Architect', title: 'Identidad y trust para agentes autonomos', dept: 'engineering',
+  { id: 'agentic-identity-trust', name: 'Identity & Trust Architect', title: 'Identidad y trust para agentes autonomos', dept: 'engineering', model: 'opus',
     capabilities: 'identity-systems, trust-verification, audit-trails', skills: '' },
-  { id: 'engineering-autonomous-optimization-architect', name: 'Autonomous Optimizer', title: 'Shadow-testing APIs, guardrails financieros', dept: 'engineering',
+  { id: 'engineering-autonomous-optimization-architect', name: 'Autonomous Optimizer', title: 'Shadow-testing APIs, guardrails financieros', dept: 'engineering', model: 'sonnet',
     capabilities: 'api-shadow-testing, cost-guardrails, performance-monitoring', skills: '' },
-  { id: 'lsp-index-engineer', name: 'LSP Index Engineer', title: 'Language Server Protocol, code intelligence', dept: 'engineering',
+  { id: 'lsp-index-engineer', name: 'LSP Index Engineer', title: 'Language Server Protocol, code intelligence', dept: 'engineering', model: 'sonnet',
     capabilities: 'lsp-orchestration, semantic-indexing, code-intelligence', skills: '' },
 
   // XR & Spatial (5)
-  { id: 'xr-immersive-developer', name: 'XR Immersive Dev', title: 'WebXR, browser-based AR/VR/XR', dept: 'engineering',
+  { id: 'xr-immersive-developer', name: 'XR Immersive Dev', title: 'WebXR, browser-based AR/VR/XR', dept: 'engineering', model: 'sonnet',
     capabilities: 'webxr, browser-ar-vr, immersive-web', skills: '' },
-  { id: 'xr-interface-architect', name: 'XR Interface Architect', title: 'Spatial interaction design for XR', dept: 'engineering',
+  { id: 'xr-interface-architect', name: 'XR Interface Architect', title: 'Spatial interaction design for XR', dept: 'engineering', model: 'opus',
     capabilities: 'spatial-design, xr-interaction, immersive-ui', skills: '' },
-  { id: 'xr-cockpit-interaction-specialist', name: 'XR Cockpit Specialist', title: 'Cockpit control systems for XR', dept: 'engineering',
+  { id: 'xr-cockpit-interaction-specialist', name: 'XR Cockpit Specialist', title: 'Cockpit control systems for XR', dept: 'engineering', model: 'sonnet',
     capabilities: 'cockpit-design, xr-controls, immersive-dashboards', skills: '' },
-  { id: 'visionos-spatial-engineer', name: 'visionOS Engineer', title: 'visionOS, SwiftUI volumetric, Liquid Glass', dept: 'engineering',
+  { id: 'visionos-spatial-engineer', name: 'visionOS Engineer', title: 'visionOS, SwiftUI volumetric, Liquid Glass', dept: 'engineering', model: 'sonnet',
     capabilities: 'visionos, swiftui-volumetric, liquid-glass', skills: '' },
-  { id: 'macos-spatial-metal-engineer', name: 'macOS Metal Engineer', title: 'Swift Metal, 3D rendering, spatial computing', dept: 'engineering',
+  { id: 'macos-spatial-metal-engineer', name: 'macOS Metal Engineer', title: 'Swift Metal, 3D rendering, spatial computing', dept: 'engineering', model: 'sonnet',
     capabilities: 'metal-api, 3d-rendering, spatial-computing', skills: '' },
 
   // Data reporters (mapped to analytics)
-  { id: 'data-analytics-reporter', name: 'Data Analytics Reporter', title: 'Raw data → actionable business insights', dept: 'analytics',
+  { id: 'data-analytics-reporter', name: 'Data Analytics Reporter', title: 'Raw data → actionable business insights', dept: 'analytics', model: 'sonnet',
     capabilities: 'data-analysis, dashboards, statistical-analysis, kpi-tracking', skills: '' },
 
   // Terminal specialist (mapped to engineering)
-  { id: 'terminal-integration-specialist', name: 'Terminal Specialist', title: 'Terminal emulation, SwiftTerm integration', dept: 'engineering',
+  { id: 'terminal-integration-specialist', name: 'Terminal Specialist', title: 'Terminal emulation, SwiftTerm integration', dept: 'engineering', model: 'haiku',
     capabilities: 'terminal-emulation, text-rendering, swiftterm', skills: '' },
 ];
 
@@ -295,6 +296,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   allAgents = AGENTS_DATA;
+  simulateAgentActivity();
   buildDepartments();
   renderNeuralMap();
   renderDepartmentsTab();
@@ -302,6 +304,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderActivity();
   renderRoutines();
   renderAuditLog();
+  renderProposals();
+  renderCampaigns();
   updateKPIs();
   setupEventListeners();
 });
@@ -344,21 +348,28 @@ function renderNeuralMap() {
     const desksHtml = dept.agents.map(agent => {
       const skills = (agent.skills || '').split(',').filter(s => s.trim());
       const hasRoutine = routineAgentIds.has(agent.id);
-      // Desk size: agents with more skills/capabilities get bigger desks
       const capCount = (agent.capabilities || '').split(',').filter(c => c.trim()).length;
       const deskSize = capCount >= 5 ? 'desk-lg' : capCount >= 3 ? 'desk-md' : 'desk-sm';
-      // Lamp: routine = cyan, skills = on, else off
-      const lampClass = hasRoutine ? 'routine' : skills.length > 0 ? 'on' : '';
+
+      // Live status from simulation
+      const live = getAgentStatus(agent.id);
+      const isActive = live.status !== 'idle';
+      const lampClass = isActive ? live.status : (hasRoutine ? 'routine' : skills.length > 0 ? 'on' : '');
+      const tooltip = isActive ? `${agent.name}: ${live.task}` : agent.title;
 
       let itemsHtml = '';
-      if (skills.length) itemsHtml += `<span class="desk-item has-skills">${skills.length} skills</span>`;
-      if (hasRoutine) itemsHtml += `<span class="desk-item has-routine">routine</span>`;
+      if (isActive) {
+        itemsHtml += `<span class="desk-item status-${live.status}">${getStatusLabel(live.status)}</span>`;
+      } else {
+        if (skills.length) itemsHtml += `<span class="desk-item has-skills">${skills.length} skills</span>`;
+        if (hasRoutine) itemsHtml += `<span class="desk-item has-routine">routine</span>`;
+      }
 
       return `
-        <div class="agent-desk ${deskSize}" data-agent-id="${agent.id}" title="${agent.title}">
-          <div class="desk-lamp ${lampClass}"></div>
-          <div class="desk-agent-name">${agent.name}</div>
-          <div class="desk-agent-title">${agent.title}</div>
+        <div class="agent-desk ${deskSize} ${isActive ? 'desk-active' : ''}" data-agent-id="${agent.id}" title="${tooltip}">
+          <div class="desk-lamp ${lampClass}" ${isActive ? `style="background: ${getStatusColor(live.status)}; box-shadow: 0 0 8px ${getStatusColor(live.status)}"` : ''}></div>
+          <div class="desk-agent-name">${agent.name} <span class="model-badge model-${agent.model || 'sonnet'}">${(agent.model || 'sonnet').toUpperCase()}</span></div>
+          ${isActive ? `<div class="desk-task-preview">${live.task}</div>` : `<div class="desk-agent-title">${agent.title}</div>`}
           ${itemsHtml ? `<div class="desk-items">${itemsHtml}</div>` : ''}
         </div>
       `;
@@ -447,7 +458,7 @@ function renderAgentsTab(filter = 'all', search = '') {
       <div class="agent-card" data-agent-id="${agent.id}" style="--dept-color: ${deptCfg.color || '#c9a96e'}">
         <div class="agent-card-icon">${deptCfg.icon || '&#9678;'}</div>
         <div class="agent-card-content">
-          <div class="agent-card-name">${agent.name}</div>
+          <div class="agent-card-name">${agent.name} <span class="model-badge model-${agent.model || 'sonnet'}">${(agent.model || 'sonnet').toUpperCase()}</span></div>
           <div class="agent-card-title">${agent.title}</div>
           <span class="agent-card-dept-badge" style="background: ${deptCfg.color || '#c9a96e'}20; color: ${deptCfg.color || '#c9a96e'}">${deptCfg.name || agent.dept}</span>
         </div>
@@ -588,7 +599,7 @@ function openAgentModal(agentId) {
   document.getElementById('modalIcon').innerHTML = deptCfg.icon || '&#9678;';
   document.getElementById('modalIcon').style.borderColor = deptCfg.color || '#c9a96e';
   document.getElementById('modalIcon').style.color = deptCfg.color || '#c9a96e';
-  document.getElementById('modalName').textContent = agent.name;
+  document.getElementById('modalName').innerHTML = agent.name + ` <span class="model-badge model-${agent.model || 'sonnet'}">${(agent.model || 'sonnet').toUpperCase()}</span>`;
   document.getElementById('modalTitle').textContent = agent.title;
   document.getElementById('modalDept').textContent = deptCfg.name || agent.dept;
   document.getElementById('modalDept').style.background = (deptCfg.color || '#c9a96e') + '20';
@@ -606,13 +617,49 @@ function openAgentModal(agentId) {
     ? skills.map(s => `<span class="skill-tag">${s}</span>`).join('')
     : '<span class="no-data-text">No specific skills assigned</span>';
 
-  // Status
-  document.getElementById('modalBudgetFill').style.width = '100%';
-  document.getElementById('modalBudgetFill').style.background = '#00C853';
-  document.getElementById('modalBudgetText').textContent = 'Ready — available for tasks';
+  // Live status
+  const live = getAgentStatus(agentId);
+  const statusEl = document.getElementById('modalLiveStatus');
+  const statusDot = statusEl.querySelector('.live-dot');
+  const statusText = document.getElementById('modalStatusText');
+  const statusColor = getStatusColor(live.status);
+  statusDot.style.background = statusColor;
+  statusDot.style.boxShadow = `0 0 8px ${statusColor}`;
+  statusText.textContent = live.status === 'idle'
+    ? 'Idle — ready for tasks'
+    : `${getStatusLabel(live.status)} — ${live.task}`;
 
-  // Tasks (placeholder)
-  document.getElementById('modalTasks').innerHTML = '<span class="no-data-text">No recent tasks</span>';
+  // Performance stats
+  const agentProposals = SAMPLE_PROPOSALS.filter(p => p.agent_id === agentId);
+  document.getElementById('modalTasksDone').textContent = Math.floor(Math.random() * 20 + 3);
+  document.getElementById('modalProposals').textContent = agentProposals.length;
+  document.getElementById('modalQuality').textContent = (3.5 + Math.random() * 1.5).toFixed(1);
+  document.getElementById('modalStreak').textContent = Math.floor(Math.random() * 14 + 1) + 'd';
+
+  // Recent tasks (simulated)
+  const recentTasks = live.status !== 'idle'
+    ? `<div class="modal-task-row active"><span class="task-dot" style="background:${statusColor}"></span>${live.task}<span class="task-time">now</span></div>`
+    : '';
+  document.getElementById('modalTasks').innerHTML = recentTasks
+    + '<div class="modal-task-row"><span class="task-dot"></span>Routine check completed<span class="task-time">2h ago</span></div>'
+    + '<div class="modal-task-row"><span class="task-dot"></span>Weekly deliverable reviewed<span class="task-time">1d ago</span></div>'
+    || '<span class="no-data-text">No recent activity</span>';
+
+  // Proposals by this agent
+  const proposalsList = document.getElementById('modalProposalsList');
+  if (agentProposals.length) {
+    proposalsList.innerHTML = agentProposals.map(p => `
+      <div class="modal-proposal-row">
+        <span class="proposal-status-dot status-${p.status}"></span>
+        <div class="modal-proposal-info">
+          <span class="modal-proposal-title">${p.title}</span>
+          <span class="modal-proposal-meta">${p.category} · ${p.priority} · ${getTimeAgo(p.created_at)}</span>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    proposalsList.innerHTML = '<span class="no-data-text">No proposals yet</span>';
+  }
 
   document.getElementById('agentModal').classList.add('open');
 }
@@ -665,10 +712,20 @@ function setupEventListeners() {
     renderAgentsTab(e.target.value, document.getElementById('agentSearch').value);
   });
 
+  // Proposal filters
+  const catFilter = document.getElementById('proposalCategoryFilter');
+  const statFilter = document.getElementById('proposalStatusFilter');
+  if (catFilter) catFilter.addEventListener('change', () => renderProposals(catFilter.value, statFilter.value));
+  if (statFilter) statFilter.addEventListener('change', () => renderProposals(catFilter.value, statFilter.value));
+
   // Refresh
   document.getElementById('refreshData').addEventListener('click', () => {
     showNotification('Syncing agents...', 'info');
-    // Future: fetch from Supabase
+    simulateAgentActivity();
+    renderNeuralMap();
+    renderProposals();
+    renderCampaigns();
+    updateKPIs();
     setTimeout(() => showNotification('All agents synced', 'success'), 500);
   });
 
@@ -685,6 +742,300 @@ function setupEventListeners() {
 }
 
 // ─── Notifications ───
+// ═══════════════════════════════════════════════════════════════
+// PROPOSALS — Autonomous agent suggestions feed
+// ═══════════════════════════════════════════════════════════════
+
+// Sample proposals (until Supabase tables are created)
+const SAMPLE_PROPOSALS = [
+  {
+    id: 'p1', agent_id: 'design-ux-architect', title: 'Simplify onboarding flow to 3 steps',
+    description: 'Current onboarding has 7 steps with 45% drop-off at step 4. Reducing to 3 consolidated steps could increase completion by ~30%. Key changes: merge profile + preferences into one screen, defer non-essential fields to post-signup.',
+    category: 'optimization', priority: 'high', target_area: 'ux',
+    estimated_impact: '+30% onboarding completion', estimated_effort: '4-6 hours',
+    status: 'pending', created_at: '2026-04-03T08:30:00Z'
+  },
+  {
+    id: 'p2', agent_id: 'testing-performance-benchmarker', title: 'Dashboard images missing lazy loading',
+    description: 'Campaign images on dashboard.html load eagerly, causing LCP of 4.2s on mobile. Adding loading="lazy" to below-fold images and switching to WebP format would reduce LCP to ~1.8s.',
+    category: 'bug', priority: 'high', target_area: 'performance',
+    estimated_impact: 'LCP 4.2s → 1.8s', estimated_effort: '1 hour',
+    status: 'pending', created_at: '2026-04-03T07:00:00Z'
+  },
+  {
+    id: 'p3', agent_id: 'marketing-growth-hacker', title: 'Add referral program to client portal',
+    description: 'The client onboarding already has referral code UI but no backend validation. Implementing real referral tracking with double-sided incentives ($5K discount for referrer, $5K for referred) could generate 2-3 new clients/quarter at $0 CAC.',
+    category: 'opportunity', priority: 'medium', target_area: 'growth',
+    estimated_impact: '2-3 new clients/quarter', estimated_effort: '1 sprint',
+    status: 'pending', created_at: '2026-04-02T14:00:00Z'
+  },
+  {
+    id: 'p4', agent_id: 'design-brand-guardian', title: 'Inconsistent accent color across pages',
+    description: 'Landing page uses #c9a96e but dashboard uses #d4b070 for the gold accent. Brand consistency requires a single source of truth. Recommend adding CSS custom property --pvb-gold and using it everywhere.',
+    category: 'improvement', priority: 'low', target_area: 'brand',
+    estimated_impact: 'Visual consistency +100%', estimated_effort: '30 min',
+    status: 'approved', created_at: '2026-04-01T11:00:00Z'
+  },
+  {
+    id: 'p5', agent_id: 'engineering-security-engineer', title: 'Add CSP headers to Netlify config',
+    description: 'Current netlify.toml has basic security headers but no Content-Security-Policy. Adding a strict CSP would prevent XSS attacks. Recommend: default-src self, script-src self cdn.jsdelivr.net, style-src self fonts.googleapis.com unsafe-inline.',
+    category: 'improvement', priority: 'high', target_area: 'security',
+    estimated_impact: 'XSS protection', estimated_effort: '2 hours',
+    status: 'pending', created_at: '2026-04-02T09:00:00Z'
+  },
+  {
+    id: 'p6', agent_id: 'design-whimsy-injector', title: 'Add micro-animations to KPI cards',
+    description: 'KPI cards currently appear static. Adding a subtle count-up animation on page load and a gentle pulse on hover would make the dashboard feel alive. CSS-only implementation, no JS needed.',
+    category: 'creative', priority: 'low', target_area: 'ui',
+    estimated_impact: 'Perceived quality +20%', estimated_effort: '1 hour',
+    status: 'pending', created_at: '2026-04-03T06:00:00Z'
+  },
+  {
+    id: 'p7', agent_id: 'testing-accessibility-auditor', title: 'Missing aria-labels on icon-only buttons',
+    description: 'The refresh, settings, and logout buttons in the nav use SVG icons without text alternatives. Screen readers announce them as "button" with no context. Add aria-label to each.',
+    category: 'bug', priority: 'medium', target_area: 'accessibility',
+    estimated_impact: 'WCAG AA compliance', estimated_effort: '15 min',
+    status: 'pending', created_at: '2026-04-02T16:00:00Z'
+  },
+  {
+    id: 'p8', agent_id: 'product-behavioral-nudge-engine', title: 'Add streak counter to client dashboard',
+    description: 'Clients who check their dashboard daily are 3x more likely to renew. Adding a visible "login streak" counter with milestone celebrations (7d, 30d, 90d) would increase daily engagement through loss aversion.',
+    category: 'opportunity', priority: 'medium', target_area: 'retention',
+    estimated_impact: '+40% daily active clients', estimated_effort: '3-4 hours',
+    status: 'pending', created_at: '2026-04-01T10:00:00Z'
+  },
+];
+
+// Simulated live agent states (until Supabase is connected)
+const AGENT_LIVE_STATUS = {};
+function simulateAgentActivity() {
+  const activeIds = [
+    'marketing-content-creator', 'support-analytics-reporter', 'testing-reality-checker',
+    'design-brand-guardian', 'engineering-frontend-developer', 'product-trend-researcher',
+    'support-finance-tracker', 'marketing-growth-hacker'
+  ];
+  const tasks = [
+    'Reviewing weekly content calendar', 'Analyzing engagement metrics Q1',
+    'QA check on 3 pending deliverables', 'Auditing brand consistency across pages',
+    'Optimizing dashboard load performance', 'Researching LATAM market trends',
+    'Processing March invoices from Drive', 'Modeling referral loop economics'
+  ];
+  const statuses = ['working', 'working', 'working', 'reviewing', 'proposing'];
+
+  activeIds.forEach((id, i) => {
+    AGENT_LIVE_STATUS[id] = {
+      status: statuses[i % statuses.length],
+      task: tasks[i],
+      started: new Date(Date.now() - Math.random() * 3600000).toISOString()
+    };
+  });
+}
+
+function getAgentStatus(agentId) {
+  return AGENT_LIVE_STATUS[agentId] || { status: 'idle', task: null };
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    idle: 'Idle — ready for tasks',
+    working: 'Working',
+    reviewing: 'Reviewing',
+    proposing: 'Drafting proposal',
+    completed: 'Task completed'
+  };
+  return labels[status] || status;
+}
+
+function getStatusColor(status) {
+  const colors = { idle: '#6B7280', working: '#34D399', reviewing: '#60A5FA', proposing: '#FBBF24', completed: '#10B981' };
+  return colors[status] || '#6B7280';
+}
+
+// ─── Render Proposals Feed ───
+function renderProposals(categoryFilter = 'all', statusFilter = 'pending') {
+  const feed = document.getElementById('proposalsFeed');
+  if (!feed) return;
+
+  let proposals = [...SAMPLE_PROPOSALS];
+  if (categoryFilter !== 'all') proposals = proposals.filter(p => p.category === categoryFilter);
+  if (statusFilter !== 'all') proposals = proposals.filter(p => p.status === statusFilter);
+
+  proposals.sort((a, b) => {
+    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    return (priorityOrder[a.priority] || 3) - (priorityOrder[b.priority] || 3);
+  });
+
+  const pendingCount = SAMPLE_PROPOSALS.filter(p => p.status === 'pending').length;
+  const badge = document.getElementById('proposalBadge');
+  if (badge) {
+    badge.textContent = pendingCount;
+    badge.style.display = pendingCount > 0 ? 'inline-flex' : 'none';
+  }
+
+  if (!proposals.length) {
+    feed.innerHTML = '<p class="no-data-text">No proposals match the current filters.</p>';
+    return;
+  }
+
+  const priorityColors = { critical: '#EF4444', high: '#F59E0B', medium: '#3B82F6', low: '#6B7280' };
+  const categoryIcons = {
+    improvement: '&#9650;', bug: '&#9888;', opportunity: '&#9733;',
+    optimization: '&#9881;', creative: '&#10024;'
+  };
+  const statusIcons = {
+    pending: '&#9679;', approved: '&#10003;', rejected: '&#10007;',
+    in_progress: '&#9654;', completed: '&#10004;'
+  };
+
+  feed.innerHTML = proposals.map(p => {
+    const agent = allAgents.find(a => a.id === p.agent_id);
+    const deptCfg = agent ? (DEPT_CONFIG[agent.dept] || {}) : {};
+    const timeAgo = getTimeAgo(p.created_at);
+
+    return `
+      <div class="proposal-card" data-proposal-id="${p.id}" data-status="${p.status}">
+        <div class="proposal-priority-bar" style="background: ${priorityColors[p.priority] || '#6B7280'}"></div>
+        <div class="proposal-content">
+          <div class="proposal-header">
+            <div class="proposal-agent">
+              <span class="proposal-agent-icon" style="color: ${deptCfg.color || '#c9a96e'}">${deptCfg.icon || '&#9678;'}</span>
+              <span class="proposal-agent-name" data-agent-id="${p.agent_id}">${agent ? agent.name : p.agent_id}</span>
+              <span class="proposal-time">${timeAgo}</span>
+            </div>
+            <div class="proposal-badges">
+              <span class="proposal-category">${categoryIcons[p.category] || ''} ${p.category}</span>
+              <span class="proposal-priority" style="color: ${priorityColors[p.priority]}">${p.priority}</span>
+            </div>
+          </div>
+          <h3 class="proposal-title">${p.title}</h3>
+          <p class="proposal-desc">${p.description}</p>
+          <div class="proposal-meta">
+            ${p.estimated_impact ? `<span class="proposal-impact">Impact: ${p.estimated_impact}</span>` : ''}
+            ${p.estimated_effort ? `<span class="proposal-effort">Effort: ${p.estimated_effort}</span>` : ''}
+            ${p.target_area ? `<span class="proposal-area">${p.target_area}</span>` : ''}
+          </div>
+          ${p.status === 'pending' ? `
+            <div class="proposal-actions">
+              <button class="proposal-btn approve" onclick="handleProposal('${p.id}', 'approved')">Approve</button>
+              <button class="proposal-btn reject" onclick="handleProposal('${p.id}', 'rejected')">Reject</button>
+              <button class="proposal-btn discuss" onclick="openAgentModal('${p.agent_id}')">Discuss</button>
+            </div>
+          ` : `
+            <div class="proposal-status-badge status-${p.status}">${statusIcons[p.status] || ''} ${p.status}</div>
+          `}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function handleProposal(proposalId, newStatus) {
+  const proposal = SAMPLE_PROPOSALS.find(p => p.id === proposalId);
+  if (proposal) {
+    proposal.status = newStatus;
+    proposal.reviewed_at = new Date().toISOString();
+    renderProposals(
+      document.getElementById('proposalCategoryFilter')?.value || 'all',
+      document.getElementById('proposalStatusFilter')?.value || 'pending'
+    );
+    showNotification(
+      `Proposal "${proposal.title}" ${newStatus}`,
+      newStatus === 'approved' ? 'success' : 'info'
+    );
+  }
+}
+
+// ─── Render Campaigns Tab ───
+function renderCampaigns() {
+  const grid = document.getElementById('campaignsGrid');
+  if (!grid) return;
+
+  // Sample campaign data (will come from Supabase campaigns table)
+  const campaigns = [
+    {
+      name: 'Compliance Video — CGC',
+      client: 'Compliance Global Consulting',
+      status: 'in_progress',
+      agents_involved: ['marketing-content-creator', 'engineering-frontend-developer', 'design-visual-storyteller'],
+      tasks: { total: 12, completed: 8, in_progress: 3, blocked: 1 },
+      deadline: '2026-04-15',
+      progress: 67,
+    },
+    {
+      name: 'Kaya Winter Campaign 2026',
+      client: 'Kaya Unite',
+      status: 'in_progress',
+      agents_involved: ['design-image-prompt-engineer', 'marketing-instagram-curator', 'marketing-tiktok-strategist', 'design-brand-guardian'],
+      tasks: { total: 18, completed: 5, in_progress: 8, blocked: 0 },
+      deadline: '2026-05-01',
+      progress: 28,
+    },
+    {
+      name: 'Client Portal v2',
+      client: 'PVB Internal',
+      status: 'in_progress',
+      agents_involved: ['engineering-frontend-developer', 'engineering-backend-architect', 'design-ux-architect', 'testing-reality-checker'],
+      tasks: { total: 24, completed: 18, in_progress: 4, blocked: 2 },
+      deadline: '2026-04-30',
+      progress: 75,
+    },
+  ];
+
+  grid.innerHTML = campaigns.map(c => {
+    const agentAvatars = c.agents_involved.map(id => {
+      const agent = allAgents.find(a => a.id === id);
+      const dept = agent ? (DEPT_CONFIG[agent.dept] || {}) : {};
+      return `<span class="campaign-agent-avatar" title="${agent ? agent.name : id}" style="background: ${dept.color || '#c9a96e'}30; color: ${dept.color || '#c9a96e'}">${dept.icon || '&#9678;'}</span>`;
+    }).join('');
+
+    const daysLeft = Math.ceil((new Date(c.deadline) - Date.now()) / 86400000);
+    const urgency = daysLeft <= 7 ? 'urgent' : daysLeft <= 14 ? 'soon' : 'ok';
+
+    return `
+      <div class="campaign-card">
+        <div class="campaign-header">
+          <div>
+            <h3 class="campaign-name">${c.name}</h3>
+            <span class="campaign-client">${c.client}</span>
+          </div>
+          <span class="campaign-deadline ${urgency}">${daysLeft}d left</span>
+        </div>
+
+        <div class="campaign-progress-bar">
+          <div class="campaign-progress-fill" style="width: ${c.progress}%"></div>
+        </div>
+        <div class="campaign-progress-label">${c.progress}% complete</div>
+
+        <div class="campaign-task-breakdown">
+          <span class="task-stat completed">${c.tasks.completed} done</span>
+          <span class="task-stat in-progress">${c.tasks.in_progress} active</span>
+          ${c.tasks.blocked > 0 ? `<span class="task-stat blocked">${c.tasks.blocked} blocked</span>` : ''}
+          <span class="task-stat total">${c.tasks.total} total</span>
+        </div>
+
+        <div class="campaign-agents">
+          <span class="campaign-agents-label">Team:</span>
+          ${agentAvatars}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function getTimeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════
+
 function showNotification(message, type = 'info') {
   const toast = document.createElement('div');
   toast.textContent = message;
