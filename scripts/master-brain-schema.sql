@@ -60,6 +60,38 @@ CREATE TABLE IF NOT EXISTS brain_routines (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Agent Learnings (continuous improvement system)
+CREATE TABLE IF NOT EXISTS brain_learnings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  agent_id TEXT NOT NULL REFERENCES brain_agents(id),
+  learning TEXT NOT NULL,
+  category TEXT DEFAULT 'general' CHECK (category IN (
+    'style',        -- tone, voice, format preferences
+    'technique',    -- methods that work well
+    'avoid',        -- patterns to avoid
+    'client',       -- client-specific insights
+    'tool',         -- tool/integration insights
+    'process',      -- workflow improvements
+    'general'       -- uncategorized
+  )),
+  source TEXT DEFAULT 'manual' CHECK (source IN ('manual', 'task', 'feedback', 'routine')),
+  source_task_id UUID REFERENCES brain_tasks(id),
+  confidence REAL DEFAULT 0.8 CHECK (confidence >= 0 AND confidence <= 1),
+  times_applied INTEGER DEFAULT 0,
+  last_applied TIMESTAMPTZ,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_brain_learnings_agent ON brain_learnings(agent_id);
+CREATE INDEX IF NOT EXISTS idx_brain_learnings_category ON brain_learnings(category);
+CREATE INDEX IF NOT EXISTS idx_brain_learnings_active ON brain_learnings(is_active) WHERE is_active = true;
+
+ALTER TABLE brain_learnings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role full access" ON brain_learnings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Auth users can read learnings" ON brain_learnings FOR SELECT TO authenticated USING (true);
+
 -- Audit log (immutable)
 CREATE TABLE IF NOT EXISTS brain_audit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

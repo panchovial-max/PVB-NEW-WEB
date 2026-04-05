@@ -78,6 +78,43 @@ export const handler = async (event, context) => {
         return { statusCode: 200, headers, body: JSON.stringify({ success: true, tasks: tasks || [] }) };
       }
 
+      if (action === 'learnings') {
+        const agentId = params.agent_id || null;
+        let query = supabase
+          .from('brain_learnings')
+          .select('*')
+          .eq('is_active', true)
+          .order('confidence', { ascending: false })
+          .order('times_applied', { ascending: false });
+
+        if (agentId) query = query.eq('agent_id', agentId);
+        const { data, error } = await query.limit(200);
+        if (error) throw error;
+        return { statusCode: 200, headers, body: JSON.stringify({ success: true, learnings: data || [] }) };
+      }
+
+      if (action === 'learnings-stats') {
+        const { data, error } = await supabase
+          .from('brain_learnings')
+          .select('agent_id, category, confidence, times_applied, is_active')
+          .eq('is_active', true);
+
+        if (error) throw error;
+
+        // Aggregate per agent
+        const stats = {};
+        (data || []).forEach(l => {
+          if (!stats[l.agent_id]) stats[l.agent_id] = { total: 0, categories: {}, avgConfidence: 0, totalApplied: 0 };
+          stats[l.agent_id].total++;
+          stats[l.agent_id].categories[l.category] = (stats[l.agent_id].categories[l.category] || 0) + 1;
+          stats[l.agent_id].avgConfidence += l.confidence;
+          stats[l.agent_id].totalApplied += l.times_applied;
+        });
+        Object.values(stats).forEach(s => { s.avgConfidence = s.total > 0 ? (s.avgConfidence / s.total) : 0; });
+
+        return { statusCode: 200, headers, body: JSON.stringify({ success: true, stats }) };
+      }
+
       if (action === 'audit') {
         const filterType = params.type || 'all';
         let query = supabase
@@ -119,6 +156,55 @@ export const handler = async (event, context) => {
         });
 
         return { statusCode: 200, headers, body: JSON.stringify({ success: true, entry: data }) };
+      }
+
+      if (action === 'add-learning') {
+        const { agent_id, learning, category, source, source_task_id, confidence } = body;
+        if (!agent_id || !learning) {
+          return { statusCode: 400, headers, body: JSON.stringify({ success: false, message: 'agent_id and learning required' }) };
+        }
+        const { data, error } = await supabase
+          .from('brain_learnings')
+          .insert({
+            agent_id,
+            learning,
+            category: category || 'general',
+            source: source || 'manual',
+            source_task_id: source_task_id || null,
+            confidence: confidence || 0.8,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        await supabase.from('brain_audit_log').insert({
+          action_type: 'learning',
+          entity_type: 'agent',
+          entity_id: agent_id,
+          details: { learning, category: category || 'general', learning_id: data.id },
+        });
+
+        return { statusCode: 200, headers, body: JSON.stringify({ success: true, learning: data }) };
+      }
+
+      if (action === 'update-learning') {
+        const { id, is_active, confidence, times_applied } = body;
+        const updates = {};
+        if (is_active !== undefined) updates.is_active = is_active;
+        if (confidence !== undefined) updates.confidence = confidence;
+        if (times_applied !== undefined) updates.times_applied = times_applied;
+        updates.updated_at = new Date().toISOString();
+
+        const { data, error } = await supabase
+          .from('brain_learnings')
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return { statusCode: 200, headers, body: JSON.stringify({ success: true, learning: data }) };
       }
 
       if (action === 'create-task') {

@@ -304,6 +304,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderActivity();
   renderRoutines();
   renderAuditLog();
+  initLearnings();
+  renderLearningsTab();
   renderProposals();
   renderCampaigns();
   updateKPIs();
@@ -558,6 +560,143 @@ function renderRoutines() {
 }
 
 // ─── Audit Log ───
+// ─── Learnings System ───
+let agentLearnings = {}; // { agent_id: [{ id, learning, category, confidence, times_applied }] }
+
+// Sample learnings data (will be replaced by Supabase data)
+const SAMPLE_LEARNINGS = [
+  { id: '1', agent_id: 'marketing-content-creator', learning: 'Para clientes LATAM, usar tono casual pero profesional. Evitar formalidades excesivas.', category: 'style', confidence: 0.95, times_applied: 12 },
+  { id: '2', agent_id: 'marketing-content-creator', learning: 'Posts de martes y jueves tienen 40% mas engagement que otros dias.', category: 'technique', confidence: 0.85, times_applied: 8 },
+  { id: '3', agent_id: 'marketing-content-creator', learning: 'No usar emojis en LinkedIn — reduce credibilidad profesional para audiencia chilena.', category: 'avoid', confidence: 0.9, times_applied: 5 },
+  { id: '4', agent_id: 'design-brand-guardian', learning: 'Kaya usa paleta fria invierno: azul petroleo, gris grafito, blanco roto. Nunca colores calidos.', category: 'client', confidence: 0.98, times_applied: 15 },
+  { id: '5', agent_id: 'design-brand-guardian', learning: 'Siempre verificar que logos tengan zona de exclusion minima de 2x el alto del isotipo.', category: 'technique', confidence: 0.92, times_applied: 7 },
+  { id: '6', agent_id: 'engineering-backend-architect', learning: 'Supabase RLS policies deben testearse con rol anon Y authenticated antes de deploy.', category: 'process', confidence: 0.95, times_applied: 4 },
+  { id: '7', agent_id: 'engineering-frontend-developer', learning: 'Netlify functions con esbuild requieren imports ESM — no usar require().', category: 'tool', confidence: 0.99, times_applied: 10 },
+  { id: '8', agent_id: 'testing-reality-checker', learning: 'Screenshots deben incluir URL bar visible como evidencia del entorno (staging vs prod).', category: 'technique', confidence: 0.88, times_applied: 6 },
+  { id: '9', agent_id: 'support-executive-summary-generator', learning: 'Pancho prefiere bullet points sobre parrafos. Max 5 bullets por seccion.', category: 'style', confidence: 0.95, times_applied: 9 },
+  { id: '10', agent_id: 'marketing-instagram-curator', learning: 'Reels con texto overlay en los primeros 0.5s tienen 60% mas retention.', category: 'technique', confidence: 0.82, times_applied: 3 },
+  { id: '11', agent_id: 'product-sprint-prioritizer', learning: 'Para PVB, usar RICE por default. MoSCoW solo cuando el cliente lo pide.', category: 'process', confidence: 0.87, times_applied: 4 },
+  { id: '12', agent_id: 'engineering-senior-developer', learning: 'Glass morphism: backdrop-filter blur(20px) + rgba bg 0.3-0.6 opacity. Siempre fallback solid color.', category: 'technique', confidence: 0.93, times_applied: 8 },
+];
+
+function initLearnings() {
+  agentLearnings = {};
+  SAMPLE_LEARNINGS.forEach(l => {
+    if (!agentLearnings[l.agent_id]) agentLearnings[l.agent_id] = [];
+    agentLearnings[l.agent_id].push(l);
+  });
+}
+
+function renderLearningsTab(deptFilter = 'all', catFilter = 'all') {
+  const grid = document.getElementById('learningsGrid');
+  const statsBar = document.getElementById('learningsStatsBar');
+  const deptSelect = document.getElementById('learningsDeptFilter');
+
+  // Populate dept filter
+  if (deptSelect.options.length <= 1) {
+    departments.forEach(dept => {
+      const opt = document.createElement('option');
+      opt.value = dept.key;
+      opt.textContent = dept.name;
+      deptSelect.appendChild(opt);
+    });
+  }
+
+  const allLearnings = SAMPLE_LEARNINGS.slice();
+
+  // Stats
+  const totalLearnings = allLearnings.length;
+  const categories = {};
+  const agentsWithLearnings = new Set();
+  let totalApplied = 0;
+  allLearnings.forEach(l => {
+    categories[l.category] = (categories[l.category] || 0) + 1;
+    agentsWithLearnings.add(l.agent_id);
+    totalApplied += l.times_applied;
+  });
+
+  statsBar.innerHTML = `
+    <div class="learning-stat-card"><div class="learning-stat-value">${totalLearnings}</div><div class="learning-stat-label">LEARNINGS</div></div>
+    <div class="learning-stat-card"><div class="learning-stat-value">${agentsWithLearnings.size}</div><div class="learning-stat-label">AGENTS LEARNING</div></div>
+    <div class="learning-stat-card"><div class="learning-stat-value">${totalApplied}</div><div class="learning-stat-label">TIMES APPLIED</div></div>
+    <div class="learning-stat-card"><div class="learning-stat-value">${Object.keys(categories).length}</div><div class="learning-stat-label">CATEGORIES</div></div>
+  `;
+
+  // Filter
+  let filtered = allLearnings;
+  if (deptFilter !== 'all') {
+    const deptAgentIds = allAgents.filter(a => a.dept === deptFilter).map(a => a.id);
+    filtered = filtered.filter(l => deptAgentIds.includes(l.agent_id));
+  }
+  if (catFilter !== 'all') {
+    filtered = filtered.filter(l => l.category === catFilter);
+  }
+
+  grid.innerHTML = filtered.length ? filtered.map(l => {
+    const agent = allAgents.find(a => a.id === l.agent_id);
+    return `
+      <div class="learning-row">
+        <span class="learning-agent-name">${agent ? agent.name : l.agent_id}</span>
+        <span class="learning-text">${l.learning}</span>
+        <span class="learning-category-badge cat-${l.category}">${l.category}</span>
+        <span class="learning-confidence">${Math.round(l.confidence * 100)}% · ${l.times_applied}x</span>
+      </div>
+    `;
+  }).join('') : '<p class="no-data-text">No learnings match your filter.</p>';
+}
+
+function getAgentLearnings(agentId) {
+  return agentLearnings[agentId] || [];
+}
+
+function renderModalLearnings(agentId) {
+  const learnings = getAgentLearnings(agentId);
+  const container = document.getElementById('modalLearnings');
+  const countEl = document.getElementById('modalLearningCount');
+  countEl.textContent = learnings.length;
+
+  container.innerHTML = learnings.length ? learnings.map(l => `
+    <div class="modal-learning-item" data-learning-id="${l.id}">
+      <span class="learning-category-badge cat-${l.category}">${l.category}</span>
+      <span class="modal-learning-text">${l.learning}</span>
+      <button class="modal-learning-remove" title="Remove learning" data-lid="${l.id}">&times;</button>
+    </div>
+  `).join('') : '<span class="no-data-text">No learnings yet — teach this agent below.</span>';
+}
+
+function addLearning(agentId) {
+  const input = document.getElementById('learningInput');
+  const category = document.getElementById('learningCategory').value;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const newLearning = {
+    id: 'local-' + Date.now(),
+    agent_id: agentId,
+    learning: text,
+    category,
+    confidence: 0.8,
+    times_applied: 0,
+  };
+
+  SAMPLE_LEARNINGS.push(newLearning);
+  if (!agentLearnings[agentId]) agentLearnings[agentId] = [];
+  agentLearnings[agentId].push(newLearning);
+
+  input.value = '';
+  renderModalLearnings(agentId);
+  showNotification(`Learning added to ${allAgents.find(a => a.id === agentId)?.name || agentId}`, 'success');
+}
+
+function removeLearning(learningId, agentId) {
+  const idx = SAMPLE_LEARNINGS.findIndex(l => l.id === learningId);
+  if (idx > -1) SAMPLE_LEARNINGS.splice(idx, 1);
+  if (agentLearnings[agentId]) {
+    agentLearnings[agentId] = agentLearnings[agentId].filter(l => l.id !== learningId);
+  }
+  renderModalLearnings(agentId);
+}
+
 function renderAuditLog() {
   const log = document.getElementById('auditLog');
   // Placeholder — will be populated from Supabase
@@ -661,6 +800,27 @@ function openAgentModal(agentId) {
     proposalsList.innerHTML = '<span class="no-data-text">No proposals yet</span>';
   }
 
+  // Render learnings for this agent
+  renderModalLearnings(agentId);
+
+  // Wire up add learning button
+  const addBtn = document.getElementById('learningAddBtn');
+  const newAddBtn = addBtn.cloneNode(true);
+  addBtn.parentNode.replaceChild(newAddBtn, addBtn);
+  newAddBtn.addEventListener('click', () => addLearning(agentId));
+
+  // Wire up enter key on input
+  const input = document.getElementById('learningInput');
+  const newInput = input.cloneNode(true);
+  input.parentNode.replaceChild(newInput, input);
+  newInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addLearning(agentId); });
+
+  // Wire up remove buttons (delegated)
+  document.getElementById('modalLearnings').addEventListener('click', (e) => {
+    const removeBtn = e.target.closest('.modal-learning-remove');
+    if (removeBtn) removeLearning(removeBtn.dataset.lid, agentId);
+  });
+
   document.getElementById('agentModal').classList.add('open');
 }
 
@@ -711,6 +871,12 @@ function setupEventListeners() {
   document.getElementById('agentDeptFilter').addEventListener('change', (e) => {
     renderAgentsTab(e.target.value, document.getElementById('agentSearch').value);
   });
+
+  // Learnings filters
+  const learnDeptFilter = document.getElementById('learningsDeptFilter');
+  const learnCatFilter = document.getElementById('learningsCatFilter');
+  if (learnDeptFilter) learnDeptFilter.addEventListener('change', () => renderLearningsTab(learnDeptFilter.value, learnCatFilter.value));
+  if (learnCatFilter) learnCatFilter.addEventListener('change', () => renderLearningsTab(learnDeptFilter.value, learnCatFilter.value));
 
   // Proposal filters
   const catFilter = document.getElementById('proposalCategoryFilter');

@@ -90,6 +90,7 @@
             <button class="brain-tab" data-tab="agents">All Agents</button>
             <button class="brain-tab" data-tab="activity">Activity</button>
             <button class="brain-tab" data-tab="routines">Routines</button>
+            <button class="brain-tab" data-tab="learnings">Learnings</button>
             <button class="brain-tab" data-tab="audit">Audit Log</button>
         </div>
 
@@ -182,6 +183,33 @@
             </div>
         </section>
 
+        <!-- TAB: Learnings -->
+        <section class="brain-tab-content" id="tab-learnings">
+            <div class="learnings-header">
+                <div class="learnings-stats-bar" id="learningsStatsBar">
+                    <!-- Rendered by JS -->
+                </div>
+                <div class="learnings-toolbar">
+                    <select class="filter-select" id="learningsDeptFilter" title="Filter by department">
+                        <option value="all">All Departments</option>
+                    </select>
+                    <select class="filter-select" id="learningsCatFilter" title="Filter by category">
+                        <option value="all">All Categories</option>
+                        <option value="style">Style</option>
+                        <option value="technique">Technique</option>
+                        <option value="avoid">Avoid</option>
+                        <option value="client">Client</option>
+                        <option value="tool">Tool</option>
+                        <option value="process">Process</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+            </div>
+            <div class="learnings-grid" id="learningsGrid">
+                <!-- Rendered by JS -->
+            </div>
+        </section>
+
         <!-- TAB: Audit Log -->
         <section class="brain-tab-content" id="tab-audit">
             <div class="audit-toolbar">
@@ -241,6 +269,23 @@
                     <div class="modal-section">
                         <h3>Proposals by this Agent</h3>
                         <div class="modal-proposals" id="modalProposalsList"></div>
+                    </div>
+                    <div class="modal-section">
+                        <h3>Learnings <span class="learning-count" id="modalLearningCount">0</span></h3>
+                        <div class="modal-learnings" id="modalLearnings"></div>
+                        <div class="add-learning-form" id="addLearningForm">
+                            <input type="text" class="learning-input" id="learningInput" placeholder="Teach this agent something...">
+                            <select class="learning-category-select" id="learningCategory" title="Learning category">
+                                <option value="technique">Technique</option>
+                                <option value="style">Style</option>
+                                <option value="avoid">Avoid</option>
+                                <option value="client">Client</option>
+                                <option value="tool">Tool</option>
+                                <option value="process">Process</option>
+                                <option value="general">General</option>
+                            </select>
+                            <button type="button" class="learning-add-btn" id="learningAddBtn">+</button>
+                        </div>
                     </div>
                 </div>
             </div>
