@@ -90,6 +90,7 @@
             <button class="brain-tab" data-tab="agents">All Agents</button>
             <button class="brain-tab" data-tab="activity">Activity</button>
             <button class="brain-tab" data-tab="routines">Routines</button>
+            <button class="brain-tab" data-tab="portfolio">Portfolio</button>
             <button class="brain-tab" data-tab="learnings">Learnings</button>
             <button class="brain-tab" data-tab="audit">Audit Log</button>
         </div>
@@ -173,6 +174,22 @@
         <section class="brain-tab-content" id="tab-activity">
             <div class="budgets-container" id="activityContainer">
                 <!-- Rendered by JS -->
+            </div>
+        </section>
+
+        <!-- TAB: Portfolio (Google Drive) -->
+        <section class="brain-tab-content" id="tab-portfolio">
+            <div class="portfolio-header" id="portfolioHeader">
+                <div class="portfolio-connect" id="portfolioConnect">
+                    <p class="portfolio-connect-text">Connect Google Drive to browse deliverables</p>
+                    <button type="button" class="pin-btn" id="connectDriveBtn" style="width: auto; padding: 0.7rem 2rem;">Connect Drive</button>
+                </div>
+            </div>
+            <div class="portfolio-folders" id="portfolioFolders">
+                <!-- Department folder tabs rendered by JS -->
+            </div>
+            <div class="portfolio-grid" id="portfolioGrid">
+                <!-- File thumbnails rendered by JS -->
             </div>
         </section>
 

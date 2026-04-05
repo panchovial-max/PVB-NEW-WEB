@@ -1450,6 +1450,130 @@ body.theme-dark .nav-title {
     font-style: italic;
 }
 
+/* ── Portfolio (Google Drive) ── */
+.portfolio-header {
+    margin-bottom: 1.5rem;
+}
+
+.portfolio-connect {
+    text-align: center;
+    padding: 3rem 2rem;
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 14px;
+}
+
+.portfolio-connect-text {
+    color: var(--brain-text-dim);
+    font-size: 13px;
+    margin: 0 0 1rem;
+}
+
+.portfolio-connect-btn {
+    padding: 0.7rem 2rem;
+    width: auto;
+}
+
+.portfolio-folders {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.portfolio-folder-btn {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--brain-text-dim);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s;
+    white-space: nowrap;
+}
+
+.portfolio-folder-btn:hover {
+    border-color: rgba(255,255,255,0.15);
+    color: var(--brain-text);
+}
+
+.portfolio-folder-btn.active {
+    border-color: var(--brain-accent);
+    color: var(--brain-accent);
+    background: rgba(212,176,112,0.06);
+}
+
+.portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.portfolio-item {
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    background: rgba(0,0,0,0.2);
+}
+
+.portfolio-item:hover {
+    border-color: rgba(212,176,112,0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+}
+
+.portfolio-thumb {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    display: block;
+    background: rgba(255,255,255,0.02);
+}
+
+.portfolio-thumb-placeholder {
+    width: 100%;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.02);
+    color: var(--brain-text-dim);
+    font-size: 28px;
+}
+
+.portfolio-item-info {
+    padding: 8px 10px;
+}
+
+.portfolio-item-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--brain-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.portfolio-item-meta {
+    font-size: 9px;
+    color: var(--brain-text-dim);
+    margin-top: 2px;
+}
+
+.portfolio-empty {
+    text-align: center;
+    padding: 3rem;
+    color: var(--brain-text-dim);
+    font-size: 13px;
+}
+
 /* ── Learnings System ── */
 .learnings-header {
     margin-bottom: 1.5rem;

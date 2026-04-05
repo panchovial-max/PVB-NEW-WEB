@@ -306,6 +306,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderAuditLog();
   initLearnings();
   renderLearningsTab();
+  renderPortfolio();
+
+  // Check for Drive OAuth callback
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('drive_connected') === 'true') {
+    showNotification('Google Drive connected — department folders created', 'success');
+    history.replaceState(null, '', window.location.pathname);
+  }
   renderProposals();
   renderCampaigns();
   updateKPIs();
@@ -695,6 +703,133 @@ function removeLearning(learningId, agentId) {
     agentLearnings[agentId] = agentLearnings[agentId].filter(l => l.id !== learningId);
   }
   renderModalLearnings(agentId);
+}
+
+// ─── Portfolio (Google Drive) ───
+let driveConnected = false;
+let driveFolders = [];
+let currentDriveFolder = 'all';
+
+async function checkDriveConnection() {
+  try {
+    const res = await fetch('/.netlify/functions/drive-files?action=folders');
+    const data = await res.json();
+    if (data.success && data.connected) {
+      driveConnected = true;
+      driveFolders = data.folders || [];
+      return true;
+    }
+  } catch (e) { /* not connected */ }
+  return false;
+}
+
+async function renderPortfolio() {
+  const header = document.getElementById('portfolioHeader');
+  const foldersEl = document.getElementById('portfolioFolders');
+  const grid = document.getElementById('portfolioGrid');
+
+  const connected = await checkDriveConnection();
+
+  if (!connected) {
+    header.innerHTML = `
+      <div class="portfolio-connect">
+        <p class="portfolio-connect-text">Connect Google Drive (info@panchovial.com) to browse deliverables</p>
+        <button type="button" class="pin-btn portfolio-connect-btn" id="connectDriveBtn">Connect Drive</button>
+      </div>
+    `;
+    foldersEl.innerHTML = '';
+    grid.innerHTML = '';
+
+    document.getElementById('connectDriveBtn')?.addEventListener('click', connectDrive);
+    return;
+  }
+
+  // Connected — show folder tabs
+  header.innerHTML = '';
+  const allFolders = [{ id: 'all', name: 'All' }, ...driveFolders];
+  foldersEl.innerHTML = allFolders.map(f =>
+    `<button type="button" class="portfolio-folder-btn ${f.id === currentDriveFolder ? 'active' : ''}" data-folder="${f.id}" data-folder-name="${f.name}">${f.name}</button>`
+  ).join('');
+
+  // Folder click handlers
+  foldersEl.querySelectorAll('.portfolio-folder-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentDriveFolder = btn.dataset.folder;
+      foldersEl.querySelectorAll('.portfolio-folder-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadDriveFiles(btn.dataset.folder === 'all' ? null : btn.dataset.folderName);
+    });
+  });
+
+  // Load files
+  await loadDriveFiles(null);
+}
+
+async function loadDriveFiles(folder) {
+  const grid = document.getElementById('portfolioGrid');
+  grid.innerHTML = '<p class="portfolio-empty">Loading...</p>';
+
+  try {
+    const url = folder
+      ? `/.netlify/functions/drive-files?folder=${encodeURIComponent(folder)}`
+      : '/.netlify/functions/drive-files';
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.success || !data.files?.length) {
+      grid.innerHTML = '<p class="portfolio-empty">No files in this folder yet.</p>';
+      return;
+    }
+
+    grid.innerHTML = data.files.map(f => {
+      const isImage = f.mimeType?.startsWith('image/');
+      const isVideo = f.mimeType?.startsWith('video/');
+      const isPdf = f.mimeType === 'application/pdf';
+      const icon = isVideo ? '&#9654;' : isPdf ? '&#9776;' : '&#9634;';
+      const sizeStr = f.size ? formatFileSize(f.size) : '';
+      const dateStr = f.modified ? new Date(f.modified).toLocaleDateString('es-CL') : '';
+
+      return `
+        <div class="portfolio-item" data-view-link="${f.viewLink || ''}" onclick="window.open('${f.viewLink}', '_blank')">
+          ${f.thumbnail
+            ? `<img class="portfolio-thumb" src="${f.thumbnail}" alt="${f.name}" loading="lazy">`
+            : `<div class="portfolio-thumb-placeholder">${icon}</div>`
+          }
+          <div class="portfolio-item-info">
+            <div class="portfolio-item-name" title="${f.name}">${f.name}</div>
+            <div class="portfolio-item-meta">${sizeStr}${sizeStr && dateStr ? ' · ' : ''}${dateStr}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (e) {
+    grid.innerHTML = `<p class="portfolio-empty">Error loading files: ${e.message}</p>`;
+  }
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(0) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+async function connectDrive() {
+  try {
+    const token = localStorage.getItem('brain_token');
+    const res = await fetch('/.netlify/functions/oauth-drive-initiate', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success && data.authorization_url) {
+      window.location.href = data.authorization_url;
+    } else {
+      showNotification(data.message || 'Error connecting Drive', 'error');
+    }
+  } catch (e) {
+    showNotification('Error: ' + e.message, 'error');
+  }
 }
 
 function renderAuditLog() {
