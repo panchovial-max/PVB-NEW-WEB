@@ -678,6 +678,20 @@ if (document.readyState === 'loading') {
 }
 
 // =========================
+// AOS INIT
+// =========================
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof AOS !== 'undefined') {
+        AOS.init({
+            duration: 700,
+            easing: 'ease-out-cubic',
+            once: true,
+            offset: 60
+        });
+    }
+});
+
+// =========================
 // INITIALIZE
 // =========================
 console.log('✅ PVB Estudio Creativo website initialized');
