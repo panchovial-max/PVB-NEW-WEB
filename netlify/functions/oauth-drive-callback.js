@@ -74,7 +74,7 @@ export const handler = async (event) => {
     }, { onConflict: 'user_id,platform' });
 
     // Auto-create department folders
-    const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '1TmLqUdGvwvicoYoR7IrLtgXEl7CmgRcU';
+    const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '1w5ZVdyDfc12z8GUrYhwKrkRHbjgMJlg1';
     const departments = ['Creative', 'Marketing', 'Engineering', 'Production', 'QA', 'Analytics', 'Product', 'Support'];
 
     for (const dept of departments) {

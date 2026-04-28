@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from './utils/supabase.js';
 
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
-const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '1TmLqUdGvwvicoYoR7IrLtgXEl7CmgRcU';
+const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '1w5ZVdyDfc12z8GUrYhwKrkRHbjgMJlg1';
 
 async function getDriveToken() {
   const supabase = getSupabaseAdmin();
