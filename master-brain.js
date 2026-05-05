@@ -17,6 +17,7 @@ const DEPT_CONFIG = {
   analytics:   { name: 'Analytics & Data',  icon: '&#9670;', color: '#00BCD4', director: 'Analytics Lead' },
   product:     { name: 'Product Strategy',  icon: '&#9830;', color: '#9C27B0', director: 'Product Strategy Lead' },
   support:     { name: 'Operations & Legal',icon: '&#9635;', color: '#607D8B', director: 'Operations & Legal Lead' },
+  sales:       { name: 'Sales',             icon: '&#9654;', color: '#F59E0B', director: 'Sales Lead' },
 };
 
 // ─── All 68 Agents ───
@@ -183,6 +184,14 @@ const AGENTS_DATA = [
   // Terminal specialist (mapped to engineering)
   { id: 'terminal-integration-specialist', name: 'Terminal Specialist', title: 'Terminal emulation, SwiftTerm integration', dept: 'engineering', model: 'haiku',
     capabilities: 'terminal-emulation, text-rendering, swiftterm', skills: '' },
+
+  // SALES (3) — imported from agency-agents
+  { id: 'sales-proposal-strategist', name: 'Proposal Strategist', title: 'Win narratives, presupuestos y propuestas persuasivas', dept: 'sales', model: 'opus',
+    capabilities: 'win-theme-development, proposal-narrative, executive-summary, competitive-positioning, pricing-narrative', skills: 'sales-enablement' },
+  { id: 'sales-outbound-strategist', name: 'Outbound Strategist', title: 'Signal-based prospecting, cold email, ICP, secuencias multicanal', dept: 'sales', model: 'sonnet',
+    capabilities: 'signal-based-outreach, icp-definition, cold-email, sequence-design, pipeline-building', skills: '' },
+  { id: 'sales-discovery-coach', name: 'Discovery Coach', title: 'Discovery calls, SPIN selling, gap mapping, manejo de objeciones', dept: 'sales', model: 'sonnet',
+    capabilities: 'spin-selling, gap-selling, sandler-pain-funnel, call-structure, objection-handling', skills: '' },
 ];
 
 // ─── Routines ───

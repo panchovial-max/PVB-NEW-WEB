@@ -726,6 +726,7 @@ body.theme-dark .nav-title {
 .dept-analytics { --dept-color: #22d3ee; }
 .dept-product { --dept-color: #c084fc; }
 .dept-support { --dept-color: #94a3b8; }
+.dept-sales { --dept-color: #F59E0B; }
 
 /* ── Departments Grid ── */
 .departments-grid {
