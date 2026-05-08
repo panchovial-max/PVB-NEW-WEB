@@ -24,7 +24,7 @@ export const handler = async (event) => {
 
   try {
     const { pin } = JSON.parse(event.body);
-    const expectedPin = process.env.BRAIN_PIN || '1404';
+    const expectedPin = process.env.STUDIO_PIN || '1404';
 
     if (pin !== expectedPin) {
       return { statusCode: 401, headers, body: JSON.stringify({ error: 'PIN incorrecto' }) };
