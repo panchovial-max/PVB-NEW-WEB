@@ -862,6 +862,100 @@ function renderAuditLog() {
   `).join('');
 }
 
+// ─── Clientes ───
+const PLATFORM_ICONS = { instagram: '📸', facebook: '📘', tiktok: '🎵', youtube: '▶️', linkedin: '💼' };
+const PLATFORM_COLORS = { instagram: '#E1306C', facebook: '#1877F2', tiktok: '#010101', youtube: '#FF0000', linkedin: '#0A66C2' };
+
+async function loadClients() {
+  const grid = document.getElementById('clientsGrid');
+  const empty = document.getElementById('clientsEmpty');
+  grid.innerHTML = '<div class="loading-state">Cargando clientes...</div>';
+
+  const token = localStorage.getItem('brain_token');
+  try {
+    const res = await fetch('/.netlify/functions/brain-clients?action=list', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+
+    const clients = data.clients || [];
+    const badge = document.getElementById('clientsBadge');
+    if (clients.length > 0) {
+      badge.textContent = clients.length;
+      badge.classList.remove('hidden');
+    }
+
+    if (clients.length === 0) {
+      grid.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    empty.classList.add('hidden');
+    grid.innerHTML = clients.map(c => `
+      <div class="client-card" data-client-id="${c.id}">
+        <div class="client-card-header">
+          <div class="client-avatar">${(c.name || '?')[0].toUpperCase()}</div>
+          <div class="client-info">
+            <div class="client-name">${c.name}</div>
+            <div class="client-company">${c.company || c.email || ''}</div>
+          </div>
+        </div>
+        <div class="client-platforms">
+          ${c.platforms.length === 0
+            ? '<span class="no-platforms">Sin cuentas conectadas</span>'
+            : c.platforms.map(p => `
+              <button type="button" class="platform-chip" style="border-color:${PLATFORM_COLORS[p.platform] || '#888'}"
+                data-client-id="${c.id}" data-platform="${p.platform}">
+                ${PLATFORM_ICONS[p.platform] || '🔗'} ${p.username || p.account_name || p.platform}
+              </button>`).join('')}
+        </div>
+        <div class="client-stats-area" id="stats-${c.id}"></div>
+        <div class="client-card-actions">
+          <button type="button" class="action-btn small" onclick="analyzeClient('${c.id}','${c.name}')">&#9881; Analizar</button>
+        </div>
+      </div>
+    `).join('');
+
+    // Platform chip click → load stats
+    grid.querySelectorAll('.platform-chip').forEach(btn => {
+      btn.addEventListener('click', () => loadClientStats(btn.dataset.clientId, btn.dataset.platform));
+    });
+
+  } catch (err) {
+    grid.innerHTML = `<div class="error-state">Error cargando clientes: ${err.message}</div>`;
+  }
+}
+
+async function loadClientStats(clientId, platform) {
+  const area = document.getElementById(`stats-${clientId}`);
+  area.innerHTML = '<span class="loading-inline">Cargando métricas...</span>';
+
+  const token = localStorage.getItem('brain_token');
+  try {
+    const res = await fetch(`/.netlify/functions/brain-clients?action=stats&user_id=${clientId}&platform=${platform}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+
+    const s = data.stats;
+    const rows = Object.entries(s)
+      .filter(([k]) => !['username', 'profile_picture', 'name', 'title'].includes(k))
+      .map(([k, v]) => `<div class="stat-row"><span class="stat-key">${k.replace(/_/g, ' ')}</span><span class="stat-val">${Number.isFinite(+v) ? (+v).toLocaleString() : v}</span></div>`)
+      .join('');
+
+    area.innerHTML = `<div class="stats-block"><div class="stats-platform-label" style="color:${PLATFORM_COLORS[platform]}">${PLATFORM_ICONS[platform]} ${platform}</div>${rows}</div>`;
+  } catch (err) {
+    area.innerHTML = `<span class="error-inline">${err.message}</span>`;
+  }
+}
+
+function analyzeClient(clientId, clientName) {
+  showNotification(`Análisis de ${clientName} pendiente — conectar con agente de estrategia`);
+}
+
 // ─── KPIs ───
 function updateKPIs() {
   document.getElementById('kpiTotalAgents').textContent = allAgents.length;
@@ -981,8 +1075,11 @@ function setupEventListeners() {
       document.querySelectorAll('.brain-tab-content').forEach(c => c.classList.remove('active'));
       tab.classList.add('active');
       document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      if (tab.dataset.tab === 'clients') loadClients();
     });
   });
+
+  document.getElementById('refreshClients')?.addEventListener('click', loadClients);
 
   // Agent clicks (delegated)
   document.addEventListener('click', (e) => {

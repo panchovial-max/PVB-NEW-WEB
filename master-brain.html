@@ -88,6 +88,7 @@
             <button class="brain-tab" data-tab="campaigns">Campaigns</button>
             <button class="brain-tab" data-tab="departments">Departments</button>
             <button class="brain-tab" data-tab="agents">All Agents</button>
+            <button class="brain-tab" data-tab="clients">Clientes <span class="tab-badge hidden" id="clientsBadge">0</span></button>
             <button class="brain-tab" data-tab="activity">Activity</button>
             <button class="brain-tab" data-tab="routines">Routines</button>
             <button class="brain-tab" data-tab="portfolio">Portfolio</button>
@@ -224,6 +225,20 @@
             </div>
             <div class="learnings-grid" id="learningsGrid">
                 <!-- Rendered by JS -->
+            </div>
+        </section>
+
+        <!-- TAB: Clientes -->
+        <section class="brain-tab-content" id="tab-clients">
+            <div class="section-header">
+                <h2 class="section-title">Clientes — Redes Sociales</h2>
+                <button type="button" class="action-btn" id="refreshClients">&#8635; Actualizar</button>
+            </div>
+            <div id="clientsGrid" class="clients-grid">
+                <!-- Rendered by JS -->
+            </div>
+            <div id="clientsEmpty" class="empty-state hidden">
+                <p>No hay clientes con cuentas conectadas aún.</p>
             </div>
         </section>
 

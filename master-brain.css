@@ -2210,6 +2210,8 @@ body.theme-dark .nav-title {
     color: var(--brain-red);
 }
 
+.hidden { display: none !important; }
+
 .tab-badge {
     display: inline-flex;
     align-items: center;
@@ -2224,6 +2226,112 @@ body.theme-dark .nav-title {
     font-weight: 700;
     margin-left: 4px;
     vertical-align: middle;
+}
+
+/* ─── Clientes Tab ─── */
+.clients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    padding: 8px 0;
+}
+
+.client-card {
+    background: var(--brain-surface);
+    border: 1px solid var(--brain-border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: border-color 0.2s;
+}
+
+.client-card:hover { border-color: var(--brain-accent); }
+
+.client-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.client-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--brain-accent);
+    color: #000;
+    font-weight: 700;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.client-name { font-weight: 600; font-size: 15px; }
+.client-company { font-size: 12px; color: var(--brain-muted); margin-top: 2px; }
+
+.client-platforms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.platform-chip {
+    background: transparent;
+    border: 1px solid;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--brain-text);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.platform-chip:hover { background: rgba(255,255,255,0.06); }
+
+.no-platforms { font-size: 12px; color: var(--brain-muted); }
+
+.stats-block {
+    background: var(--brain-bg);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+}
+
+.stats-platform-label {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--brain-border);
+}
+
+.stat-row:last-child { border-bottom: none; }
+.stat-key { color: var(--brain-muted); text-transform: capitalize; }
+.stat-val { font-weight: 600; }
+
+.client-card-actions { display: flex; gap: 8px; }
+.action-btn.small { font-size: 11px; padding: 5px 12px; }
+
+.loading-state, .error-state, .empty-state {
+    padding: 40px;
+    text-align: center;
+    color: var(--brain-muted);
+    font-size: 14px;
+}
+
+.loading-inline, .error-inline {
+    font-size: 12px;
+    color: var(--brain-muted);
+    display: block;
+    padding: 8px 0;
 }
 
 /* ========================================
