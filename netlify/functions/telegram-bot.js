@@ -1,14 +1,22 @@
-// telegram-bot.js — PVB Telegram Bot webhook
-// Recibe updates de Telegram y responde comandos
-// Webhook URL: /.netlify/functions/telegram-bot
-
+// telegram-bot.js — PVB Master Brain Bot
+// Webhook Telegram → comandos conectados a Notion + Supabase
 import { createClient } from '@supabase/supabase-js';
+import {
+  getProyectosActivos,
+  getBoletasPendientes,
+  getResumenFinanciero,
+  createProyecto,
+  updateProyectoEstado,
+  addNotaProyecto
+} from './notion-query.js';
 
 let TELEGRAM_API;
 let supabaseAdmin;
+let NOTION_KEY;
 
 function init() {
   TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
+  NOTION_KEY = process.env.NOTION_API_KEY;
   supabaseAdmin = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_KEY
@@ -26,20 +34,31 @@ async function sendMessage(chatId, text, options = {}) {
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown', ...options })
   });
   const data = await res.json();
-  if (!data.ok) console.error('❌ Telegram sendMessage error:', data.description);
+  if (!data.ok) console.error('❌ Telegram error:', data.description, '| text:', text.slice(0, 100));
   return data;
 }
+
+// ─── Session state para comandos multi-paso ───
+const SESSION = {};
 
 async function handleCommand(chatId, command, args) {
   switch (command) {
     case '/start':
     case '/help':
       await sendMessage(chatId,
-        `🧠 *PVB Master Brain Bot*\n\n` +
-        `Comandos disponibles:\n` +
-        `/clientes — Clientes activos con redes conectadas\n` +
-        `/facturas — Facturas pendientes de cobro\n` +
-        `/agentes — Estado del equipo de agentes\n` +
+        `🧠 *PVB Master Brain*\n\n` +
+        `*Proyectos*\n` +
+        `/proyectos — Proyectos activos\n` +
+        `/nuevo — Crear proyecto en Notion\n` +
+        `/estado — Cambiar estado de proyecto\n` +
+        `/nota — Agregar nota a proyecto\n\n` +
+        `*Finanzas*\n` +
+        `/boletas — Boletas/facturas pendientes\n` +
+        `/resumen — Resumen financiero del mes\n\n` +
+        `*Clientes*\n` +
+        `/clientes — Clientes con redes conectadas\n\n` +
+        `*Agentes*\n` +
+        `/agentes — Estado del equipo\n` +
         `/ping — Test de conexión`
       );
       break;
@@ -48,20 +67,128 @@ async function handleCommand(chatId, command, args) {
       await sendMessage(chatId, '✅ Bot activo y respondiendo.');
       break;
 
-    case '/clientes':
-      await handleClientes(chatId);
+    case '/proyectos':
+      await handleProyectos(chatId);
       break;
 
-    case '/facturas':
-      await handleFacturas(chatId);
+    case '/boletas':
+      await handleBoletas(chatId);
+      break;
+
+    case '/resumen':
+      await handleResumen(chatId);
+      break;
+
+    case '/clientes':
+      await handleClientes(chatId);
       break;
 
     case '/agentes':
       await handleAgentes(chatId);
       break;
 
+    case '/nuevo':
+      await handleNuevoProyecto(chatId, args);
+      break;
+
+    case '/estado':
+      await handleCambiarEstado(chatId, args);
+      break;
+
+    case '/nota':
+      await handleAgregarNota(chatId, args);
+      break;
+
     default:
       await sendMessage(chatId, `Comando no reconocido. Usa /help para ver los disponibles.`);
+  }
+}
+
+async function handleProyectos(chatId) {
+  try {
+    const data = await getProyectosActivos(NOTION_KEY);
+    if (!data.results?.length) {
+      await sendMessage(chatId, '📭 No hay proyectos activos.');
+      return;
+    }
+
+    const ESTADO_ICONS = {
+      'Brief': '📋', 'Pre-produccion': '🔍',
+      'Produccion': '🎬', 'Post-produccion': '✂️'
+    };
+
+    const lines = data.results.map(p => {
+      const props = p.properties;
+      const nombre = escapeMarkdown(props.Nombre?.title?.[0]?.plain_text || 'Sin nombre');
+      const cliente = props.Cliente?.rich_text?.[0]?.plain_text || '';
+      const estado = props.Estado?.select?.name || '';
+      const entrega = props['Fecha Entrega']?.date?.start || '';
+      const icon = ESTADO_ICONS[estado] || '▪️';
+      return `${icon} *${nombre}*${cliente ? ' — ' + escapeMarkdown(cliente) : ''}\n   ${estado}${entrega ? ' · entrega ' + entrega : ''}`;
+    });
+
+    await sendMessage(chatId,
+      `🎬 *Proyectos activos (${data.results.length})*\n\n${lines.join('\n\n')}`
+    );
+  } catch (err) {
+    await sendMessage(chatId, `❌ Error: ${escapeMarkdown(err.message)}`);
+  }
+}
+
+async function handleBoletas(chatId) {
+  try {
+    const data = await getBoletasPendientes(NOTION_KEY);
+    if (!data.results?.length) {
+      await sendMessage(chatId, '✅ No hay boletas/facturas pendientes.');
+      return;
+    }
+
+    const lines = data.results.map(p => {
+      const props = p.properties;
+      const desc = escapeMarkdown(props.Descripcion?.title?.[0]?.plain_text || 'Sin descripción');
+      const monto = props['Monto CLP']?.number ? `$${props['Monto CLP'].number.toLocaleString('es-CL')}` : '';
+      const fecha = props.Fecha?.date?.start || '';
+      const tipo = props['Tipo Documento']?.select?.name || '';
+      return `• *${desc}*${monto ? ' — ' + monto : ''}\n  ${tipo}${fecha ? ' · ' + fecha : ''}`;
+    });
+
+    const total = data.results.reduce((s, p) => s + (p.properties['Monto CLP']?.number || 0), 0);
+
+    await sendMessage(chatId,
+      `🧾 *Pendientes (${data.results.length})*\n\n${lines.join('\n\n')}\n\n*Total: $${total.toLocaleString('es-CL')} CLP*`
+    );
+  } catch (err) {
+    await sendMessage(chatId, `❌ Error: ${escapeMarkdown(err.message)}`);
+  }
+}
+
+async function handleResumen(chatId) {
+  try {
+    const data = await getResumenFinanciero(NOTION_KEY);
+    if (!data.results?.length) {
+      await sendMessage(chatId, '📊 Sin registros procesados este mes.');
+      return;
+    }
+
+    const porCategoria = {};
+    let total = 0;
+    for (const p of data.results) {
+      const cat = p.properties.Categoria?.select?.name || 'Otro';
+      const monto = p.properties['Monto CLP']?.number || 0;
+      porCategoria[cat] = (porCategoria[cat] || 0) + monto;
+      total += monto;
+    }
+
+    const mes = new Date().toLocaleString('es-CL', { month: 'long', year: 'numeric' });
+    const lines = Object.entries(porCategoria)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, monto]) => `• ${cat}: $${monto.toLocaleString('es-CL')}`);
+
+    await sendMessage(chatId,
+      `📊 *Resumen ${mes}*\n\n${lines.join('\n')}\n\n*Total: $${total.toLocaleString('es-CL')} CLP*\n_${data.results.length} registros procesados_`
+    );
+  } catch (err) {
+    await sendMessage(chatId, `❌ Error: ${escapeMarkdown(err.message)}`);
   }
 }
 
@@ -73,8 +200,8 @@ async function handleClientes(chatId) {
       .order('created_at', { ascending: false })
       .limit(10);
 
-    if (!profiles || profiles.length === 0) {
-      await sendMessage(chatId, '📭 No hay clientes registrados aún.');
+    if (!profiles?.length) {
+      await sendMessage(chatId, '📭 No hay clientes registrados.');
       return;
     }
 
@@ -95,59 +222,9 @@ async function handleClientes(chatId) {
       return `• ${name}${company}${redes}`;
     });
 
-    await sendMessage(chatId, `👥 *Clientes activos (${profiles.length})*\n\n${lines.join('\n')}`);
+    await sendMessage(chatId, `👥 *Clientes (${profiles.length})*\n\n${lines.join('\n')}`);
   } catch (err) {
-    await sendMessage(chatId, `❌ Error al cargar clientes: ${err.message}`);
-  }
-}
-
-async function handleFacturas(chatId) {
-  const notionKey = process.env.NOTION_API_KEY;
-  const notionDb = process.env.NOTION_CLIENT_CONTEXT_DB_ID;
-
-  if (!notionKey || !notionDb) {
-    await sendMessage(chatId, '⚠️ Notion no configurado. Verifica NOTION_API_KEY y NOTION_CLIENT_CONTEXT_DB_ID.');
-    return;
-  }
-
-  try {
-    const res = await fetch(`https://api.notion.com/v1/databases/${notionDb}/query`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${notionKey}`,
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        filter: {
-          property: 'Estado',
-          select: { equals: 'Pendiente' }
-        },
-        sorts: [{ property: 'Fecha', direction: 'descending' }],
-        page_size: 10
-      })
-    });
-
-    const data = await res.json();
-
-    if (!data.results || data.results.length === 0) {
-      await sendMessage(chatId, '✅ No hay facturas pendientes.');
-      return;
-    }
-
-    const lines = data.results.map(page => {
-      const props = page.properties;
-      const nombre = escapeMarkdown(props.Nombre?.title?.[0]?.plain_text || props.Name?.title?.[0]?.plain_text || 'Sin nombre');
-      const monto = props.Monto?.number ? `$${props.Monto.number.toLocaleString('es-CL')}` : '';
-      const fecha = props.Fecha?.date?.start || '';
-      return `• ${nombre}${monto ? ' — ' + monto : ''}${fecha ? ' (' + fecha + ')' : ''}`;
-    });
-
-    await sendMessage(chatId,
-      `🧾 *Facturas pendientes (${data.results.length})*\n\n${lines.join('\n')}\n\n_Revisa Notion para más detalle_`
-    );
-  } catch (err) {
-    await sendMessage(chatId, `❌ Error al consultar Notion: ${err.message}`);
+    await sendMessage(chatId, `❌ Error: ${escapeMarkdown(err.message)}`);
   }
 }
 
@@ -157,25 +234,120 @@ async function handleAgentes(chatId) {
     production: 5, qa: 8, analytics: 5,
     product: 5, support: 5, sales: 3
   };
-
   const total = Object.values(depts).reduce((a, b) => a + b, 0);
-  const lines = Object.entries(depts).map(([d, n]) => `• ${d}: ${n} agentes`);
-
+  const lines = Object.entries(depts).map(([d, n]) => `• ${d}: ${n}`);
   await sendMessage(chatId,
-    `🤖 *Master Brain — ${total} agentes activos*\n\n${lines.join('\n')}\n\n_Ver detalle en panchovial.com/masterbrain_`
+    `🤖 *Master Brain — ${total} agentes*\n\n${lines.join('\n')}\n\n_panchovial.com/masterbrain_`
   );
+}
+
+async function handleNuevoProyecto(chatId, args) {
+  // Uso: /nuevo NombreProyecto | Cliente | Tipo | Presupuesto | FechaEntrega
+  if (!args.length) {
+    await sendMessage(chatId,
+      `📋 *Nuevo proyecto*\n\nUso:\n/nuevo Nombre \\| Cliente \\| Tipo \\| Presupuesto \\| Fecha\n\nEjemplo:\n/nuevo Campaña Kaya \\| Kaya Unite \\| Video \\| 2500000 \\| 2026-06-30\n\nTipos: Video, Foto, Branding, Web, Social Media, Print`
+    );
+    return;
+  }
+
+  const full = args.join(' ');
+  const parts = full.split('|').map(s => s.trim());
+  const [nombre, cliente, tipo, presupuesto, fechaEntrega] = parts;
+
+  if (!nombre) {
+    await sendMessage(chatId, '❌ Nombre del proyecto requerido.');
+    return;
+  }
+
+  try {
+    const page = await createProyecto(NOTION_KEY, { nombre, cliente, tipo, presupuesto, fechaEntrega });
+    if (page.id) {
+      await sendMessage(chatId,
+        `✅ *Proyecto creado en Notion*\n\n*${escapeMarkdown(nombre)}*${cliente ? '\nCliente: ' + escapeMarkdown(cliente) : ''}${tipo ? '\nTipo: ' + tipo : ''}${presupuesto ? '\nPresupuesto: $' + parseInt(presupuesto).toLocaleString('es-CL') : ''}${fechaEntrega ? '\nEntrega: ' + fechaEntrega : ''}`
+      );
+    } else {
+      await sendMessage(chatId, `❌ Error creando proyecto: ${escapeMarkdown(page.message || 'Error desconocido')}`);
+    }
+  } catch (err) {
+    await sendMessage(chatId, `❌ Error: ${escapeMarkdown(err.message)}`);
+  }
+}
+
+async function handleCambiarEstado(chatId, args) {
+  // Uso: /estado NombreProyecto | NuevoEstado
+  if (!args.length) {
+    await sendMessage(chatId,
+      `📋 *Cambiar estado*\n\nUso:\n/estado Nombre \\| Estado\n\nEstados: Brief, Pre-produccion, Produccion, Post-produccion, Entregado, Archivado`
+    );
+    return;
+  }
+
+  const [busqueda, nuevoEstado] = args.join(' ').split('|').map(s => s.trim());
+  if (!busqueda || !nuevoEstado) {
+    await sendMessage(chatId, '❌ Formato: /estado Nombre \\| Estado');
+    return;
+  }
+
+  try {
+    const data = await getProyectosActivos(NOTION_KEY);
+    const proyecto = data.results?.find(p =>
+      p.properties.Nombre?.title?.[0]?.plain_text?.toLowerCase().includes(busqueda.toLowerCase())
+    );
+
+    if (!proyecto) {
+      await sendMessage(chatId, `❌ No encontré proyecto con "${escapeMarkdown(busqueda)}"`);
+      return;
+    }
+
+    const nombre = proyecto.properties.Nombre?.title?.[0]?.plain_text || 'Sin nombre';
+    await updateProyectoEstado(NOTION_KEY, proyecto.id, nuevoEstado);
+    await sendMessage(chatId, `✅ *${escapeMarkdown(nombre)}* → ${nuevoEstado}`);
+  } catch (err) {
+    await sendMessage(chatId, `❌ Error: ${escapeMarkdown(err.message)}`);
+  }
+}
+
+async function handleAgregarNota(chatId, args) {
+  // Uso: /nota NombreProyecto | Texto de la nota
+  if (!args.length) {
+    await sendMessage(chatId, `📝 Uso: /nota NombreProyecto \\| Texto de la nota`);
+    return;
+  }
+
+  const [busqueda, nota] = args.join(' ').split('|').map(s => s.trim());
+  if (!busqueda || !nota) {
+    await sendMessage(chatId, '❌ Formato: /nota Nombre \\| Texto');
+    return;
+  }
+
+  try {
+    const data = await getProyectosActivos(NOTION_KEY);
+    const proyecto = data.results?.find(p =>
+      p.properties.Nombre?.title?.[0]?.plain_text?.toLowerCase().includes(busqueda.toLowerCase())
+    );
+
+    if (!proyecto) {
+      await sendMessage(chatId, `❌ No encontré proyecto con "${escapeMarkdown(busqueda)}"`);
+      return;
+    }
+
+    const nombre = proyecto.properties.Nombre?.title?.[0]?.plain_text || 'Sin nombre';
+    await addNotaProyecto(NOTION_KEY, proyecto.id, nota);
+    await sendMessage(chatId, `✅ Nota agregada en *${escapeMarkdown(nombre)}*`);
+  } catch (err) {
+    await sendMessage(chatId, `❌ Error: ${escapeMarkdown(err.message)}`);
+  }
 }
 
 export const handler = async (event) => {
   init();
 
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 200, body: 'PVB Telegram Bot OK' };
+    return { statusCode: 200, body: 'PVB Master Brain Bot OK' };
   }
 
   try {
     const update = JSON.parse(event.body);
-    console.log('📨 Update:', JSON.stringify(update));
     const message = update.message || update.edited_message;
     if (!message?.text) return { statusCode: 200, body: 'ok' };
 
@@ -184,7 +356,7 @@ export const handler = async (event) => {
 
     if (text.startsWith('/')) {
       const parts = text.split(' ');
-      const command = parts[0].split('@')[0]; // remove @botname if present
+      const command = parts[0].split('@')[0];
       const args = parts.slice(1);
       await handleCommand(chatId, command, args);
     }
@@ -192,6 +364,6 @@ export const handler = async (event) => {
     return { statusCode: 200, body: 'ok' };
   } catch (err) {
     console.error('telegram-bot error:', err);
-    return { statusCode: 200, body: 'ok' }; // always 200 to Telegram
+    return { statusCode: 200, body: 'ok' };
   }
 };
