@@ -15,16 +15,14 @@ const supabaseAdmin = createClient(
 );
 
 async function sendMessage(chatId, text, options = {}) {
-  await fetch(`${TELEGRAM_API}/sendMessage`, {
+  const res = await fetch(`${TELEGRAM_API}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: 'Markdown',
-      ...options
-    })
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown', ...options })
   });
+  const data = await res.json();
+  if (!data.ok) console.error('❌ Telegram sendMessage error:', data.description);
+  return data;
 }
 
 async function handleCommand(chatId, command, args) {
@@ -161,12 +159,15 @@ async function handleAgentes(chatId) {
 }
 
 export const handler = async (event) => {
+  console.log('📥 Received:', event.httpMethod, JSON.stringify(event.body));
+
   if (event.httpMethod !== 'POST') {
     return { statusCode: 200, body: 'PVB Telegram Bot OK' };
   }
 
   try {
     const update = JSON.parse(event.body);
+    console.log('📨 Update:', JSON.stringify(update));
     const message = update.message || update.edited_message;
     if (!message?.text) return { statusCode: 200, body: 'ok' };
 
