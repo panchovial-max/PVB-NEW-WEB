@@ -1076,6 +1076,10 @@ function setupEventListeners() {
       tab.classList.add('active');
       document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
       if (tab.dataset.tab === 'clients') loadClients();
+      if (tab.dataset.tab === 'competitor-config' && !competitorTabInitialized) {
+        competitorTabInitialized = true;
+        initCompetitorConfigTab();
+      }
     });
   });
 
@@ -1463,3 +1467,154 @@ function showNotification(message, type = 'info') {
     setTimeout(() => toast.remove(), 300);
   }, 2500);
 }
+
+// ============================================
+// COMPETITOR TRACKER CONFIG PANEL
+// ============================================
+const SUPABASE_URL_MB = 'https://krmoihryyvooymvhsuno.supabase.co';
+const SUPABASE_ANON_MB = 'sb_publishable_siFuszUIw5ibS-2Y15O4-Q_k484kZ8i';
+
+async function sbFetch(path, options = {}) {
+  const token = localStorage.getItem('brain_token');
+  const res = await fetch(`${SUPABASE_URL_MB}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_ANON_MB,
+      'Authorization': `Bearer ${SUPABASE_ANON_MB}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+  return res.status === 204 ? null : res.json();
+}
+
+async function initCompetitorConfigTab() {
+  await loadClientsForSelect();
+  await loadTrackersList();
+
+  document.getElementById('cfgAddBtn').addEventListener('click', addTracker);
+  document.getElementById('scanAllBtn').addEventListener('click', triggerScan);
+}
+
+async function loadClientsForSelect() {
+  const token = localStorage.getItem('brain_token');
+  try {
+    const res = await fetch('/.netlify/functions/brain-clients?action=list', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const select = document.getElementById('cfgClientSelect');
+    (data.clients || []).forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = `${c.full_name || c.email} — ${c.company_name || ''}`.trim();
+      select.appendChild(opt);
+    });
+  } catch (err) {
+    console.error('loadClientsForSelect:', err);
+  }
+}
+
+async function loadTrackersList() {
+  const list = document.getElementById('trackersList');
+  try {
+    const data = await sbFetch('competitor_trackers?select=*,user_profiles(full_name,company_name)&order=created_at.desc');
+    if (!data?.length) {
+      list.innerHTML = '<p class="loading-text">No hay competidores configurados aún.</p>';
+      return;
+    }
+    list.innerHTML = data.map(t => `
+      <div class="tracker-row" data-id="${t.id}">
+        <span class="tracker-client">${t.user_profiles?.full_name || t.client_id.slice(0, 8)}</span>
+        <span class="tracker-handle">@${escapeHtmlMB(t.instagram_handle)}</span>
+        ${t.display_name ? `<span class="tracker-name">${escapeHtmlMB(t.display_name)}</span>` : ''}
+        <span class="tracker-threshold">${t.viral_threshold.toLocaleString('es-CL')} views</span>
+        <span class="tracker-status ${t.is_active ? 'active' : 'inactive'}">${t.is_active ? 'Activo' : 'Pausado'}</span>
+        <button type="button" class="tracker-toggle-btn" onclick="toggleTracker('${t.id}', ${t.is_active})">${t.is_active ? 'Pausar' : 'Activar'}</button>
+        <button type="button" class="tracker-delete-btn" onclick="deleteTracker('${t.id}')">✕</button>
+      </div>
+    `).join('');
+  } catch (err) {
+    list.innerHTML = `<p class="loading-text">Error cargando trackers: ${escapeHtmlMB(err.message)}</p>`;
+  }
+}
+
+async function addTracker() {
+  const clientId = document.getElementById('cfgClientSelect').value;
+  const handle = document.getElementById('cfgHandle').value.trim().replace(/^@/, '');
+  const displayName = document.getElementById('cfgDisplayName').value.trim();
+  const threshold = parseInt(document.getElementById('cfgThreshold').value, 10) || 100000;
+
+  if (!clientId || !handle) {
+    showToast('Seleccioná un cliente e ingresá el handle.', 'warning');
+    return;
+  }
+
+  try {
+    await sbFetch('competitor_trackers', {
+      method: 'POST',
+      body: JSON.stringify({ client_id: clientId, instagram_handle: handle, display_name: displayName || null, viral_threshold: threshold })
+    });
+    document.getElementById('cfgHandle').value = '';
+    document.getElementById('cfgDisplayName').value = '';
+    showToast(`@${handle} agregado correctamente.`, 'success');
+    await loadTrackersList();
+  } catch (err) {
+    showToast(`Error: ${err.message}`, 'error');
+  }
+}
+
+async function toggleTracker(id, currentActive) {
+  try {
+    await sbFetch(`competitor_trackers?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_active: !currentActive })
+    });
+    await loadTrackersList();
+  } catch (err) {
+    showToast(`Error: ${err.message}`, 'error');
+  }
+}
+
+async function deleteTracker(id) {
+  if (!confirm('¿Eliminar este competidor?')) return;
+  try {
+    await sbFetch(`competitor_trackers?id=eq.${id}`, { method: 'DELETE' });
+    await loadTrackersList();
+  } catch (err) {
+    showToast(`Error: ${err.message}`, 'error');
+  }
+}
+
+async function triggerScan() {
+  const btn = document.getElementById('scanAllBtn');
+  btn.disabled = true;
+  btn.textContent = 'Escaneando...';
+  try {
+    const token = localStorage.getItem('brain_token');
+    const res = await fetch('/.netlify/functions/competitor-scan', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    showToast(`Escaneo completado. ${data.new_viral_posts || 0} posts virales nuevos.`, 'success');
+  } catch (err) {
+    showToast(`Error en escaneo: ${err.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Escanear ahora';
+  }
+}
+
+function escapeHtmlMB(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+let competitorTabInitialized = false;

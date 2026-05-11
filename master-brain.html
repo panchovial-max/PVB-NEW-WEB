@@ -89,6 +89,7 @@
             <button class="brain-tab" data-tab="departments">Departments</button>
             <button class="brain-tab" data-tab="agents">All Agents</button>
             <button class="brain-tab" data-tab="clients">Clientes <span class="tab-badge hidden" id="clientsBadge">0</span></button>
+            <button class="brain-tab" data-tab="competitor-config">Competidores</button>
             <button class="brain-tab" data-tab="activity">Activity</button>
             <button class="brain-tab" data-tab="routines">Routines</button>
             <button class="brain-tab" data-tab="portfolio">Portfolio</button>
@@ -239,6 +240,34 @@
             </div>
             <div id="clientsEmpty" class="empty-state hidden">
                 <p>No hay clientes con cuentas conectadas aún.</p>
+            </div>
+        </section>
+
+        <!-- TAB: Competitor Tracker Config -->
+        <section class="brain-tab-content" id="tab-competitor-config">
+            <div class="section-header">
+                <h2 class="section-title">Inteligencia Competitiva — Config</h2>
+                <button type="button" class="action-btn" id="scanAllBtn">&#9654; Escanear ahora</button>
+            </div>
+
+            <!-- Agregar tracker -->
+            <div class="competitor-config-form">
+                <h3>Asignar competidor a cliente</h3>
+                <div class="config-form-row">
+                    <select id="cfgClientSelect" class="filter-select" title="Seleccionar cliente" aria-label="Seleccionar cliente">
+                        <option value="">Seleccionar cliente...</option>
+                    </select>
+                    <input type="text" id="cfgHandle" class="config-input" placeholder="@handle (sin @)" aria-label="Handle de Instagram del competidor" />
+                    <input type="text" id="cfgDisplayName" class="config-input" placeholder="Nombre (opcional)" aria-label="Nombre del competidor" />
+                    <input type="number" id="cfgThreshold" class="config-input config-input--sm" value="100000" min="1000" step="1000" title="Umbral de views para considerar viral" aria-label="Umbral de views" />
+                    <button type="button" class="action-btn" id="cfgAddBtn">+ Agregar</button>
+                </div>
+                <p class="config-hint">Umbral: mínimo de views/likes para considerar un post viral.</p>
+            </div>
+
+            <!-- Lista de trackers activos -->
+            <div id="trackersList" class="trackers-list">
+                <p class="loading-text">Cargando configuración...</p>
             </div>
         </section>
 
