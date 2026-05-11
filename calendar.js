@@ -174,6 +174,20 @@ function renderCalendar() {
         const dayEvents = calendarEvents.filter(e => e.event_date === dateString);
 
         if (dayEvents.length > 0) {
+            // Priority dot indicator under day number
+            const hasHigh = dayEvents.some(e => e.priority === 'high');
+            const hasNormal = dayEvents.some(e => e.priority === 'normal' || e.event_type === 'deadline');
+            const dotsBar = document.createElement('div');
+            dotsBar.className = 'calendar-day-dots';
+            dayEvents.slice(0, 4).forEach(e => {
+                const dot = document.createElement('span');
+                dot.className = `calendar-dot ${e.priority === 'high' ? 'dot-high' : e.priority === 'normal' || e.event_type === 'deadline' ? 'dot-normal' : 'dot-low'}`;
+                dotsBar.appendChild(dot);
+            });
+            dayElement.appendChild(dotsBar);
+            if (hasHigh) dayElement.classList.add('has-high-event');
+            else if (hasNormal) dayElement.classList.add('has-normal-event');
+
             const eventsContainer = document.createElement('div');
             eventsContainer.className = 'calendar-events';
 
