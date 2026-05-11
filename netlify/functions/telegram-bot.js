@@ -66,7 +66,7 @@ async function handleClientes(chatId) {
   try {
     const { data: profiles } = await supabaseAdmin
       .from('user_profiles')
-      .select('full_name, email, company, created_at')
+      .select('id, full_name, email, company, created_at')
       .order('created_at', { ascending: false })
       .limit(10);
 
@@ -138,7 +138,7 @@ async function handleFacturas(chatId) {
     });
 
     await sendMessage(chatId,
-      `🧾 *Facturas pendientes (${data.results.length})*\n\n${lines.join('\n')}\n\n_Usa /cobrar [nombre] para marcar como enviada_`
+      `🧾 *Facturas pendientes (${data.results.length})*\n\n${lines.join('\n')}\n\n_Revisa Notion para más detalle_`
     );
   } catch (err) {
     await sendMessage(chatId, `❌ Error al consultar Notion: ${err.message}`);
