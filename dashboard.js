@@ -30,6 +30,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // Sync localStorage so functions that read session_id work after OAuth redirect
+    localStorage.setItem('session_id', session.access_token);
+    localStorage.setItem('user_id', session.user.id);
+    localStorage.setItem('email', session.user.email);
+    localStorage.setItem('full_name', session.user.user_metadata?.full_name || session.user.email);
+
     // User is logged in - initialize dashboard
     await initializeDashboard({
         session_token: session.access_token,
@@ -97,6 +103,9 @@ async function loadDashboardData(userData) {
 
         // Load charts
         await loadCharts(userData);
+
+        // Load competitor intelligence
+        loadViralPosts(userData);
 
         showLoadingState(false);
     } catch (error) {
@@ -506,7 +515,7 @@ document.head.appendChild(style);
 
 // Connect social account (called from settings page)
 async function connectSocialAccount(platform) {
-    const sessionToken = localStorage.getItem('session_id');
+    const sessionToken = window._pvbUserData?.session_token || localStorage.getItem('session_id');
     if (!sessionToken) {
         showNotification('Please log in first', 'error');
         return;
@@ -538,7 +547,7 @@ async function connectSocialAccount(platform) {
 
 // Sync metrics from social platforms
 async function syncMetrics() {
-    const sessionToken = localStorage.getItem('session_id');
+    const sessionToken = window._pvbUserData?.session_token || localStorage.getItem('session_id');
     if (!sessionToken) {
         showNotification('Please log in first', 'error');
         return;
@@ -553,8 +562,17 @@ async function syncMetrics() {
                 'Authorization': `Bearer ${sessionToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({}) // Empty body syncs all accounts
+            body: JSON.stringify({})
         });
+
+        if (!response.ok) {
+            // metrics-sync not yet deployed — reload dashboard with fresh data
+            if (window._pvbUserData) {
+                await loadDashboardData(window._pvbUserData);
+                showNotification('Dashboard refreshed', 'success');
+            }
+            return;
+        }
 
         const data = await response.json();
 
@@ -563,15 +581,7 @@ async function syncMetrics() {
                 `Metrics synced successfully! ${data.synced} account(s) updated.`,
                 'success'
             );
-
-            // Reload dashboard to show new metrics
-            const userData = {
-                session_token: sessionToken,
-                user_id: localStorage.getItem('user_id'),
-                email: localStorage.getItem('email'),
-                full_name: localStorage.getItem('full_name')
-            };
-            await loadDashboardData(userData);
+            if (window._pvbUserData) await loadDashboardData(window._pvbUserData);
         } else {
             throw new Error(data.message || 'Failed to sync metrics');
         }
@@ -589,7 +599,7 @@ window.refreshInbox = refreshInbox;
 
 // Load real social stats from Meta Graph API via Netlify function
 async function loadSocialStats(userData) {
-    const sessionToken = localStorage.getItem('session_id');
+    const sessionToken = userData?.session_token || localStorage.getItem('session_id');
     if (!sessionToken) return;
 
     const platforms = ['instagram', 'facebook', 'tiktok', 'youtube'];
@@ -646,7 +656,7 @@ async function loadSocialStats(userData) {
 let _inboxMessages = [];
 
 async function loadInbox() {
-    const sessionToken = localStorage.getItem('session_id');
+    const sessionToken = window._pvbUserData?.session_token || localStorage.getItem('session_id');
     if (!sessionToken) return;
 
     const loading = document.getElementById('inboxLoading');
@@ -830,4 +840,79 @@ async function sendReply(inputEl) {
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ============================================
+// INTELIGENCIA COMPETITIVA
+// ============================================
+async function loadViralPosts(userData) {
+    const grid = document.getElementById('viralPostsGrid');
+    const badge = document.getElementById('viralPostsBadge');
+    const intro = document.getElementById('competitorIntro');
+    if (!grid || !supabase) return;
+
+    try {
+        const { data: posts, error } = await supabase
+            .from('viral_posts')
+            .select('*')
+            .eq('client_id', userData.user_id)
+            .order('detected_at', { ascending: false })
+            .limit(12);
+
+        if (error) throw error;
+
+        // Verificar si tiene trackers activos
+        const { data: trackers } = await supabase
+            .from('competitor_trackers')
+            .select('id')
+            .eq('client_id', userData.user_id)
+            .eq('is_active', true);
+
+        if (trackers?.length) {
+            intro.classList.remove('hidden');
+        }
+
+        if (!posts?.length) return;
+
+        badge.textContent = `${posts.length} viral`;
+        grid.innerHTML = posts.map(post => renderViralCard(post)).join('');
+
+    } catch (err) {
+        console.error('loadViralPosts error:', err);
+    }
+}
+
+function renderViralCard(post) {
+    const views = post.views ? post.views.toLocaleString('es-CL') : '—';
+    const likes = post.likes ? post.likes.toLocaleString('es-CL') : '—';
+    const date = post.detected_at
+        ? new Date(post.detected_at).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })
+        : '';
+
+    const thumb = post.thumbnail_url
+        ? `<img class="viral-post-thumb" src="${escapeHtml(post.thumbnail_url)}" alt="Post de @${escapeHtml(post.instagram_handle)}" loading="lazy">`
+        : `<div class="viral-post-thumb-placeholder">📸</div>`;
+
+    const forecast = post.views_forecast
+        ? `<p class="viral-post-why">Forecast si lo replicás: ~${post.views_forecast.toLocaleString('es-CL')} views</p>`
+        : '';
+
+    return `
+        <div class="viral-post-card">
+            ${thumb}
+            <div class="viral-post-body">
+                <div class="viral-post-handle">@${escapeHtml(post.instagram_handle)}</div>
+                <div class="viral-post-metrics">
+                    <span class="viral-metric"><strong>${views}</strong> views</span>
+                    <span class="viral-metric"><strong>${likes}</strong> likes</span>
+                </div>
+                ${post.hook_analysis ? `<p class="viral-post-hook"><span>Hook:</span> ${escapeHtml(post.hook_analysis)}</p>` : ''}
+                ${post.why_viral ? `<p class="viral-post-why">${escapeHtml(post.why_viral)}</p>` : ''}
+                ${forecast}
+                <div class="viral-post-footer">
+                    <span class="viral-post-date">${date}</span>
+                    <a href="${escapeHtml(post.post_url)}" target="_blank" rel="noopener noreferrer" class="viral-post-link">Ver post →</a>
+                </div>
+            </div>
+        </div>`;
 }

@@ -36,13 +36,11 @@ export function getSupabaseClient(userToken) {
     throw new Error('Missing Supabase environment variables');
   }
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-  if (userToken) {
-    supabase.auth.setAuth(userToken);
-  }
-
-  return supabase;
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: userToken ? { Authorization: `Bearer ${userToken}` } : {}
+    }
+  });
 }
 
 /**

@@ -687,148 +687,10 @@
             });
         });
 
-        // #region agent log - Signup Form Handler with instrumentation
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            debugLog('signupForm: Submit event triggered', 'info', {}, 'H2');
+        // Legacy signupForm handler — replaced by Supabase handler in the AUTH FIX block below (setTimeout 100ms)
 
-            const fullName = document.getElementById('signupName').value.trim();
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const agreeTerms = document.getElementById('agreeTerms').checked;
-            debugLog('signupForm: Form data extracted', 'info', {fullName, email, passwordLength: password.length, passwordsMatch: password === confirmPassword, agreeTerms}, 'H2');
-
-            const signupBtn = document.getElementById('signupBtn');
-            const errorAlert = document.getElementById('errorAlert');
-            const successAlert = document.getElementById('successAlert');
-
-            // Reset alerts
-            errorAlert.classList.remove('show');
-            successAlert.classList.remove('show');
-
-            // Validation
-            if (password !== confirmPassword) {
-                errorAlert.textContent = 'Passwords do not match';
-                errorAlert.classList.add('show');
-                return;
-            }
-
-            if (password.length < 8) {
-                errorAlert.textContent = 'Password must be at least 8 characters';
-                errorAlert.classList.add('show');
-                return;
-            }
-
-            if (!agreeTerms) {
-                errorAlert.textContent = 'Please agree to the Terms of Service and Privacy Policy';
-                errorAlert.classList.add('show');
-                return;
-            }
-
-            // Disable signup button
-            signupBtn.disabled = true;
-            signupBtn.textContent = 'CREATING ACCOUNT...';
-
-            // #region agent log - Signup API request
-            try {
-                const requestBody = { full_name: fullName, email, password };
-                debugLog('signupForm: Starting signup fetch', 'info', {url: `${API_BASE}/signup`, email, hasPassword: !!password}, 'H3');
-                
-                const response = await fetch(`${API_BASE}/signup`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody),
-                    signal: AbortSignal.timeout(10000)
-                });
-                debugLog('signupForm: Fetch completed', 'info', {status: response.status, ok: response.ok}, 'H3');
-
-                const responseText = await response.text();
-                debugLog('signupForm: Response text received', 'info', {responseTextLength: responseText.length}, 'H4');
-                let data;
-                
-                try {
-                    data = JSON.parse(responseText);
-                    debugLog('signupForm: JSON parsed successfully', 'info', {hasSuccess: 'success' in data}, 'H4');
-                } catch (parseError) {
-                    debugLog('signupForm: JSON parse failed', 'error', {parseError: parseError.message}, 'H4');
-                    throw new Error('Invalid JSON response');
-                }
-            // #endregion
-
-                if (data.success) {
-                    debugLog('signupForm: Signup successful', 'info', {sessionId: data.session_id}, 'H5');
-                    successAlert.textContent = `Account created successfully! Welcome, ${fullName}!`;
-                    successAlert.classList.add('show');
-
-                    // Auto-login after signup
-                    setTimeout(async () => {
-                        try {
-                            debugLog('signupForm: Attempting auto-login', 'info', {email}, 'H5');
-                            const loginResponse = await fetch(`${API_BASE}/login`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({ email, password })
-                            });
-                            debugLog('signupForm: Auto-login response received', 'info', {status: loginResponse.status}, 'H5');
-
-                            const loginData = await loginResponse.json();
-                            debugLog('signupForm: Auto-login response received', 'info', {status: loginResponse.status, success: loginData.success}, 'H5');
-                            if (loginData.success) {
-                                debugLog('signupForm: Auto-login successful, redirecting', 'info', {}, 'H5');
-                                localStorage.setItem('session_id', loginData.session_id);
-                                localStorage.setItem('user_id', loginData.user.user_id);
-                                localStorage.setItem('email', loginData.user.email);
-                                localStorage.setItem('full_name', loginData.user.full_name);
-                                localStorage.setItem('role', loginData.user.role);
-                                
-                                window.location.href = 'dashboard.html';
-                            } else {
-                                debugLog('signupForm: Auto-login failed', 'error', {message: loginData.message}, 'H5');
-                            }
-                        } catch (loginError) {
-                            debugLog('signupForm: Auto-login error', 'error', {errorName: loginError.name, errorMessage: loginError.message}, 'H5');
-                            // Redirect to login tab
-                            document.querySelector('[data-tab="login"]').click();
-                document.getElementById('email').value = email;
-                            errorAlert.textContent = 'Account created! Please sign in.';
-                            errorAlert.classList.add('show');
-                        }
-                    }, 1500);
-                } else {
-                    errorAlert.textContent = data.message || 'Signup failed. Please try again.';
-                    errorAlert.classList.add('show');
-                    debugLog('signupForm: Signup failed', 'error', {message: data.message}, 'H5');
-                }
-            // #endregion
-            } catch (error) {
-                debugLog('signupForm: Exception caught', 'error', {errorName: error.name, errorMessage: error.message}, 'H3');
-                
-                let errorMessage = 'An unexpected error occurred. Please try again.';
-                if (error.name === 'AbortError') {
-                    errorMessage = 'Request timed out. Please check your internet connection.';
-                } else if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Unable to connect to the server. Please check your network connection.';
-                }
-                
-                errorAlert.textContent = errorMessage;
-                errorAlert.classList.add('show');
-                debugLog('signupForm: Error alert shown', 'error', {errorMessage}, 'H3');
-            } finally {
-                signupBtn.disabled = false;
-                signupBtn.textContent = 'CREATE ACCOUNT';
-                debugLog('signupForm: Signup button re-enabled', 'info', {}, 'H2');
-            }
-        });
-
-
-        // #region agent log - Network Diagnostics with detailed logging
+        // #region Network Diagnostics
         async function checkServerAvailability() {
-            debugLog('checkServerAvailability: Starting health check', 'info', {apiBase: API_BASE}, 'H1');
             try {
                 const startTime = Date.now();
                 debugLog('checkServerAvailability: Attempting fetch to /health', 'info', {url: `${API_BASE}/health`}, 'H1');
@@ -853,132 +715,8 @@
         }
         // #endregion
 
-        // #region agent log - Login form submit handler with detailed instrumentation
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            debugLog('loginForm: Submit event triggered', 'info', {}, 'H2');
-
-            // Clear previous debug logs
-            const debugArea = document.getElementById('debugArea');
-            if (debugArea) {
-                debugArea.textContent = '';
-            }
-
-            // #region agent log - Server availability check
-            const serverAvailable = await checkServerAvailability();
-            debugLog('loginForm: Server availability result', 'info', {serverAvailable}, 'H1');
-            if (!serverAvailable) {
-                const errorAlert = document.getElementById('errorAlert');
-                errorAlert.textContent = 'Server is currently unavailable. Please try again later.';
-                errorAlert.classList.add('show');
-                debugLog('loginForm: Cannot proceed - server not responding', 'error', {}, 'H1');
-                return;
-            }
-            // #endregion
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
-            debugLog('loginForm: Form data extracted', 'info', {email, passwordLength: password.length, rememberMe}, 'H2');
-
-            const loginBtn = document.getElementById('loginBtn');
-            const errorAlert = document.getElementById('errorAlert');
-            const successAlert = document.getElementById('successAlert');
-
-            // Reset alerts
-            errorAlert.classList.remove('show');
-            successAlert.classList.remove('show');
-
-            // Disable login button
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'SIGNING IN...';
-            debugLog('loginForm: Login button disabled, preparing request', 'info', {}, 'H2');
-
-            // #region agent log - Login API request
-            try {
-                const requestBody = { email, password, rememberMe };
-                const requestUrl = `${API_BASE}/login`;
-                debugLog('loginForm: Starting login fetch', 'info', {url: requestUrl, email, hasPassword: !!password}, 'H3');
-                
-                const requestStartTime = Date.now();
-                const response = await fetch(requestUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody),
-                    signal: AbortSignal.timeout(10000)
-                });
-                const requestTime = Date.now() - requestStartTime;
-                debugLog('loginForm: Fetch completed', 'info', {status: response.status, ok: response.ok, time: requestTime}, 'H3');
-
-                // #region agent log - Response processing
-                const responseText = await response.text();
-                debugLog('loginForm: Response text received', 'info', {responseTextLength: responseText.length, preview: responseText.substring(0, 200)}, 'H4');
-
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                    debugLog('loginForm: JSON parsed successfully', 'info', {hasSuccess: 'success' in data, hasMessage: 'message' in data}, 'H4');
-                } catch (parseError) {
-                    debugLog('loginForm: JSON parse failed', 'error', {parseError: parseError.message, responseText}, 'H4');
-                    throw new Error('Invalid JSON response');
-                }
-
-                if (data.success) {
-                    debugLog('loginForm: Login successful', 'info', {sessionId: data.session_id, userId: data.user?.user_id}, 'H5');
-                    // Store session information
-                    localStorage.setItem('session_id', data.session_id);
-                    localStorage.setItem('user_id', data.user.user_id);
-                    localStorage.setItem('email', data.user.email);
-                    localStorage.setItem('full_name', data.user.full_name);
-                    localStorage.setItem('role', data.user.role);
-                    debugLog('loginForm: Session data stored in localStorage', 'info', {stored: true}, 'H5');
-
-                    // Show success message
-                    successAlert.textContent = `Welcome back, ${data.user.full_name}!`;
-                    successAlert.classList.add('show');
-                    debugLog('loginForm: Success alert shown, redirecting', 'info', {}, 'H5');
-
-                    // Redirect to dashboard
-                    setTimeout(() => {
-                        debugLog('loginForm: Redirecting to dashboard', 'info', {}, 'H5');
-                        window.location.href = 'dashboard.html';
-                    }, 1000);
-                } else {
-                    const errorMessage = data.message || 'Login failed. Please check your credentials.';
-                    errorAlert.textContent = errorMessage;
-                    errorAlert.classList.add('show');
-                    debugLog('loginForm: Login failed', 'error', {errorMessage, errorCode: data.error_code}, 'H5');
-                }
-                // #endregion
-            } catch (error) {
-                debugLog('loginForm: Exception caught', 'error', {errorName: error.name, errorMessage: error.message, errorStack: error.stack?.substring(0, 500)}, 'H3');
-                
-                let errorMessage = 'An unexpected error occurred. Please try again.';
-                if (error.name === 'AbortError') {
-                    errorMessage = 'Request timed out. Please check your internet connection.';
-                    debugLog('loginForm: Request timeout', 'error', {}, 'H3');
-                } else if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'Unable to connect to the server. Please check your network connection.';
-                    debugLog('loginForm: Fetch failed - network/CORS issue', 'error', {}, 'H3');
-                } else if (error.message.includes('HTTP error')) {
-                    errorMessage = 'Server error. Please try again later.';
-                    debugLog('loginForm: HTTP error', 'error', {}, 'H3');
-                }
-                
-                errorAlert.textContent = errorMessage;
-                errorAlert.classList.add('show');
-                debugLog('loginForm: Error alert shown', 'error', {errorMessage}, 'H3');
-            } finally {
-                // Re-enable login button
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'SIGN IN';
-                debugLog('loginForm: Login button re-enabled', 'info', {}, 'H2');
-            }
-            // #endregion
-        });
-        // #endregion
+        // Legacy loginForm handler — replaced by Supabase handler in the AUTH FIX block below (setTimeout 100ms)
+        // Kept as placeholder so the form clone mechanism works correctly
 
         // Debug toggle functionality
         document.getElementById('toggleDebug').addEventListener('click', () => {
@@ -986,10 +724,29 @@
             debugArea.style.display = debugArea.style.display === 'none' ? 'block' : 'none';
         });
 
-        // Forgot Password Handler
-        document.querySelector('.forgot-password').addEventListener('click', (e) => {
+        // Forgot Password Handler — uses Supabase password reset email
+        document.querySelector('.forgot-password').addEventListener('click', async (e) => {
             e.preventDefault();
-            alert('Password reset functionality coming soon!');
+            const email = document.getElementById('email')?.value?.trim();
+            if (!email) {
+                const errorAlert = document.getElementById('errorAlert');
+                errorAlert.textContent = 'Enter your email above first, then click "Forgot password"';
+                errorAlert.classList.add('show');
+                return;
+            }
+            try {
+                if (!supabase) await initSupabaseClient();
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/settings.html`
+                });
+                const successAlert = document.getElementById('successAlert');
+                successAlert.textContent = error
+                    ? `Error: ${error.message}`
+                    : `Reset link sent to ${email}`;
+                successAlert.classList.add('show');
+            } catch (err) {
+                console.error('Password reset error:', err);
+            }
         });
 
         // Network status monitoring
