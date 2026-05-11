@@ -9,6 +9,7 @@ import {
   updateProyectoEstado,
   addNotaProyecto
 } from './notion-query.js';
+import { askClaude } from './telegram-ai.js';
 
 let TELEGRAM_API;
 let supabaseAdmin;
@@ -359,6 +360,11 @@ export const handler = async (event) => {
       const command = parts[0].split('@')[0];
       const args = parts.slice(1);
       await handleCommand(chatId, command, args);
+    } else {
+      // Mensaje libre → Claude IA
+      const thinking = await sendMessage(chatId, '🧠 _Procesando..._');
+      const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY);
+      await sendMessage(chatId, reply);
     }
 
     return { statusCode: 200, body: 'ok' };

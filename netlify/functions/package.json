@@ -6,6 +6,7 @@
     "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.2",
     "@supabase/supabase-js": "^2.39.3"
   },
   "devDependencies": {
