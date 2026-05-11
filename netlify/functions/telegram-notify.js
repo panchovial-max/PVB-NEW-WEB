@@ -3,27 +3,31 @@
 // level: 'info' | 'success' | 'warning' | 'error'
 import { createHmac } from 'crypto';
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
-const HMAC_SECRET = process.env.SUPABASE_SERVICE_KEY;
-const OWNER_CHAT_ID = process.env.TELEGRAM_OWNER_CHAT_ID;
+const LEVEL_ICONS = { info: 'ℹ️', success: '✅', warning: '⚠️', error: '❌' };
 
-function verifyBrainToken(token) {
+function verifyBrainToken(token, secret) {
+  if (!secret) return false;
   try {
     const decoded = JSON.parse(Buffer.from(token, 'base64').toString('utf8'));
     if (decoded.scope !== 'brain') return false;
     if (decoded.expires < Date.now()) return false;
     const payload = `brain:${decoded.expires}`;
-    const expectedSig = createHmac('sha256', HMAC_SECRET).update(payload).digest('hex');
+    const expectedSig = createHmac('sha256', secret).update(payload).digest('hex');
     return decoded.sig === expectedSig;
   } catch {
     return false;
   }
 }
 
-const LEVEL_ICONS = { info: 'ℹ️', success: '✅', warning: '⚠️', error: '❌' };
+function escapeMarkdown(text) {
+  return String(text).replace(/[_*`[]/g, '\\$&');
+}
 
 export const handler = async (event) => {
+  const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
+  const HMAC_SECRET = process.env.SUPABASE_SERVICE_KEY;
+  const OWNER_CHAT_ID = process.env.TELEGRAM_OWNER_CHAT_ID;
+
   const headers = {
     'Access-Control-Allow-Origin': process.env.BASE_URL || '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -36,7 +40,7 @@ export const handler = async (event) => {
 
   const authHeader = event.headers.authorization || event.headers.Authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!token || !verifyBrainToken(token)) {
+  if (!token || !verifyBrainToken(token, HMAC_SECRET)) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
@@ -53,7 +57,7 @@ export const handler = async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: targetChat,
-        text: `${icon} ${message}`,
+        text: `${icon} ${escapeMarkdown(message)}`,
         parse_mode: 'Markdown'
       })
     });

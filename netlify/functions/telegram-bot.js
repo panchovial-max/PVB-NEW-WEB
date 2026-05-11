@@ -15,6 +15,10 @@ function init() {
   );
 }
 
+function escapeMarkdown(text) {
+  return String(text).replace(/[_*`[]/g, '\\$&');
+}
+
 async function sendMessage(chatId, text, options = {}) {
   const res = await fetch(`${TELEGRAM_API}/sendMessage`, {
     method: 'POST',
@@ -85,8 +89,8 @@ async function handleClientes(chatId) {
     }
 
     const lines = profiles.map(p => {
-      const name = p.full_name || p.email || 'Sin nombre';
-      const company = p.company ? ` — ${p.company}` : '';
+      const name = escapeMarkdown(p.full_name || p.email || 'Sin nombre');
+      const company = p.company ? ` — ${escapeMarkdown(p.company)}` : '';
       const redes = countByUser[p.id] ? ` *(${countByUser[p.id]} redes)*` : '';
       return `• ${name}${company}${redes}`;
     });
@@ -133,7 +137,7 @@ async function handleFacturas(chatId) {
 
     const lines = data.results.map(page => {
       const props = page.properties;
-      const nombre = props.Nombre?.title?.[0]?.plain_text || props.Name?.title?.[0]?.plain_text || 'Sin nombre';
+      const nombre = escapeMarkdown(props.Nombre?.title?.[0]?.plain_text || props.Name?.title?.[0]?.plain_text || 'Sin nombre');
       const monto = props.Monto?.number ? `$${props.Monto.number.toLocaleString('es-CL')}` : '';
       const fecha = props.Fecha?.date?.start || '';
       return `• ${nombre}${monto ? ' — ' + monto : ''}${fecha ? ' (' + fecha + ')' : ''}`;
@@ -164,8 +168,6 @@ async function handleAgentes(chatId) {
 
 export const handler = async (event) => {
   init();
-  console.log('📥 Received:', event.httpMethod, JSON.stringify(event.body));
-  console.log('🔑 Token set:', !!process.env.TELEGRAM_BOT_TOKEN);
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 200, body: 'PVB Telegram Bot OK' };
