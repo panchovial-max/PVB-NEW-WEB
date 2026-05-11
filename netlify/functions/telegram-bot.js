@@ -4,15 +4,16 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
-const NOTION_API_KEY = process.env.NOTION_API_KEY;
-const NOTION_BOLETAS_DB = process.env.NOTION_CLIENT_CONTEXT_DB_ID;
+let TELEGRAM_API;
+let supabaseAdmin;
 
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+function init() {
+  TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
+  supabaseAdmin = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY
+  );
+}
 
 async function sendMessage(chatId, text, options = {}) {
   const res = await fetch(`${TELEGRAM_API}/sendMessage`, {
@@ -97,16 +98,19 @@ async function handleClientes(chatId) {
 }
 
 async function handleFacturas(chatId) {
-  if (!NOTION_API_KEY || !NOTION_BOLETAS_DB) {
+  const notionKey = process.env.NOTION_API_KEY;
+  const notionDb = process.env.NOTION_CLIENT_CONTEXT_DB_ID;
+
+  if (!notionKey || !notionDb) {
     await sendMessage(chatId, '⚠️ Notion no configurado. Verifica NOTION_API_KEY y NOTION_CLIENT_CONTEXT_DB_ID.');
     return;
   }
 
   try {
-    const res = await fetch(`https://api.notion.com/v1/databases/${NOTION_BOLETAS_DB}/query`, {
+    const res = await fetch(`https://api.notion.com/v1/databases/${notionDb}/query`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Authorization': `Bearer ${notionKey}`,
         'Notion-Version': '2022-06-28',
         'Content-Type': 'application/json'
       },
@@ -159,7 +163,9 @@ async function handleAgentes(chatId) {
 }
 
 export const handler = async (event) => {
+  init();
   console.log('📥 Received:', event.httpMethod, JSON.stringify(event.body));
+  console.log('🔑 Token set:', !!process.env.TELEGRAM_BOT_TOKEN);
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 200, body: 'PVB Telegram Bot OK' };
