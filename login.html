@@ -552,536 +552,212 @@
                 </div>
             </div>
 
-            <div class="debug-container">
-                <button class="debug-toggle" id="toggleDebug">Toggle Debug Info</button>
-                <pre class="debug-area" id="debugArea" style="display: none;"></pre>
-            </div>
         </div>
     </div>
 
     <!-- Supabase JS Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
-    
-    <!-- Supabase Configuration -->
-    <script>
-        // Supabase Configuration - PVB Estudio Creativo
-        const SUPABASE_URL = window.SUPABASE_URL || 'https://krmoihryyvooymvhsuno.supabase.co';
-        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'sb_publishable_siFuszUIw5ibS-2Y15O4-Q_k484kZ8i';
-        
-        // Initialize Supabase client after library loads
-        let supabase = null;
-
-        // Remove OAuth tokens from URL fragment immediately on load
-        if (window.location.hash && window.location.hash.includes('access_token')) {
-            window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-        }
-
-        // Function to initialize Supabase
-        function initSupabaseClient() {
-            try {
-                // The Supabase UMD build exposes it as window.supabase
-                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    console.log('✅ Supabase initialized with URL:', SUPABASE_URL);
-                    // Listen for OAuth callbacks (fires when Supabase detects session from URL fragment)
-                    supabase.auth.onAuthStateChange((event, session) => {
-                        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-                            console.log('✅ Auth state change: SIGNED_IN, redirecting to dashboard');
-                            localStorage.setItem('supabase_session', JSON.stringify(session));
-                            localStorage.setItem('session_id', session.access_token);
-                            localStorage.setItem('user_id', session.user.id);
-                            localStorage.setItem('email', session.user.email);
-                            localStorage.setItem('full_name', session.user.user_metadata?.full_name || session.user.email);
-                            localStorage.setItem('role', session.user.role || 'client');
-                            window.location.href = 'dashboard.html';
-                        }
-                    });
-                    return true;
-                }
-                console.warn('⚠️ Supabase library not found. Authentication will use custom API.');
-                return false;
-            } catch (error) {
-                console.error('❌ Error initializing Supabase:', error);
-                return false;
-            }
-        }
-        
-        // Initialize after page loads (give time for CDN script to load)
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(initSupabaseClient, 100);
-            });
-        } else {
-            setTimeout(initSupabaseClient, 100);
-        }
-    </script>
 
     <script>
-        // Using Supabase Auth instead of custom API
-        const API_BASE = ''; // Not needed - using Supabase directly
-        const LOG_ENDPOINT = 'http://127.0.0.1:7242/ingest/aa1d3a64-908e-40bb-99e0-ce8fd7cea53c';
-        const RUN_ID = 'login-debug-' + Date.now();
-        const SESSION_ID = 'debug-session';
+        const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_siFuszUIw5ibS-2Y15O4-Q_k484kZ8i';
 
-        // #region agent log - Enhanced Debugging Function with remote logging
-        function debugLog(message, type = 'info', data = {}, hypothesisId = null) {
-            const debugArea = document.getElementById('debugArea');
-            const timestamp = new Date().toISOString();
-            const logMessage = `[${timestamp}] [${type.toUpperCase()}] ${message}\n`;
-            
-            if (debugArea) {
-                debugArea.textContent += logMessage;
-                debugArea.scrollTop = debugArea.scrollHeight;
-            }
-            
-            // Remote logging
-            const logEntry = {
-                location: 'login.html:' + (new Error().stack.split('\n')[2]?.match(/:\d+:\d+/)?.[0] || 'unknown'),
-                message: message,
-                data: data,
-                timestamp: Date.now(),
-                sessionId: SESSION_ID,
-                runId: RUN_ID,
-                hypothesisId: hypothesisId || 'unknown'
-            };
-            fetch(LOG_ENDPOINT, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(logEntry)}).catch(() => {});
-            
-            // Console logging with color coding
-            switch(type) {
-                case 'error':
-                    console.error(logMessage);
-                    break;
-                case 'warn':
-                    console.warn(logMessage);
-                    break;
-                default:
-                    console.log(logMessage);
-            }
+        // Initialize Supabase immediately — CDN script tag above is synchronous
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- Session helpers ---
+
+        function storeSession(session) {
+            localStorage.setItem('supabase_session', JSON.stringify(session));
+            localStorage.setItem('session_id', session.access_token);
+            localStorage.setItem('user_id', session.user.id);
+            localStorage.setItem('email', session.user.email);
+            localStorage.setItem('full_name', session.user.user_metadata?.full_name || session.user.email);
         }
-        // #endregion
 
-        // Tab Switching
+        function showError(msg) {
+            const el = document.getElementById('errorAlert');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successAlert');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        function clearAlerts() {
+            document.getElementById('errorAlert').classList.remove('show');
+            document.getElementById('successAlert').classList.remove('show');
+        }
+
+        // --- OAuth callback handler ---
+        // Must be registered before any hash manipulation so Supabase can read the token.
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                storeSession(session);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                window.location.replace('dashboard.html');
+            }
+        });
+
+        // --- Tab switching ---
+
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const tab = btn.dataset.tab;
-                
-                // Update active tab
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                
-                // Update forms
-                document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
-                
-                // Update page title
-                const pageTitle = document.getElementById('pageTitle');
-                const pageSubtitle = document.getElementById('pageSubtitle');
-                
-                if (tab === 'login') {
-                    document.getElementById('loginForm').classList.add('active');
-                    pageTitle.textContent = 'Client Login';
-                    pageSubtitle.textContent = 'Access your campaign analytics dashboard';
-                } else {
-                    document.getElementById('signupForm').classList.add('active');
-                    pageTitle.textContent = 'Create Account';
-                    pageSubtitle.textContent = 'Join PVB Estudio Creativo';
-                }
-                
-                // Clear alerts
-                document.getElementById('errorAlert').classList.remove('show');
-                document.getElementById('successAlert').classList.remove('show');
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+                document.getElementById(tab === 'login' ? 'loginForm' : 'signupForm').classList.add('active');
+                document.getElementById('pageTitle').textContent = tab === 'login' ? 'Client Login' : 'Create Account';
+                document.getElementById('pageSubtitle').textContent = tab === 'login'
+                    ? 'Access your campaign analytics dashboard'
+                    : 'Join PVB Estudio Creativo';
+                clearAlerts();
             });
         });
 
-        // Legacy signupForm handler — replaced by Supabase handler in the AUTH FIX block below (setTimeout 100ms)
+        // --- Login form ---
 
-        // #region Network Diagnostics
-        async function checkServerAvailability() {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+
+            clearAlerts();
+            btn.disabled = true;
+            btn.textContent = 'SIGNING IN...';
+
             try {
-                const startTime = Date.now();
-                debugLog('checkServerAvailability: Attempting fetch to /health', 'info', {url: `${API_BASE}/health`}, 'H1');
-                const response = await fetch(`${API_BASE}/health`, { 
-                    method: 'GET'
-                });
-                const fetchTime = Date.now() - startTime;
-                debugLog('checkServerAvailability: Fetch completed', 'info', {status: response.status, ok: response.ok, time: fetchTime}, 'H1');
-                
-                if (!response.ok) {
-                    debugLog('checkServerAvailability: Server health check failed - non-OK response', 'error', {status: response.status, statusText: response.statusText}, 'H1');
-                    return false;
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) {
+                    showError(error.message);
+                } else if (data.session) {
+                    storeSession(data.session);
+                    window.location.replace('dashboard.html');
                 }
-
-                const healthData = await response.json();
-                debugLog('checkServerAvailability: Health check successful', 'info', {healthData, status: healthData.status}, 'H1');
-                return healthData.status === 'healthy';
-            } catch (error) {
-                debugLog('checkServerAvailability: Error during health check', 'error', {errorName: error.name, errorMessage: error.message, errorStack: error.stack}, 'H1');
-                return false;
+            } catch {
+                showError('Unable to sign in. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'SIGN IN';
             }
-        }
-        // #endregion
-
-        // Legacy loginForm handler — replaced by Supabase handler in the AUTH FIX block below (setTimeout 100ms)
-        // Kept as placeholder so the form clone mechanism works correctly
-
-        // Debug toggle functionality
-        document.getElementById('toggleDebug').addEventListener('click', () => {
-            const debugArea = document.getElementById('debugArea');
-            debugArea.style.display = debugArea.style.display === 'none' ? 'block' : 'none';
         });
 
-        // Forgot Password Handler — uses Supabase password reset email
+        // --- Signup form ---
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const btn = document.getElementById('signupBtn');
+
+            clearAlerts();
+
+            if (password !== confirmPassword) return showError('Passwords do not match.');
+            if (password.length < 8) return showError('Password must be at least 8 characters.');
+            if (!document.getElementById('agreeTerms').checked) return showError('Please agree to the Terms of Service.');
+
+            btn.disabled = true;
+            btn.textContent = 'CREATING ACCOUNT...';
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { data: { full_name: fullName } }
+                });
+
+                if (error) {
+                    showError(error.message);
+                } else if (data.session) {
+                    storeSession(data.session);
+                    window.location.replace('dashboard.html');
+                } else {
+                    showSuccess(`Check your email (${email}) to confirm your account.`);
+                }
+            } catch {
+                showError('Unable to create account. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'CREATE ACCOUNT';
+            }
+        });
+
+        // --- Social login (OAuth) ---
+
+        async function initiateSocialLogin(provider) {
+            const supported = { google: 'google', facebook: 'facebook', apple: 'apple' };
+            const supabaseProvider = supported[provider];
+            if (!supabaseProvider) return showError(`Provider "${provider}" is not supported.`);
+
+            try {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: supabaseProvider,
+                    options: {
+                        redirectTo: `${window.location.origin}/login.html`
+                    }
+                });
+                if (error) showError(error.message);
+            } catch {
+                showError(`Unable to connect to ${provider}. Please try again.`);
+            }
+        }
+
+        // --- Forgot password ---
+
         document.querySelector('.forgot-password').addEventListener('click', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email')?.value?.trim();
-            if (!email) {
-                const errorAlert = document.getElementById('errorAlert');
-                errorAlert.textContent = 'Enter your email above first, then click "Forgot password"';
-                errorAlert.classList.add('show');
-                return;
-            }
-            try {
-                if (!supabase) await initSupabaseClient();
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/settings.html`
-                });
-                const successAlert = document.getElementById('successAlert');
-                successAlert.textContent = error
-                    ? `Error: ${error.message}`
-                    : `Reset link sent to ${email}`;
-                successAlert.classList.add('show');
-            } catch (err) {
-                console.error('Password reset error:', err);
-            }
+            const email = document.getElementById('email').value.trim();
+            if (!email) return showError('Enter your email address above first.');
+
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/settings.html`
+            });
+            if (error) showError(error.message);
+            else showSuccess(`Password reset link sent to ${email}.`);
         });
 
-        // Network status monitoring
-        function checkNetworkStatus() {
-            const networkStatus = document.getElementById('networkStatus');
+        // --- Network status ---
+
+        function updateNetworkStatus() {
+            const el = document.getElementById('networkStatus');
             if (!navigator.onLine) {
-                networkStatus.textContent = 'You are offline. Please check your internet connection.';
-                networkStatus.style.display = 'block';
+                el.textContent = 'You are offline. Please check your internet connection.';
+                el.style.display = 'block';
             } else {
-                networkStatus.style.display = 'none';
+                el.style.display = 'none';
             }
         }
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
 
-        // #region agent log - Page initialization
-        window.addEventListener('load', () => {
-            debugLog('Page loaded', 'info', {apiBase: API_BASE, protocol: window.location.protocol, hostname: window.location.hostname}, 'H1');
-            checkNetworkStatus();
-        });
-        // #endregion
+        // --- Init ---
 
-        // #region agent log - Social Login OAuth Flow with Supabase (Top 4 Providers)
-        async function initiateSocialLogin(provider) {
-            debugLog(`initiateSocialLogin: Starting OAuth for ${provider}`, 'info', {provider, hasSupabase: !!supabase}, 'H6');
-            
-            // Top 4 OAuth Providers: Google, Facebook, Apple, Microsoft
-            const topProviders = ['google', 'facebook', 'apple', 'microsoft'];
-            
-            // Prefer Supabase for top providers if available
-            if (supabase && SUPABASE_URL && SUPABASE_URL.includes('supabase.co') && topProviders.includes(provider.toLowerCase())) {
-                try {
-                    debugLog(`initiateSocialLogin: Using Supabase Auth for ${provider}`, 'info', {}, 'H6');
-                    
-                    // Map provider names to Supabase provider IDs
-                    const supabaseProviderMap = {
-                        'google': 'google',
-                        'facebook': 'facebook',
-                        'apple': 'apple',
-                        'microsoft': 'azure' // Microsoft uses 'azure' in Supabase
-                    };
-                    
-                    const supabaseProvider = supabaseProviderMap[provider.toLowerCase()] || provider.toLowerCase();
-                    
-                    // Initiate OAuth sign-in with Supabase
-                    const { data, error } = await supabase.auth.signInWithOAuth({
-                        provider: supabaseProvider,
-                        options: {
-                            redirectTo: `${window.location.origin}/dashboard.html`,
-                            queryParams: {
-                                access_type: 'offline',
-                                prompt: 'consent',
-                            }
-                        }
-                    });
-                    
-                    if (error) {
-                        throw error;
-                    }
-                    
-                    if (data?.url) {
-                        debugLog(`initiateSocialLogin: Supabase OAuth URL received`, 'info', {url: data.url}, 'H6');
-                        window.location.href = data.url;
-                        return;
-                    } else {
-                        throw new Error('No redirect URL received from Supabase');
-                    }
-                } catch (error) {
-                    debugLog(`initiateSocialLogin: Supabase error, falling back to custom API`, 'warn', {errorMessage: error.message}, 'H6');
-                    // Fall through to custom API
-                }
-            }
-            
-            // Fallback to custom API implementation
-            try {
-                debugLog(`initiateSocialLogin: Using custom API for ${provider}`, 'info', {}, 'H6');
-                const response = await fetch(`${API_BASE}/social-login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ provider })
-                });
-                
-                const data = await response.json();
-                debugLog(`initiateSocialLogin: Response received`, 'info', {success: data.success, hasUrl: !!data.authorizationUrl}, 'H6');
-                
-                if (data.success && data.authorizationUrl) {
-                    debugLog(`initiateSocialLogin: Redirecting to ${provider} OAuth`, 'info', {url: data.authorizationUrl}, 'H6');
-                    // Redirect to OAuth provider
-                    window.location.href = data.authorizationUrl;
-                } else {
-                    const errorMessage = data.message || `Failed to initiate ${provider} login`;
-                    debugLog(`initiateSocialLogin: Failed`, 'error', {message: errorMessage}, 'H6');
-                    const errorAlert = document.getElementById('errorAlert');
-                    errorAlert.textContent = errorMessage;
-                    errorAlert.classList.add('show');
-                }
-            } catch (error) {
-                debugLog(`initiateSocialLogin: Exception caught`, 'error', {errorName: error.name, errorMessage: error.message}, 'H6');
-                const errorAlert = document.getElementById('errorAlert');
-                errorAlert.textContent = `Unable to connect to ${provider}. Please try again.`;
-                errorAlert.classList.add('show');
-            }
-        }
-        // #endregion
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateNetworkStatus();
 
-        // #region agent log - Page initialization with Supabase
-        window.addEventListener('load', async () => {
-            debugLog('Page loaded', 'info', {apiBase: API_BASE, protocol: window.location.protocol, hostname: window.location.hostname, hasSupabase: !!supabase}, 'H1');
-            checkNetworkStatus();
-            
-            // Initialize Supabase if not already initialized
-            if (!supabase) {
-                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-                    try {
-                        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                        debugLog('Supabase initialized on page load', 'info', {url: SUPABASE_URL}, 'H1');
-                    } catch (error) {
-                        debugLog('Failed to initialize Supabase', 'error', {errorMessage: error.message}, 'H1');
-                    }
-                } else {
-                    debugLog('Supabase library not available, using custom API', 'warn', {}, 'H1');
-                }
-            }
-            
-            // Handle Supabase OAuth callback
-            if (supabase) {
-                try {
-                    const { data, error } = await supabase.auth.getSession();
-                    if (data?.session && !error) {
-                        debugLog('Supabase session found', 'info', {userId: data.session.user.id}, 'H1');
-                        // Store session info
-                        localStorage.setItem('supabase_session', JSON.stringify(data.session));
-                        localStorage.setItem('session_id', data.session.access_token);
-                        localStorage.setItem('user_id', data.session.user.id);
-                        localStorage.setItem('email', data.session.user.email);
-                        localStorage.setItem('full_name', data.session.user.user_metadata?.full_name || data.session.user.email);
-                        localStorage.setItem('role', data.session.user.role || 'client');
-                        
-                        // Check if this is an OAuth callback
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const provider = urlParams.get('provider');
-                        if (provider) {
-                            // Clean URL and redirect
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                            window.location.href = 'dashboard.html';
-                            return;
-                        }
-                    } else if (error) {
-                        debugLog('Supabase session error', 'warn', {errorMessage: error.message}, 'H1');
-                    }
-                } catch (error) {
-                    debugLog('Supabase session check failed', 'error', {errorMessage: error.message}, 'H1');
-                }
-            }
-            
-            // Check for OAuth callback error on page load
-            const urlParams = new URLSearchParams(window.location.search);
-            const error = urlParams.get('error');
-            const errorDescription = urlParams.get('error_description');
-            if (error) {
-                const errorAlert = document.getElementById('errorAlert');
-                const errorMsg = errorDescription ? decodeURIComponent(errorDescription) : decodeURIComponent(error);
-                errorAlert.textContent = errorMsg;
-                errorAlert.classList.add('show');
-                // Clean URL
+            // Show any OAuth error passed back in query params
+            const params = new URLSearchParams(window.location.search);
+            const oauthError = params.get('error');
+            const oauthErrorDesc = params.get('error_description');
+            if (oauthError) {
+                showError(oauthErrorDesc ? decodeURIComponent(oauthErrorDesc) : decodeURIComponent(oauthError));
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
-            
-            // Check for OAuth callback success (session token) - fallback for custom API
-            const session = urlParams.get('session');
+
+            // Redirect already-authenticated users straight to the dashboard
+            const { data: { session } } = await supabase.auth.getSession();
             if (session) {
-                localStorage.setItem('session_id', session);
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
+                storeSession(session);
+                window.location.replace('dashboard.html');
             }
         });
-        // #endregion
-
-        // Add network status listeners
-        window.addEventListener('online', checkNetworkStatus);
-        window.addEventListener('offline', checkNetworkStatus);
-
-        // =========================================
-        // SUPABASE AUTH FIX - Overrides API_BASE calls
-        // =========================================
-
-        // Wait for DOM to be ready
-        setTimeout(() => {
-            const signupForm = document.getElementById('signupForm');
-            const loginForm = document.getElementById('loginForm');
-
-            if (signupForm) {
-                // Remove all existing listeners by cloning
-                const newSignupForm = signupForm.cloneNode(true);
-                signupForm.parentNode.replaceChild(newSignupForm, signupForm);
-
-                // Add new Supabase-based handler
-                newSignupForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-
-                    const fullName = document.getElementById('signupName').value.trim();
-                    const email = document.getElementById('signupEmail').value.trim();
-                    const password = document.getElementById('signupPassword').value;
-                    const confirmPassword = document.getElementById('confirmPassword').value;
-                    const agreeTerms = document.getElementById('agreeTerms').checked;
-
-                    const errorAlert = document.getElementById('errorAlert');
-                    const successAlert = document.getElementById('successAlert');
-                    const signupBtn = this.querySelector('button[type="submit"]');
-
-                    errorAlert.classList.remove('show');
-                    successAlert.classList.remove('show');
-
-                    if (password !== confirmPassword) {
-                        errorAlert.textContent = 'Passwords do not match';
-                        errorAlert.classList.add('show');
-                        return;
-                    }
-
-                    if (password.length < 8) {
-                        errorAlert.textContent = 'Password must be at least 8 characters';
-                        errorAlert.classList.add('show');
-                        return;
-                    }
-
-                    if (!agreeTerms) {
-                        errorAlert.textContent = 'Please agree to Terms';
-                        errorAlert.classList.add('show');
-                        return;
-                    }
-
-                    signupBtn.disabled = true;
-                    signupBtn.textContent = 'CREATING ACCOUNT...';
-
-                    try {
-                        if (!supabase) {
-                            await initSupabaseClient();
-                        }
-
-                        const { data, error } = await supabase.auth.signUp({
-                            email: email,
-                            password: password,
-                            options: {
-                                data: { full_name: fullName }
-                            }
-                        });
-
-                        if (error) {
-                            errorAlert.textContent = error.message;
-                            errorAlert.classList.add('show');
-                        } else if (data.user) {
-                            successAlert.textContent = `Account created! Welcome, ${fullName}!`;
-                            successAlert.classList.add('show');
-
-                            if (data.session) {
-                                localStorage.setItem('session_id', data.session.access_token);
-                                localStorage.setItem('user_id', data.user.id);
-                                localStorage.setItem('email', data.user.email);
-                                localStorage.setItem('full_name', fullName);
-                                localStorage.setItem('supabase_session', JSON.stringify(data.session));
-
-                                setTimeout(() => {
-                                    window.location.href = 'dashboard.html';
-                                }, 1500);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Signup error:', error);
-                        errorAlert.textContent = 'Unable to create account';
-                        errorAlert.classList.add('show');
-                    } finally {
-                        signupBtn.disabled = false;
-                        signupBtn.textContent = 'SIGN UP';
-                    }
-                });
-            }
-
-            if (loginForm) {
-                // Remove all existing listeners by cloning
-                const newLoginForm = loginForm.cloneNode(true);
-                loginForm.parentNode.replaceChild(newLoginForm, loginForm);
-
-                // Add new Supabase-based handler
-                newLoginForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-
-                    const email = document.getElementById('email').value.trim();
-                    const password = document.getElementById('password').value;
-
-                    const errorAlert = document.getElementById('errorAlert');
-                    const loginBtn = this.querySelector('button[type="submit"]');
-
-                    errorAlert.classList.remove('show');
-
-                    loginBtn.disabled = true;
-                    loginBtn.textContent = 'SIGNING IN...';
-
-                    try {
-                        if (!supabase) {
-                            await initSupabaseClient();
-                        }
-
-                        const { data, error } = await supabase.auth.signInWithPassword({
-                            email: email,
-                            password: password
-                        });
-
-                        if (error) {
-                            errorAlert.textContent = error.message || 'Invalid credentials';
-                            errorAlert.classList.add('show');
-                        } else if (data.user && data.session) {
-                            localStorage.setItem('session_id', data.session.access_token);
-                            localStorage.setItem('user_id', data.user.id);
-                            localStorage.setItem('email', data.user.email);
-                            localStorage.setItem('full_name', data.user.user_metadata?.full_name || '');
-                            localStorage.setItem('supabase_session', JSON.stringify(data.session));
-
-                            window.location.href = 'dashboard.html';
-                        }
-                    } catch (error) {
-                        console.error('Login error:', error);
-                        errorAlert.textContent = 'Unable to sign in';
-                        errorAlert.classList.add('show');
-                    } finally {
-                        loginBtn.disabled = false;
-                        loginBtn.textContent = 'SIGN IN';
-                    }
-                });
-            }
-        }, 100);
     </script>
 </body>
 </html>
