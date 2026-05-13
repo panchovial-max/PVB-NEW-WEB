@@ -10,6 +10,11 @@ let supabase = null;
 
 // Check authentication on page load
 document.addEventListener('DOMContentLoaded', async () => {
+    // Remove OAuth tokens from URL fragment immediately
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+    }
+
     // Initialize Supabase
     if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

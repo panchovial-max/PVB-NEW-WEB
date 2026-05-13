@@ -570,7 +570,12 @@
         
         // Initialize Supabase client after library loads
         let supabase = null;
-        
+
+        // Remove OAuth tokens from URL fragment immediately on load
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+        }
+
         // Function to initialize Supabase
         function initSupabaseClient() {
             try {
