@@ -453,11 +453,12 @@ body {
 }
 
 .section-title {
-    font-size: 24px;
-    font-weight: 900;
-    color: var(--white);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-500);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 3px;
 }
 
 .social-grid {
@@ -481,54 +482,41 @@ body {
 .social-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: 12px;
+    margin-bottom: 1.25rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid var(--gray-200);
+    border-bottom: 1px solid var(--border);
 }
 
 .social-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    font-weight: 900;
-    color: var(--white);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
 }
 
-.instagram .social-icon {
-    background: var(--instagram);
-}
-
-.facebook .social-icon {
-    background: var(--facebook);
-}
-
-.linkedin .social-icon {
-    background: var(--linkedin);
-}
-
-.tiktok .social-icon {
-    background: var(--tiktok);
-}
-
-.youtube .social-icon {
-    background: var(--youtube);
-}
+.instagram .social-icon { background: rgba(220,39,67,0.08); border-color: rgba(220,39,67,0.2); }
+.facebook  .social-icon { background: rgba(24,119,242,0.08); border-color: rgba(24,119,242,0.2); }
+.linkedin  .social-icon { background: rgba(10,102,194,0.08); border-color: rgba(10,102,194,0.2); }
+.tiktok    .social-icon { background: rgba(240,240,240,0.05); border-color: rgba(240,240,240,0.1); }
+.youtube   .social-icon { background: rgba(255,0,0,0.08); border-color: rgba(255,0,0,0.2); }
 
 .social-header h4 {
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--white);
+    letter-spacing: -0.2px;
 }
 
 .social-stats {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 10px;
 }
 
 .stat-item {
@@ -538,15 +526,19 @@ body {
 }
 
 .stat-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--gray-600);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gray-500);
 }
 
 .stat-value {
-    font-size: 20px;
-    font-weight: 900;
+    font-size: 18px;
+    font-weight: 700;
     color: var(--white);
+    letter-spacing: -0.5px;
 }
 
 /* Utility */
@@ -2773,7 +2765,7 @@ input[type="password"].form-control::placeholder {
     bottom: 80px;
     right: 0;
     width: 340px;
-    background: white;
+    background: var(--surface-2);
     border-radius: 16px;
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
     opacity: 0;
@@ -2809,7 +2801,7 @@ input[type="password"].form-control::placeholder {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: white;
+    background: var(--surface-2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2869,7 +2861,7 @@ input[type="password"].form-control::placeholder {
 }
 
 .whatsapp-message {
-    background: white;
+    background: var(--surface-2);
     padding: 12px 16px;
     border-radius: 8px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -2903,7 +2895,7 @@ input[type="password"].form-control::placeholder {
 
 .whatsapp-footer {
     padding: 16px;
-    background: white;
+    background: var(--surface-2);
     border-top: 1px solid #e5e7eb;
 }
 
@@ -2947,7 +2939,7 @@ input[type="password"].form-control::placeholder {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
     body {
-        background: white !important;
+        background: var(--surface-2) !important;
         color: #1a1a1a !important;
         font-size: 11pt !important;
         line-height: 1.6 !important;
@@ -2955,7 +2947,7 @@ input[type="password"].form-control::placeholder {
 
     /* ── Header: clean, branded ── */
     .dashboard-nav {
-        background: white !important;
+        background: var(--surface-2) !important;
         color: #1a1a1a !important;
         border-bottom: 3px solid #1a1a1a !important;
         padding: 20px 0 16px !important;
@@ -3031,7 +3023,7 @@ input[type="password"].form-control::placeholder {
     /* ── Stat cards: clean grid ── */
     .stat-card {
         border: 1px solid #e0e0e0 !important;
-        background: white !important;
+        background: var(--surface-2) !important;
         color: #1a1a1a !important;
         border-radius: 8px !important;
         padding: 20px !important;
@@ -3076,7 +3068,7 @@ input[type="password"].form-control::placeholder {
 
     .inbox-platform-badge {
         border: 1px solid #ccc !important;
-        background: white !important;
+        background: var(--surface-2) !important;
         color: #666 !important;
         font-size: 8pt !important;
     }
@@ -3217,7 +3209,7 @@ input[type="password"].form-control::placeholder {
 .viral-post-link {
     font-size: 12px;
     font-weight: 600;
-    color: #000;
+    color: var(--white);
     text-decoration: none;
     padding: 6px 12px;
     border: 1px solid #000;
