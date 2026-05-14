@@ -3,7 +3,7 @@
 
 // Supabase Configuration
 const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_siFuszUIw5ibS-2Y15O4-Q_k484kZ8i';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
 
 // Initialize Supabase client
 let supabase = null;

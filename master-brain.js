@@ -1472,7 +1472,7 @@ function showNotification(message, type = 'info') {
 // COMPETITOR TRACKER CONFIG PANEL
 // ============================================
 const SUPABASE_URL_MB = 'https://krmoihryyvooymvhsuno.supabase.co';
-const SUPABASE_ANON_MB = 'sb_publishable_siFuszUIw5ibS-2Y15O4-Q_k484kZ8i';
+const SUPABASE_ANON_MB = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
 
 async function sbFetch(path, options = {}) {
   const token = localStorage.getItem('brain_token');
