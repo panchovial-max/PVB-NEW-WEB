@@ -97,6 +97,11 @@
   to = "/.netlify/functions/uf-value"
   status = 200
 
+[[redirects]]
+  from = "/timeline"
+  to = "/timeline.html"
+  status = 200
+
 # Headers for security
 [[headers]]
   for = "/*"

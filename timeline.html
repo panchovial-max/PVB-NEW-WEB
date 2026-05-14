@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline — PVB Estudio Creativo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #080808; --surface: #111; --surface2: #181818; --surface3: #1f1f1f;
+            --border: #1f1f1f; --border2: #2a2a2a;
+            --text: #fff; --muted: #666; --subtle: #444;
+            --green: #4caf50; --red: #e55; --yellow: #f5c518; --blue: #6a8fff; --orange: #ff9800;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; }
+
+        /* ── HEADER ── */
+        .header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 24px; height: 56px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; gap: 16px;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .back-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px 8px; }
+        .back-btn:hover { color: var(--text); }
+        .header-logo { font-size: 10px; letter-spacing: 4px; font-weight: 700; color: var(--muted); }
+        .header-title { font-size: 14px; font-weight: 600; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+
+        /* ── MAIN ── */
+        .main { max-width: 800px; margin: 0 auto; padding: 40px 24px 80px; }
+
+        /* ── PROGRESS BAR ── */
+        .progress-section { margin-bottom: 40px; }
+        .progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+        .progress-title { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+        .progress-pct { font-size: 1.8rem; font-weight: 900; }
+        .progress-bar-bg { height: 4px; background: var(--surface2); width: 100%; }
+        .progress-bar-fill { height: 4px; background: var(--green); transition: width .6s ease; }
+        .progress-stages { display: flex; justify-content: space-between; margin-top: 8px; }
+        .progress-stage-label { font-size: 10px; color: var(--muted); text-align: center; }
+
+        /* ── TIMELINE ── */
+        .timeline { position: relative; }
+        .timeline::before {
+            content: ''; position: absolute; left: 19px; top: 0; bottom: 0;
+            width: 1px; background: var(--border2);
+        }
+
+        .stage-item { display: flex; gap: 20px; margin-bottom: 8px; position: relative; }
+
+        /* Stage dot */
+        .stage-dot {
+            width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; position: relative; z-index: 1;
+            border: 2px solid var(--border2); background: var(--bg);
+            transition: all .2s;
+        }
+        .stage-dot.pending     { border-color: var(--border2); color: var(--muted); }
+        .stage-dot.in_progress { border-color: var(--blue); background: #0d0f1f; color: var(--blue); box-shadow: 0 0 16px rgba(106,143,255,.25); }
+        .stage-dot.completed   { border-color: var(--green); background: #0d1f0d; color: var(--green); }
+        .stage-dot.blocked     { border-color: var(--red); background: #1a0808; color: var(--red); }
+
+        /* Stage card */
+        .stage-card {
+            flex: 1; background: var(--surface); border: 1px solid var(--border);
+            padding: 18px 20px; margin-bottom: 20px; transition: border-color .15s;
+        }
+        .stage-card.in_progress { border-color: var(--blue); }
+        .stage-card.completed   { border-color: var(--border); opacity: .8; }
+        .stage-card.blocked     { border-color: var(--red); }
+
+        .stage-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+        .stage-name { font-size: 15px; font-weight: 600; }
+        .stage-badge {
+            display: inline-block; padding: 3px 10px; font-size: 10px;
+            letter-spacing: 1.5px; text-transform: uppercase; border-radius: 2px; flex-shrink: 0;
+        }
+        .badge-pending     { background: #1a1a1a; color: var(--muted); border: 1px solid var(--border2); }
+        .badge-in_progress { background: #0d0f1f; color: var(--blue); border: 1px solid #1a2060; }
+        .badge-completed   { background: #0d1f0d; color: var(--green); border: 1px solid #1a3a1a; }
+        .badge-blocked     { background: #1a0808; color: var(--red); border: 1px solid #3a1010; }
+
+        .stage-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+        .stage-dates { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+        .stage-date { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+        .stage-date.overdue { color: var(--red); }
+
+        /* Milestones */
+        .milestones { display: flex; flex-direction: column; gap: 6px; }
+        .milestone {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 13px; padding: 6px 0;
+            border-bottom: 1px solid var(--border); cursor: default;
+        }
+        .milestone:last-child { border-bottom: none; }
+        .milestone.completed { color: var(--muted); text-decoration: line-through; }
+        .milestone-check {
+            width: 18px; height: 18px; border-radius: 2px; flex-shrink: 0;
+            border: 1px solid var(--border2); display: flex; align-items: center;
+            justify-content: center; font-size: 11px;
+        }
+        .milestone.completed .milestone-check { background: #0d1f0d; border-color: var(--green); color: var(--green); }
+        .milestone-check.clickable { cursor: pointer; transition: all .15s; }
+        .milestone-check.clickable:hover { border-color: var(--green); color: var(--green); }
+
+        /* Admin controls */
+        .stage-admin { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .btn {
+            padding: 7px 14px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; font-family: inherit; border: none; transition: all .15s;
+        }
+        .btn-primary { background: var(--text); color: #000; }
+        .btn-primary:hover { background: #ddd; }
+        .btn-ghost { background: none; border: 1px solid var(--border2); color: var(--muted); }
+        .btn-ghost:hover { border-color: var(--subtle); color: var(--text); }
+        .btn-blue { background: #0d0f1f; color: var(--blue); border: 1px solid #1a2060; }
+        .btn-blue:hover { background: #1a2060; }
+        .btn-green { background: #0d1f0d; color: var(--green); border: 1px solid #1a3a1a; }
+        .btn-green:hover { background: #1a3a1a; }
+        .btn-red { background: none; color: var(--red); border: 1px solid #3a1010; }
+        .btn-red:hover { background: #1a0808; }
+        .btn-orange { background: #1a1000; color: var(--orange); border: 1px solid #3a2000; }
+        .btn-orange:hover { background: #2a1800; }
+
+        /* ── ADD STAGE MODAL ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.9);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal {
+            width: min(520px, 95vw); background: var(--surface);
+            border: 1px solid var(--border2); padding: 28px;
+            transform: translateY(20px); transition: transform .2s; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-overlay.open .modal { transform: translateY(0); }
+        .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; }
+        .modal-close:hover { color: var(--text); }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+        .form-input {
+            width: 100%; padding: 9px 13px; background: var(--surface2);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 13px; font-family: inherit; outline: none;
+        }
+        .form-input:focus { border-color: var(--subtle); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .milestones-builder { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+        .milestone-row { display: flex; gap: 8px; }
+        .milestone-row .form-input { flex: 1; }
+        .remove-ms { background: none; border: none; color: var(--red); cursor: pointer; font-size: 16px; }
+        .add-ms-btn { background: none; border: 1px dashed var(--border2); color: var(--muted); padding: 7px; cursor: pointer; font-family: inherit; font-size: 12px; width: 100%; transition: all .15s; }
+        .add-ms-btn:hover { border-color: var(--subtle); color: var(--text); }
+        .modal-error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+        /* ── TEMPLATES ── */
+        .templates-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .template-btn {
+            padding: 7px 14px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            background: none; border: 1px solid var(--border2); color: var(--muted);
+            cursor: pointer; font-family: inherit; transition: all .15s;
+        }
+        .template-btn:hover { border-color: var(--subtle); color: var(--text); }
+
+        .loading { text-align: center; padding: 80px; color: var(--muted); letter-spacing: 3px; font-size: 11px; }
+        .empty { padding: 60px 20px; text-align: center; color: var(--muted); border: 1px dashed var(--border2); }
+        .empty h3 { color: #aaa; margin-bottom: 8px; }
+        .empty p { font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <button type="button" class="back-btn" onclick="history.back()">←</button>
+        <span class="header-logo">PVB</span>
+        <span class="header-title" id="headerTitle">Timeline del Proyecto</span>
+    </div>
+    <div class="header-right">
+        <span style="font-size:11px;color:var(--muted);" id="userChip"></span>
+        <button type="button" class="btn btn-primary" id="addStageBtn" style="display:none;" onclick="openModal()">+ Etapa</button>
+    </div>
+</header>
+
+<main class="main">
+    <div class="loading" id="loadingState">CARGANDO...</div>
+    <div id="appContent" style="display:none;"></div>
+</main>
+
+<!-- ADD/EDIT STAGE MODAL -->
+<div class="modal-overlay" id="stageModal">
+    <div class="modal">
+        <div class="modal-title">
+            <span id="modalTitleText">Nueva etapa</span>
+            <button type="button" class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="form-group">
+            <label>Nombre de la etapa</label>
+            <input type="text" class="form-input" id="mTitle" placeholder="Ej: Pre-producción">
+        </div>
+        <div class="form-group">
+            <label>Descripción <span style="color:var(--muted);font-size:9px;">(visible al cliente)</span></label>
+            <textarea class="form-input" id="mDesc" rows="2" placeholder="Qué incluye esta etapa..."></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Fecha límite</label>
+                <input type="date" class="form-input" id="mDueDate">
+            </div>
+            <div class="form-group">
+                <label>¿Visible al cliente?</label>
+                <select class="form-input" id="mVisible">
+                    <option value="true">Sí</option>
+                    <option value="false">No (solo interno)</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Hitos / checklist</label>
+            <div class="milestones-builder" id="msBuilder">
+                <div class="milestone-row">
+                    <input type="text" class="form-input" placeholder="Ej: Confirmar locación">
+                    <button type="button" class="remove-ms" onclick="this.parentElement.remove()">×</button>
+                </div>
+            </div>
+            <button type="button" class="add-ms-btn" onclick="addMilestoneRow()">+ Agregar hito</button>
+        </div>
+        <p class="modal-error" id="modalError"></p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" id="saveStageBtn" onclick="saveStage()">Guardar etapa</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const params = new URLSearchParams(location.search);
+    const projectId = params.get('project');
+    const isAdmin = params.get('admin') === '1';
+
+    let currentUser = null;
+    let allStages = [];
+    let editingStageId = null;
+
+    const STATUS_ICONS = { pending:'○', in_progress:'●', completed:'✓', blocked:'✕' };
+    const STATUS_LABELS = { pending:'Pendiente', in_progress:'En progreso', completed:'Completado', blocked:'Bloqueado' };
+
+    const TEMPLATES = {
+        'Campaña Comercial': [
+            { title: 'Brief & Concepto', desc: 'Definición del concepto creativo, referencias visuales y aprobación del brief.' },
+            { title: 'Pre-producción', desc: 'Casting, scouting de locaciones, plan de rodaje, logística y coordinación de equipo.' },
+            { title: 'Producción', desc: 'Días de rodaje según el plan acordado.' },
+            { title: 'Post-producción', desc: 'Edición, color grading, sound design y motion graphics.' },
+            { title: 'Revisión y Aprobación', desc: 'Presentación de cortes para revisión y aprobación del cliente.' },
+            { title: 'Entrega Final', desc: 'Exportación en formatos acordados y entrega de archivos maestros.' }
+        ],
+        'Video Corporativo': [
+            { title: 'Guión y Concepto', desc: 'Desarrollo del guión y estructura narrativa.' },
+            { title: 'Pre-producción', desc: 'Coordinación de locaciones, entrevistados y equipo técnico.' },
+            { title: 'Producción', desc: 'Grabación de entrevistas y material visual.' },
+            { title: 'Post-producción', desc: 'Edición, gráficas y music.' },
+            { title: 'Entrega', desc: 'Entrega de versiones finales.' }
+        ],
+        'Contenido Digital': [
+            { title: 'Estrategia', desc: 'Definición de formatos, plataformas y calendario de contenidos.' },
+            { title: 'Producción', desc: 'Sesión de fotos y videos.' },
+            { title: 'Edición', desc: 'Edición y adaptación por plataforma.' },
+            { title: 'Entrega', desc: 'Entrega de assets listos para publicar.' }
+        ]
+    };
+
+    // ── INIT ──
+    async function init() {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session && !isAdmin) {
+            document.getElementById('loadingState').textContent = 'Acceso requerido.';
+            return;
+        }
+        currentUser = session?.user || null;
+        const name = isAdmin ? 'Francisco' : (currentUser?.user_metadata?.full_name?.split(' ')[0] || currentUser?.email);
+        document.getElementById('userChip').textContent = isAdmin ? '🎬 Francisco' : `👤 ${name}`;
+        if (isAdmin) document.getElementById('addStageBtn').style.display = 'block';
+
+        await loadStages();
+    }
+
+    async function loadStages() {
+        let query = sb.from('project_stages')
+            .select('*, stage_milestones(*)')
+            .order('stage_order');
+        if (projectId) query = query.eq('project_id', projectId);
+
+        const { data } = await query;
+        allStages = data || [];
+        render();
+    }
+
+    // ── RENDER ──
+    function render() {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+
+        const completed = allStages.filter(s => s.status === 'completed').length;
+        const total = allStages.length;
+        const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+        const current = allStages.find(s => s.status === 'in_progress') || allStages.find(s => s.status === 'blocked');
+
+        let html = `
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-title">Progreso del proyecto</span>
+                    <span class="progress-pct">${pct}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width:${pct}%"></div>
+                </div>
+                ${current ? `<p style="font-size:12px;color:var(--muted);margin-top:10px;">
+                    Etapa actual: <strong style="color:var(--text)">${current.title}</strong>
+                    ${current.status === 'blocked' ? '<span style="color:var(--red);"> — Bloqueado</span>' : ''}
+                </p>` : (pct === 100 ? `<p style="font-size:12px;color:var(--green);margin-top:10px;">✓ Proyecto completado</p>` : '')}
+            </div>`;
+
+        if (allStages.length === 0) {
+            html += isAdmin
+                ? `<div class="empty">
+                    <h3>Sin etapas todavía</h3>
+                    <p>Crea la primera etapa o usa una plantilla para empezar rápido.</p>
+                    <div class="templates-row" style="justify-content:center;margin-top:20px;">
+                        ${Object.keys(TEMPLATES).map(t => `<button type="button" class="template-btn" onclick="applyTemplate('${t}')">${t}</button>`).join('')}
+                    </div>
+                </div>`
+                : `<div class="empty"><h3>Timeline pendiente</h3><p>Francisco está preparando el plan de producción. Pronto verás aquí cada etapa del proyecto.</p></div>`;
+        } else {
+            if (isAdmin) {
+                html += `<div class="templates-row">
+                    <span style="font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;line-height:2.4;">Plantillas:</span>
+                    ${Object.keys(TEMPLATES).map(t => `<button type="button" class="template-btn" onclick="applyTemplate('${t}')">${t}</button>`).join('')}
+                </div>`;
+            }
+            html += `<div class="timeline">${allStages.map((s, i) => renderStage(s, i)).join('')}</div>`;
+        }
+
+        document.getElementById('appContent').innerHTML = html;
+    }
+
+    function renderStage(s, idx) {
+        const milestones = s.stage_milestones || [];
+        const msDone = milestones.filter(m => m.completed).length;
+        const overdue = s.due_date && s.status !== 'completed' && new Date(s.due_date) < new Date();
+        const dueStr = s.due_date ? new Date(s.due_date).toLocaleDateString('es-CL', { day:'numeric', month:'long' }) : null;
+        const completedStr = s.completed_at ? new Date(s.completed_at).toLocaleDateString('es-CL', { day:'numeric', month:'short', year:'numeric' }) : null;
+
+        return `<div class="stage-item">
+            <div class="stage-dot ${s.status}">${STATUS_ICONS[s.status]}</div>
+            <div class="stage-card ${s.status}" style="flex:1;">
+                <div class="stage-header">
+                    <div>
+                        <span style="font-size:10px;letter-spacing:2px;color:var(--muted);">ETAPA ${String(idx+1).padStart(2,'0')}</span>
+                        <div class="stage-name">${s.title}</div>
+                    </div>
+                    <span class="stage-badge badge-${s.status}">${STATUS_LABELS[s.status]}</span>
+                </div>
+
+                ${s.description ? `<div class="stage-desc">${s.description}</div>` : ''}
+
+                <div class="stage-dates">
+                    ${dueStr ? `<span class="stage-date ${overdue ? 'overdue' : ''}">📅 ${overdue ? '⚠ ' : ''}${dueStr}</span>` : ''}
+                    ${completedStr ? `<span class="stage-date" style="color:var(--green)">✓ ${completedStr}</span>` : ''}
+                    ${milestones.length > 0 ? `<span class="stage-date">${msDone}/${milestones.length} hitos</span>` : ''}
+                </div>
+
+                ${milestones.length > 0 ? `
+                <div class="milestones">
+                    ${milestones.map(m => `
+                        <div class="milestone ${m.completed ? 'completed' : ''}">
+                            <div class="milestone-check ${isAdmin ? 'clickable' : ''}"
+                                onclick="${isAdmin ? `toggleMilestone('${m.id}',${m.completed})` : ''}">
+                                ${m.completed ? '✓' : ''}
+                            </div>
+                            <span>${m.title}</span>
+                        </div>`).join('')}
+                </div>` : ''}
+
+                ${isAdmin ? `
+                <div class="stage-admin">
+                    ${s.status === 'pending' ? `<button type="button" class="btn btn-blue" onclick="setStatus('${s.id}','in_progress')">▶ Iniciar</button>` : ''}
+                    ${s.status === 'in_progress' ? `<button type="button" class="btn btn-green" onclick="setStatus('${s.id}','completed')">✓ Completar</button>` : ''}
+                    ${s.status === 'in_progress' ? `<button type="button" class="btn btn-orange" onclick="setStatus('${s.id}','blocked')">⚠ Bloquear</button>` : ''}
+                    ${s.status === 'blocked' ? `<button type="button" class="btn btn-blue" onclick="setStatus('${s.id}','in_progress')">↩ Reanudar</button>` : ''}
+                    ${s.status === 'completed' ? `<button type="button" class="btn btn-ghost" onclick="setStatus('${s.id}','in_progress')">↩ Reabrir</button>` : ''}
+                    <button type="button" class="btn btn-ghost" onclick="editStage('${s.id}')">✎ Editar</button>
+                    <button type="button" class="btn btn-red" onclick="deleteStage('${s.id}')">✕</button>
+                    ${idx > 0 ? `<button type="button" class="btn btn-ghost" onclick="moveStage('${s.id}',-1)" title="Subir">↑</button>` : ''}
+                    ${idx < allStages.length-1 ? `<button type="button" class="btn btn-ghost" onclick="moveStage('${s.id}',1)" title="Bajar">↓</button>` : ''}
+                </div>` : ''}
+            </div>
+        </div>`;
+    }
+
+    // ── ADMIN ACTIONS ──
+    async function setStatus(stageId, status) {
+        const updates = { status };
+        if (status === 'in_progress') updates.started_at = new Date().toISOString();
+        if (status === 'completed') updates.completed_at = new Date().toISOString();
+        await sb.from('project_stages').update(updates).eq('id', stageId);
+        await loadStages();
+    }
+
+    async function toggleMilestone(id, completed) {
+        await sb.from('stage_milestones').update({
+            completed: !completed,
+            completed_at: !completed ? new Date().toISOString() : null
+        }).eq('id', id);
+        await loadStages();
+    }
+
+    async function moveStage(id, dir) {
+        const idx = allStages.findIndex(s => s.id === id);
+        const swapIdx = idx + dir;
+        if (swapIdx < 0 || swapIdx >= allStages.length) return;
+        await Promise.all([
+            sb.from('project_stages').update({ stage_order: allStages[swapIdx].stage_order }).eq('id', id),
+            sb.from('project_stages').update({ stage_order: allStages[idx].stage_order }).eq('id', allStages[swapIdx].id)
+        ]);
+        await loadStages();
+    }
+
+    async function deleteStage(id) {
+        if (!confirm('¿Eliminar esta etapa y sus hitos?')) return;
+        await sb.from('project_stages').delete().eq('id', id);
+        await loadStages();
+    }
+
+    // ── TEMPLATES ──
+    async function applyTemplate(name) {
+        if (!confirm(`¿Aplicar plantilla "${name}"? Se agregarán ${TEMPLATES[name].length} etapas.`)) return;
+        const maxOrder = allStages.length > 0 ? Math.max(...allStages.map(s => s.stage_order)) + 1 : 0;
+        for (let i = 0; i < TEMPLATES[name].length; i++) {
+            const t = TEMPLATES[name][i];
+            await sb.from('project_stages').insert({
+                project_id: projectId,
+                title: t.title,
+                description: t.desc,
+                stage_order: maxOrder + i,
+                status: 'pending',
+                visible_to_client: true
+            });
+        }
+        await loadStages();
+    }
+
+    // ── MODAL ──
+    function openModal(stageId = null) {
+        editingStageId = stageId;
+        document.getElementById('modalTitleText').textContent = stageId ? 'Editar etapa' : 'Nueva etapa';
+        document.getElementById('modalError').style.display = 'none';
+        document.getElementById('mTitle').value = '';
+        document.getElementById('mDesc').value = '';
+        document.getElementById('mDueDate').value = '';
+        document.getElementById('mVisible').value = 'true';
+        document.getElementById('msBuilder').innerHTML = `
+            <div class="milestone-row">
+                <input type="text" class="form-input" placeholder="Ej: Confirmar locación">
+                <button type="button" class="remove-ms" onclick="this.parentElement.remove()">×</button>
+            </div>`;
+
+        if (stageId) {
+            const s = allStages.find(x => x.id === stageId);
+            if (s) {
+                document.getElementById('mTitle').value = s.title;
+                document.getElementById('mDesc').value = s.description || '';
+                document.getElementById('mDueDate').value = s.due_date || '';
+                document.getElementById('mVisible').value = String(s.visible_to_client);
+                const builder = document.getElementById('msBuilder');
+                builder.innerHTML = '';
+                (s.stage_milestones || []).forEach(m => {
+                    const row = document.createElement('div');
+                    row.className = 'milestone-row';
+                    row.innerHTML = `<input type="text" class="form-input" value="${m.title}" data-ms-id="${m.id}">
+                        <button type="button" class="remove-ms" onclick="this.parentElement.remove()">×</button>`;
+                    builder.appendChild(row);
+                });
+            }
+        }
+        document.getElementById('stageModal').classList.add('open');
+    }
+
+    function editStage(id) { openModal(id); }
+    function closeModal() { document.getElementById('stageModal').classList.remove('open'); editingStageId = null; }
+    document.getElementById('stageModal').addEventListener('click', e => { if (e.target === document.getElementById('stageModal')) closeModal(); });
+
+    function addMilestoneRow() {
+        const row = document.createElement('div');
+        row.className = 'milestone-row';
+        row.innerHTML = `<input type="text" class="form-input" placeholder="Hito">
+            <button type="button" class="remove-ms" onclick="this.parentElement.remove()">×</button>`;
+        document.getElementById('msBuilder').appendChild(row);
+    }
+
+    async function saveStage() {
+        const errEl = document.getElementById('modalError');
+        errEl.style.display = 'none';
+        const title = document.getElementById('mTitle').value.trim();
+        if (!title) { errEl.textContent = 'El nombre es requerido.'; errEl.style.display = 'block'; return; }
+
+        const payload = {
+            project_id: projectId,
+            title,
+            description: document.getElementById('mDesc').value.trim() || null,
+            due_date: document.getElementById('mDueDate').value || null,
+            visible_to_client: document.getElementById('mVisible').value === 'true',
+            stage_order: editingStageId ? allStages.find(s => s.id === editingStageId)?.stage_order : allStages.length
+        };
+
+        let stageId = editingStageId;
+        if (editingStageId) {
+            await sb.from('project_stages').update(payload).eq('id', editingStageId);
+        } else {
+            const { data } = await sb.from('project_stages').insert(payload).select().single();
+            stageId = data?.id;
+        }
+
+        // Milestones
+        if (stageId) {
+            const rows = document.querySelectorAll('#msBuilder .milestone-row input[type="text"]');
+            for (const input of rows) {
+                const msId = input.dataset.msId;
+                const val = input.value.trim();
+                if (!val) continue;
+                if (msId) {
+                    await sb.from('stage_milestones').update({ title: val }).eq('id', msId);
+                } else {
+                    await sb.from('stage_milestones').insert({ stage_id: stageId, title: val });
+                }
+            }
+        }
+
+        closeModal();
+        await loadStages();
+    }
+
+    init();
+</script>
+</body>
+</html>
