@@ -1,45 +1,39 @@
 {
   "version": 2,
   "name": "pvb-estudio-creativo",
-  "builds": [
-    {
-      "src": "**",
-      "use": "@vercel/static"
-    }
+  "redirects": [
+    { "source": "/dashboard", "destination": "/dashboard.html", "permanent": false },
+    { "source": "/login", "destination": "/login.html", "permanent": false },
+    { "source": "/settings", "destination": "/settings.html", "permanent": false },
+    { "source": "/masterbrain", "destination": "/master-brain.html", "permanent": false },
+    { "source": "/master-brain", "destination": "/master-brain.html", "permanent": false },
+    { "source": "/brain", "destination": "/master-brain.html", "permanent": false },
+    { "source": "/conta", "destination": "/studio.html", "permanent": false },
+    { "source": "/produccion", "destination": "/produccion.html", "permanent": false },
+    { "source": "/proveedores", "destination": "/proveedores.html", "permanent": false },
+    { "source": "/proveedor-dashboard", "destination": "/proveedor-dashboard.html", "permanent": false },
+    { "source": "/moodboard", "destination": "/moodboard.html", "permanent": false },
+    { "source": "/feed", "destination": "/feed.html", "permanent": false },
+    { "source": "/payments", "destination": "/payments.html", "permanent": false },
+    { "source": "/timeline", "destination": "/timeline.html", "permanent": false },
+    { "source": "/deliveries", "destination": "/deliveries.html", "permanent": false },
+    { "source": "/reviews", "destination": "/reviews.html", "permanent": false }
   ],
-  "routes": [
-    {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
+  "rewrites": [
+    { "source": "/api/og-fetch", "destination": "/api/og-fetch.js" },
+    { "source": "/api/uf-value", "destination": "/api/uf-value.js" },
+    { "source": "/api/send-notification", "destination": "/api/send-notification.js" },
+    { "source": "/api/provider-match", "destination": "/api/provider-match.js" }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/$1"
     }
   ]
 }
