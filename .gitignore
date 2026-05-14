@@ -56,3 +56,4 @@ public/plugins/
 
 # Local Netlify folder
 .netlify
+.vercel

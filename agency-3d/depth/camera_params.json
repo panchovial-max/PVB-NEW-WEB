@@ -1,0 +1,56 @@
+{
+  "device": "mps",
+  "image_size": [
+    1920,
+    1890
+  ],
+  "floor_depth_normalized": 0.5569,
+  "far_depth_normalized": 0.1451,
+  "foreground_pct": 5.7,
+  "depth_range": [
+    0.0,
+    255.0
+  ],
+  "estimated_camera": {
+    "alpha": -2.45,
+    "beta": 1.2,
+    "fov_deg": 60,
+    "notes": "Isometric top-down from upper-right, looking down-left"
+  },
+  "floor_plane": {
+    "y_world": 0.0,
+    "depth_value": 0.5569
+  },
+  "avatar_zones": {
+    "center_table": {
+      "x": -1.5,
+      "z": 1.0,
+      "depth": 0.197
+    },
+    "left_sofa": {
+      "x": -4.0,
+      "z": 3.0,
+      "depth": 0.376
+    },
+    "right_pingpong": {
+      "x": 4.5,
+      "z": 1.5,
+      "depth": 0.215
+    },
+    "purple_room": {
+      "x": -6.0,
+      "z": -4.0,
+      "depth": 0.132
+    },
+    "green_room": {
+      "x": -1.0,
+      "z": -4.0,
+      "depth": 0.072
+    },
+    "cyan_room": {
+      "x": 3.5,
+      "z": -4.0,
+      "depth": 0.153
+    }
+  }
+}

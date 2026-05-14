@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PVB Agency — Virtual Tour</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700;900&display=swap');
+    :root {
+      --gold: #d4b070;
+      --gold-glow: rgba(212,176,112,0.35);
+      --green: #34d399;
+      --border: rgba(255,255,255,0.08);
+      --text: #f5f0e8;
+      --dim: #72727f;
+      --bg: #0a0a0a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); overflow: hidden; font-family: 'Inter', sans-serif; }
+
+    /* ── Viewport ── */
+    #viewport {
+      position: fixed; inset: 0;
+      cursor: grab; overflow: hidden;
+      -webkit-user-select: none; user-select: none;
+    }
+    #viewport:active { cursor: grabbing; }
+
+    /* ── Image container ── */
+    #scene {
+      position: absolute;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+    #scene img {
+      display: block;
+      image-rendering: high-quality;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* ── Agent pins ── */
+    .agent-pin {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+      z-index: 10;
+    }
+    .agent-pin:hover { transform: translate(-50%, -100%) scale(1.15); }
+    .pin-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.9);
+      box-shadow: 0 0 12px currentColor, 0 0 24px currentColor;
+      margin: 0 auto 4px;
+      animation: pin-pulse 2.5s ease-in-out infinite;
+    }
+    /* Leaders get a larger diamond shape */
+    .agent-pin.leader .pin-dot {
+      width: 18px; height: 18px;
+      border-radius: 4px;
+      transform: rotate(45deg);
+      border: 2px solid rgba(255,255,255,1);
+      box-shadow: 0 0 16px currentColor, 0 0 32px currentColor;
+    }
+    .agent-pin.leader .pin-label {
+      border-color: rgba(255,255,255,0.2);
+      font-size: 11px;
+    }
+    @keyframes pin-pulse {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50%      { transform: scale(1.3); opacity: 0.7; }
+    }
+    .pin-label {
+      background: rgba(8,8,10,0.85);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 3px 8px; border-radius: 3px;
+      white-space: nowrap;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+
+    /* ── Brand ── */
+    #brand {
+      position: fixed; top: 24px; left: 28px; z-index: 100; pointer-events: none;
+    }
+    #brand .pvb { font-size: 20px; font-weight: 900; color: var(--text); letter-spacing: -0.05em; }
+    #brand .pvb span { color: var(--gold); text-shadow: 0 0 20px var(--gold-glow); }
+    #brand .sub { font-size: 9px; color: var(--dim); letter-spacing: 2.5px; text-transform: uppercase; margin-top: 2px; }
+
+    /* ── Zoom controls ── */
+    #zoom-controls {
+      position: fixed; bottom: 28px; right: 28px; z-index: 100;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .zoom-btn {
+      width: 36px; height: 36px;
+      background: rgba(12,12,14,0.9); border: 1px solid var(--border);
+      color: var(--text); font-size: 18px; line-height: 1;
+      border-radius: 3px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    }
+    .zoom-btn:hover { background: rgba(212,176,112,0.12); border-color: rgba(212,176,112,0.3); color: var(--gold); }
+    .zoom-btn-reset { font-size: 12px; }
+
+    /* ── Mini-map ── */
+    #minimap {
+      position: fixed; bottom: 28px; left: 28px; z-index: 100;
+      width: 140px; height: 84px;
+      background: rgba(8,8,10,0.85); border: 1px solid var(--border);
+      border-radius: 4px; overflow: hidden;
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    }
+    #minimap img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
+    #minimap-viewport {
+      position: absolute; border: 1px solid var(--gold);
+      background: rgba(212,176,112,0.1); pointer-events: none;
+    }
+
+    /* ── Agent panel ── */
+    #agent-panel {
+      position: fixed; right: -400px; top: 0; width: 360px; height: 100vh;
+      background: rgba(8,8,10,0.96);
+      border-left: 1px solid var(--border);
+      -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+      padding: 48px 32px 32px;
+      transition: right 0.4s cubic-bezier(0.4,0,0.2,1);
+      z-index: 200;
+      display: flex; flex-direction: column;
+    }
+    #agent-panel.open { right: 0; }
+    .panel-close {
+      position: absolute; top: 20px; right: 20px;
+      background: none; border: none; color: var(--dim);
+      font-size: 18px; cursor: pointer; padding: 4px 8px;
+      transition: color 0.2s;
+    }
+    .panel-close:hover { color: var(--text); }
+    .panel-dept { font-size: 10px; font-weight: 700; letter-spacing: 2.5px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; }
+    .panel-name { font-size: 32px; font-weight: 900; color: var(--text); letter-spacing: -0.03em; line-height: 1; margin-bottom: 4px; }
+    .panel-role { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 24px; }
+    .panel-divider { height: 1px; background: var(--border); margin-bottom: 20px; }
+    .panel-status { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-text { font-size: 12px; color: var(--green); letter-spacing: 0.5px; }
+    .panel-bio { font-size: 13px; color: var(--dim); line-height: 1.75; flex: 1; }
+    .panel-actions { margin-top: 24px; display: flex; flex-direction: column; gap: 8px; }
+    .panel-btn {
+      width: 100%; padding: 12px 16px; border-radius: 3px; cursor: pointer;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+      transition: all 0.2s; text-align: left; border: 1px solid;
+    }
+    .panel-btn.primary { background: rgba(212,176,112,0.1); border-color: rgba(212,176,112,0.25); color: var(--gold); }
+    .panel-btn.primary:hover { background: rgba(212,176,112,0.18); box-shadow: 0 0 20px var(--gold-glow); }
+    .panel-btn.secondary { background: transparent; border-color: var(--border); color: var(--dim); }
+    .panel-btn.secondary:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+    /* ── Tooltip ── */
+    #tooltip {
+      position: fixed; pointer-events: none; z-index: 300;
+      background: rgba(8,8,10,0.95); color: var(--text);
+      padding: 7px 13px; border-radius: 3px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+      border: 1px solid var(--border); border-left: 2px solid var(--gold);
+      display: none; white-space: nowrap;
+    }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+      #agent-panel { width: 100vw; right: -100vw; }
+      #agent-panel.open { right: 0; }
+      #minimap { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="scene">
+    <img id="bg-img" src="assets/agency-bg_1.jpg" alt="PVB Agency office" draggable="false">
+    <!-- Agent pins injected by JS -->
+  </div>
+</div>
+
+<div id="brand">
+  <div class="pvb">pvb<span>.</span></div>
+  <div class="sub">Virtual Office</div>
+</div>
+
+<div id="zoom-controls">
+  <button type="button" class="zoom-btn" onclick="zoomBy(1.25)" title="Zoom in">+</button>
+  <button type="button" class="zoom-btn" onclick="zoomBy(0.8)"  title="Zoom out">−</button>
+  <button type="button" class="zoom-btn zoom-btn-reset" onclick="resetView()" title="Reset">⌂</button>
+</div>
+
+<div id="minimap">
+  <img src="assets/agency-bg_1.jpg" alt="minimap" draggable="false">
+  <div id="minimap-viewport"></div>
+</div>
+
+<div id="tooltip"></div>
+
+<div id="agent-panel">
+  <button type="button" class="panel-close" onclick="closePanel()">✕</button>
+  <div class="panel-dept" id="panel-dept">—</div>
+  <div class="panel-name" id="panel-name">—</div>
+  <div class="panel-role" id="panel-role">—</div>
+  <div class="panel-divider"></div>
+  <div class="panel-status">
+    <div class="status-dot"></div>
+    <div class="status-text">Disponible</div>
+  </div>
+  <div class="panel-bio"  id="panel-bio">—</div>
+  <div class="panel-actions">
+    <button type="button" class="panel-btn primary"   id="panel-goto-btn">→ Ver en agencia</button>
+    <button type="button" class="panel-btn secondary" onclick="closePanel()">Cerrar</button>
+  </div>
+</div>
+
+<script src="tour.js"></script>
+</body>
+</html>

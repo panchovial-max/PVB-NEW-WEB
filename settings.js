@@ -4,7 +4,7 @@ const API_BASE = '/.netlify/functions';
 
 // Supabase client for settings page
 const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NzM5NjYsImV4cCI6MjA4NDQ0OTk2Nn0.VBiCJK4Goz6iao4fqUfOs3wrgMaFO-LUGZqOxp9UKKg';
 let _supabase = null;
 
 function getSupabase() {
@@ -309,7 +309,7 @@ async function connectPlatform(platform) {
     try {
         const supabaseClient = window.supabase.createClient(
             'https://krmoihryyvooymvhsuno.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik'
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NzM5NjYsImV4cCI6MjA4NDQ0OTk2Nn0.VBiCJK4Goz6iao4fqUfOs3wrgMaFO-LUGZqOxp9UKKg'
         );
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) sessionToken = session.access_token;
@@ -811,7 +811,7 @@ async function connectGoogleCalendar() {
     try {
         const supabaseClient = window.supabase.createClient(
             'https://krmoihryyvooymvhsuno.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik'
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NzM5NjYsImV4cCI6MjA4NDQ0OTk2Nn0.VBiCJK4Goz6iao4fqUfOs3wrgMaFO-LUGZqOxp9UKKg'
         );
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) sessionToken = session.access_token;

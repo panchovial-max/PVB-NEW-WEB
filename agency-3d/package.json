@@ -1,0 +1,19 @@
+{
+  "name": "agency-3d",
+  "version": "1.0.0",
+  "description": "",
+  "main": "agency-scene.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "build": "esbuild scene.js --bundle --outfile=bundle.js --format=iife",
+    "watch": "esbuild scene.js --bundle --outfile=bundle.js --format=iife --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.184.0"
+  }
+}
