@@ -464,11 +464,109 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ── Color picker logic ───────────────────────────────────────────────────
+let _selectedColor = 'green';
+const COLOR_LABELS = { green: 'verde', teal: 'teal', yellow: 'amarillo', orange: 'naranja', red: 'rojo', blue: 'azul', purple: 'morado' };
+
+function initColorPicker() {
+    document.querySelectorAll('.cal-color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.cal-color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            _selectedColor = btn.dataset.color;
+            const label = document.getElementById('selectedColorLabel');
+            if (label) label.textContent = COLOR_LABELS[_selectedColor] || _selectedColor;
+        });
+    });
+    // Set green as default active
+    const defaultBtn = document.querySelector('.cal-color-btn[data-color="green"]');
+    if (defaultBtn) defaultBtn.classList.add('active');
+}
+
+// ── Schedule current modal event to Google Calendar ──────────────────────
+let _currentModalEvent = null;
+
+async function scheduleCurrentEvent() {
+    if (!_currentModalEvent) return;
+    const btn = document.getElementById('scheduleEventBtn');
+    const status = document.getElementById('scheduleEventStatus');
+    const reminderDays = parseInt(document.getElementById('reminderDays')?.value || '7', 10);
+
+    btn.disabled = true;
+    btn.textContent = 'Agendando…';
+    status.textContent = '';
+    status.style.color = '#888';
+
+    const sessionToken = window._pvbUserData?.session_token || localStorage.getItem('session_id');
+    if (!sessionToken) {
+        status.textContent = '⚠️ Debes iniciar sesión primero.';
+        status.style.color = '#db4437';
+        btn.disabled = false;
+        btn.textContent = 'Agregar a Google Calendar →';
+        return;
+    }
+
+    try {
+        const res = await fetch('/.netlify/functions/calendar-create-event', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${sessionToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: _currentModalEvent.event_title,
+                description: _currentModalEvent.event_description || '',
+                date: _currentModalEvent.event_date,
+                color: _selectedColor,
+                allDay: true,
+                reminderDays
+            })
+        });
+        const data = await res.json();
+
+        if (data.needs_connect) {
+            status.innerHTML = '⚠️ <a href="settings.html#integrations" style="color:#4285f4">Conecta Google Calendar primero</a>';
+            status.style.color = '#db4437';
+        } else if (data.success) {
+            status.innerHTML = `✅ Agendado — <a href="${data.link}" target="_blank" rel="noopener" style="color:#0f9d58">Ver en Google Calendar ↗</a>`;
+            status.style.color = '#0f9d58';
+            btn.textContent = '✓ Agendado';
+        } else {
+            status.textContent = '❌ Error: ' + (data.error || 'intenta de nuevo');
+            status.style.color = '#db4437';
+            btn.disabled = false;
+            btn.textContent = 'Agregar a Google Calendar →';
+        }
+    } catch (err) {
+        status.textContent = '❌ Error de conexión';
+        status.style.color = '#db4437';
+        btn.disabled = false;
+        btn.textContent = 'Agregar a Google Calendar →';
+    }
+}
+
+// Override showEventModal to store current event and reset schedule UI
+const _originalShowEventModal = showEventModal;
+function showEventModal(event) {
+    _currentModalEvent = event;
+    _originalShowEventModal(event);
+    // Reset schedule section UI
+    const btn = document.getElementById('scheduleEventBtn');
+    const status = document.getElementById('scheduleEventStatus');
+    if (btn) { btn.disabled = false; btn.textContent = 'Agregar a Google Calendar →'; }
+    if (status) { status.textContent = ''; }
+}
+
+// Override closeEventModal to reset state
+const _originalCloseModal = closeEventModal;
+function closeEventModal() {
+    _currentModalEvent = null;
+    _originalCloseModal();
+}
+
 // Export for use in dashboard
 window.calendarAPI = {
-    initialize: initializeCalendar,
+    initialize: () => { initializeCalendar(); initColorPicker(); },
     previousMonth: previousMonth,
     nextMonth: nextMonth,
     goToToday: goToToday,
-    closeModal: closeEventModal
+    closeModal: closeEventModal,
+    scheduleCurrentEvent: scheduleCurrentEvent
 };

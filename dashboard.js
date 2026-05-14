@@ -62,6 +62,9 @@ async function initializeDashboard(userData) {
         // Expose userData for calendar.js and other modules
         window._pvbUserData = userData;
 
+        // Initialize campaign calendar
+        if (window.calendarAPI) window.calendarAPI.initialize();
+
         // Load dashboard data
         await loadDashboardData(userData);
 

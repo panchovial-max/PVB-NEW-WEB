@@ -458,3 +458,100 @@
     border-color: #444;
     color: #f0f0f0;
 }
+
+/* ── Modal: Agendar en Google Calendar ─────────────────────────────────── */
+.modal-schedule-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.modal-schedule-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #555;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.modal-color-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.modal-field-label {
+    font-size: 0.78rem;
+    color: #777;
+}
+
+.modal-field-label--block {
+    display: block;
+    margin-top: 0.6rem;
+}
+
+.color-picker {
+    display: flex;
+    gap: 6px;
+}
+
+.cal-color-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+}
+
+.cal-color-btn:hover  { transform: scale(1.2); }
+.cal-color-btn.active { border-color: #1a1a1a; transform: scale(1.15); }
+
+.cal-color-green  { background: #0f9d58; }
+.cal-color-teal   { background: #009688; }
+.cal-color-yellow { background: #f4b400; }
+.cal-color-orange { background: #ff6d00; }
+.cal-color-red    { background: #db4437; }
+.cal-color-blue   { background: #4285f4; }
+.cal-color-purple { background: #9c27b0; }
+
+.selected-color-label {
+    font-size: 0.78rem;
+    color: #888;
+    margin-left: 4px;
+}
+
+.modal-reminder-select {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-top: 3px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.modal-schedule-btn {
+    display: block;
+    margin-top: 0.75rem;
+    width: 100%;
+    padding: 10px;
+    background: #1a1a1a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.modal-schedule-btn:hover { opacity: 0.8; }
+
+.modal-schedule-status {
+    font-size: 0.78rem;
+    margin-top: 0.5rem;
+    min-height: 1.2em;
+}

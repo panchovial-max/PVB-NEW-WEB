@@ -614,6 +614,36 @@
             </div>
 
             <div id="modalEventActions" style="margin-top: 1rem;"></div>
+
+            <!-- Agendar en Google Calendar -->
+            <div id="modalScheduleSection" class="modal-schedule-section">
+                <p class="modal-schedule-title">📅 Agendar campaña en Google Calendar</p>
+                <div class="modal-color-row">
+                    <label class="modal-field-label" for="colorPicker">Color:</label>
+                    <div id="colorPicker" class="color-picker">
+                        <button type="button" class="cal-color-btn cal-color-green"    data-color="green"    title="Verde — Campaña activa"></button>
+                        <button type="button" class="cal-color-btn cal-color-teal"     data-color="teal"     title="Teal — Lanzamiento"></button>
+                        <button type="button" class="cal-color-btn cal-color-yellow"   data-color="yellow"   title="Amarillo — Preparación"></button>
+                        <button type="button" class="cal-color-btn cal-color-orange"   data-color="orange"   title="Naranja — Deadline"></button>
+                        <button type="button" class="cal-color-btn cal-color-red"      data-color="red"      title="Rojo — Urgente"></button>
+                        <button type="button" class="cal-color-btn cal-color-blue"     data-color="blue"     title="Azul — Reunión"></button>
+                        <button type="button" class="cal-color-btn cal-color-purple"   data-color="purple"   title="Morado — Creatividad"></button>
+                    </div>
+                    <span id="selectedColorLabel" class="selected-color-label">verde</span>
+                </div>
+                <label class="modal-field-label modal-field-label--block" for="reminderDays">Aviso anticipado:</label>
+                <select id="reminderDays" class="modal-reminder-select" title="Días de anticipación para el aviso">
+                    <option value="60">60 días antes</option>
+                    <option value="30">30 días antes</option>
+                    <option value="14">14 días antes</option>
+                    <option value="7" selected>7 días antes</option>
+                    <option value="1">1 día antes</option>
+                </select>
+                <button type="button" id="scheduleEventBtn" class="modal-schedule-btn" onclick="window.calendarAPI.scheduleCurrentEvent()">
+                    Agregar a Google Calendar →
+                </button>
+                <p id="scheduleEventStatus" class="modal-schedule-status"></p>
+            </div>
         </div>
     </div>
 
