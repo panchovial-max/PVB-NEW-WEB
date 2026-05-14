@@ -841,8 +841,8 @@
                 const form = e.target;
 
                 // 1. Insertar proveedor
-                const { data: { session: currentSession } } = await supabase.auth.getSession();
-                const { data: provider, error: provErr } = await supabase
+                const { data: { session: currentSession } } = await sb.auth.getSession();
+                const { data: provider, error: provErr } = await sb
                     .from('providers')
                     .insert({
                         user_id: currentSession?.user?.id || null,
@@ -870,7 +870,7 @@
 
                     if (!titleInput?.value.trim()) continue;
 
-                    const { data: asset, error: assetErr } = await supabase
+                    const { data: asset, error: assetErr } = await sb
                         .from('provider_assets')
                         .insert({
                             provider_id: provider.id,
@@ -892,12 +892,12 @@
                         const ext = file.name.split('.').pop();
                         const path = `${provider.id}/${asset.id}/${i}.${ext}`;
 
-                        const { error: uploadErr } = await supabase.storage
+                        const { error: uploadErr } = await sb.storage
                             .from('provider-assets')
                             .upload(path, file, { upsert: true });
 
                         if (!uploadErr) {
-                            const { data: urlData } = supabase.storage
+                            const { data: urlData } = sb.storage
                                 .from('provider-assets')
                                 .getPublicUrl(path);
                             photoUrls.push(urlData.publicUrl);
@@ -905,7 +905,7 @@
                     }
 
                     if (photoUrls.length > 0) {
-                        await supabase.from('provider_assets')
+                        await sb.from('provider_assets')
                             .update({ photos: photoUrls })
                             .eq('id', asset.id);
                     }
@@ -937,7 +937,7 @@
                 errEl.style.display = 'block';
                 return;
             }
-            const { error } = await supabase.auth.signInWithOtp({
+            const { error } = await sb.auth.signInWithOtp({
                 email,
                 options: { emailRedirectTo: window.location.origin + '/proveedores.html' }
             });
@@ -954,7 +954,7 @@
         // ── OAUTH GATE ──
         async function showForm(user) {
             // Si ya tiene perfil registrado, ir directo al dashboard
-            const { data: existing } = await supabase
+            const { data: existing } = await sb
                 .from('providers')
                 .select('id')
                 .eq('user_id', user.id)
@@ -979,7 +979,7 @@
             const errEl = document.getElementById('oauthError');
             errEl.style.display = 'none';
             try {
-                const { error } = await supabase.auth.signInWithOAuth({
+                const { error } = await sb.auth.signInWithOAuth({
                     provider,
                     options: { redirectTo: window.location.origin + '/proveedores.html' }
                 });
@@ -991,11 +991,11 @@
         }
 
         // Al cargar: si ya hay sesión activa (retorno OAuth), mostrar form directo
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        sb.auth.getSession().then(({ data: { session } }) => {
             if (session) showForm(session.user);
         });
 
-        supabase.auth.onAuthStateChange((event, session) => {
+        sb.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' && session) showForm(session.user);
         });
     </script>
