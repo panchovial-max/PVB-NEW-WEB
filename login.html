@@ -534,7 +534,7 @@
         const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NzM5NjYsImV4cCI6MjA4NDQ0OTk2Nn0.VBiCJK4Goz6iao4fqUfOs3wrgMaFO-LUGZqOxp9UKKg';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         function storeSession(session) {
             localStorage.setItem('supabase_session', JSON.stringify(session));
