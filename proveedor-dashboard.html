@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil — Red de Proveedores PVB</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0a0a0a; color: #fff; font-family: 'Inter', sans-serif; }
+
+        .dash-header {
+            background: #111;
+            border-bottom: 1px solid #1f1f1f;
+            padding: 20px var(--spacing-md, 24px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .dash-logo img { height: 32px; }
+        .dash-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: #888;
+        }
+        .dash-user strong { color: #fff; }
+        .dash-signout {
+            background: none;
+            border: 1px solid #333;
+            color: #888;
+            font-size: 11px;
+            letter-spacing: 1px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: border-color .2s;
+        }
+        .dash-signout:hover { border-color: #666; color: #fff; }
+
+        .dash-main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        .dash-section { margin-bottom: 48px; }
+        .dash-section-title {
+            font-size: 10px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-radius: 2px;
+        }
+        .status-pending  { background: #1a1500; color: #f5c518; border: 1px solid #3a3000; }
+        .status-active   { background: #0d1f0d; color: #4caf50; border: 1px solid #1a3a1a; }
+        .status-contacted{ background: #0d0f1f; color: #6a8fff; border: 1px solid #1a2060; }
+        .status-paused   { background: #1a1a1a; color: #666; border: 1px solid #333; }
+
+        /* Profile card */
+        .profile-card {
+            background: #111;
+            border: 1px solid #1f1f1f;
+            padding: 28px;
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .profile-avatar {
+            width: 64px;
+            height: 64px;
+            background: #1f1f1f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .profile-info { flex: 1; }
+        .profile-info h2 { font-size: 1.4rem; margin-bottom: 6px; }
+        .profile-info p { font-size: 13px; color: #888; line-height: 1.7; }
+
+        /* Referral code */
+        .referral-box {
+            background: #0d1f0d;
+            border: 1px solid #1a3a1a;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .referral-box p { font-size: 13px; color: #888; margin-bottom: 6px; }
+        .referral-code {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #4caf50;
+        }
+        .copy-btn {
+            background: none;
+            border: 1px solid #2a4a2a;
+            color: #4caf50;
+            font-size: 11px;
+            letter-spacing: 1px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background .2s;
+        }
+        .copy-btn:hover { background: #1a3a1a; }
+
+        /* Assets grid */
+        .assets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .asset-card {
+            background: #111;
+            border: 1px solid #1f1f1f;
+            padding: 20px;
+        }
+        .asset-card h4 { font-size: 14px; margin-bottom: 6px; }
+        .asset-card p { font-size: 12px; color: #666; line-height: 1.6; }
+        .asset-photo {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            margin-bottom: 14px;
+            background: #1a1a1a;
+        }
+        .asset-status {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #4caf50;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        /* Matches */
+        .match-list { display: flex; flex-direction: column; gap: 12px; }
+        .match-card {
+            background: #111;
+            border: 1px solid #1f1f1f;
+            border-left: 3px solid #6a8fff;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .match-card h4 { font-size: 14px; margin-bottom: 4px; }
+        .match-card p { font-size: 12px; color: #666; }
+        .match-actions { display: flex; gap: 8px; }
+        .btn-interested {
+            background: #fff;
+            color: #000;
+            border: none;
+            font-size: 11px;
+            letter-spacing: 1px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-pass {
+            background: none;
+            border: 1px solid #333;
+            color: #666;
+            font-size: 11px;
+            letter-spacing: 1px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .stat-card {
+            background: #111;
+            border: 1px solid #1f1f1f;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-number { font-size: 2rem; font-weight: 900; color: #fff; }
+        .stat-label { font-size: 10px; letter-spacing: 2px; color: #555; text-transform: uppercase; margin-top: 4px; }
+
+        /* Empty state */
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #444;
+            border: 1px dashed #222;
+            font-size: 13px;
+        }
+
+        .loading { text-align: center; padding: 80px 20px; color: #444; font-size: 13px; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="dash-header">
+        <div class="dash-logo">
+            <a href="index.html"><img src="LOGO_PVB.png" alt="PVB Estudio Creativo"></a>
+        </div>
+        <div class="dash-user">
+            <span>Hola, <strong id="headerName">—</strong></span>
+            <button class="dash-signout" onclick="signOut()">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="dash-main" id="dashMain">
+        <div class="loading" id="loadingState">CARGANDO TU PERFIL...</div>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const STATUS_LABELS = {
+            pending: 'En revisión',
+            active: 'Activo',
+            contacted: 'Contactado',
+            paused: 'Pausado'
+        };
+
+        async function signOut() {
+            await supabase.auth.signOut();
+            window.location.href = 'proveedores.html';
+        }
+
+        async function loadDashboard(user) {
+            document.getElementById('headerName').textContent =
+                user.user_metadata?.full_name?.split(' ')[0] || user.email;
+
+            // Cargar perfil
+            const { data: provider } = await supabase
+                .from('providers')
+                .select('*, provider_assets(*)')
+                .eq('user_id', user.id)
+                .single();
+
+            if (!provider) {
+                // Usuario autenticado pero sin perfil → redirigir a registro
+                window.location.href = 'proveedores.html';
+                return;
+            }
+
+            // Cargar matches
+            const { data: matches } = await supabase
+                .from('project_matches')
+                .select('*, projects(*)')
+                .eq('provider_id', provider.id)
+                .order('notified_at', { ascending: false })
+                .limit(10);
+
+            renderDashboard(provider, matches || []);
+        }
+
+        function renderDashboard(p, matches) {
+            const assets = p.provider_assets || [];
+            const activeMatches = matches.filter(m => m.status === 'notified');
+
+            document.getElementById('dashMain').innerHTML = `
+
+                <!-- Stats -->
+                <div class="dash-section">
+                    <p class="dash-section-title">Resumen</p>
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-number">${assets.length}</div>
+                            <div class="stat-label">Assets registrados</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${matches.length}</div>
+                            <div class="stat-label">Proyectos considerado</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${matches.filter(m => m.status === 'confirmed').length}</div>
+                            <div class="stat-label">Trabajos confirmados</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Perfil -->
+                <div class="dash-section">
+                    <p class="dash-section-title">Tu perfil</p>
+                    <div class="profile-card">
+                        <div class="profile-avatar">👤</div>
+                        <div class="profile-info">
+                            <h2>${p.full_name}</h2>
+                            <p>${p.email || ''} ${p.phone ? '· ' + p.phone : ''} ${p.instagram ? '· ' + p.instagram : ''}</p>
+                            <p style="margin-top:8px;">Categoría: <strong>${p.category}</strong></p>
+                        </div>
+                        <span class="status-badge status-${p.status}">${STATUS_LABELS[p.status]}</span>
+                    </div>
+                </div>
+
+                <!-- Código de referido -->
+                <div class="dash-section">
+                    <p class="dash-section-title">Tu código de referido</p>
+                    <div class="referral-box">
+                        <div>
+                            <p>Comparte este código con personas que puedan sumarse a la red. Si se concreta un trabajo, <strong>ganas un 5%</strong>.</p>
+                            <div class="referral-code">${p.referral_code || '—'}</div>
+                        </div>
+                        <button class="copy-btn" onclick="copyCode('${p.referral_code}')">Copiar código</button>
+                    </div>
+                </div>
+
+                <!-- Matches / proyectos -->
+                <div class="dash-section">
+                    <p class="dash-section-title">Proyectos en los que puedes participar ${activeMatches.length > 0 ? '(' + activeMatches.length + ')' : ''}</p>
+                    ${activeMatches.length === 0
+                        ? '<div class="empty-state">Aún no hay proyectos disponibles para tu perfil. Te notificamos cuando aparezca uno.</div>'
+                        : `<div class="match-list">${activeMatches.map(m => `
+                            <div class="match-card">
+                                <div>
+                                    <h4>${m.projects?.title || 'Proyecto PVB'}</h4>
+                                    <p>${m.projects?.description || ''} ${m.projects?.shoot_date ? '· ' + m.projects.shoot_date : ''}</p>
+                                </div>
+                                <div class="match-actions">
+                                    <button class="btn-interested" onclick="respondMatch('${m.id}','interested')">Me interesa</button>
+                                    <button class="btn-pass" onclick="respondMatch('${m.id}','rejected')">Paso</button>
+                                </div>
+                            </div>`).join('')}
+                        </div>`
+                    }
+                </div>
+
+                <!-- Assets -->
+                <div class="dash-section">
+                    <p class="dash-section-title">Tus assets (${assets.length})</p>
+                    ${assets.length === 0
+                        ? '<div class="empty-state">No tienes assets registrados.</div>'
+                        : `<div class="assets-grid">${assets.map(a => `
+                            <div class="asset-card">
+                                ${a.photos?.[0] ? `<img src="${a.photos[0]}" class="asset-photo" alt="${a.title}">` : ''}
+                                <h4>${a.title}</h4>
+                                <p>${a.description || ''}</p>
+                                ${a.location ? `<p>📍 ${a.location}</p>` : ''}
+                                <p class="asset-status">● ${a.status === 'available' ? 'Disponible' : a.status}</p>
+                            </div>`).join('')}
+                        </div>`
+                    }
+                </div>
+            `;
+        }
+
+        async function respondMatch(matchId, status) {
+            await supabase.from('project_matches').update({
+                status,
+                responded_at: new Date().toISOString()
+            }).eq('id', matchId);
+            location.reload();
+        }
+
+        function copyCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Código copiado: ' + code);
+            });
+        }
+
+        // Auth guard
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (!session) {
+                window.location.href = 'proveedores.html';
+            } else {
+                loadDashboard(session.user);
+            }
+        });
+    </script>
+</body>
+</html>
