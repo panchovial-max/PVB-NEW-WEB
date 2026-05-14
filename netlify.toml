@@ -67,6 +67,11 @@
   to = "/proveedor-dashboard.html"
   status = 200
 
+[[redirects]]
+  from = "/moodboard"
+  to = "/moodboard.html"
+  status = 200
+
 # Headers for security
 [[headers]]
   for = "/*"

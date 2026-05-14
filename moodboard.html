@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moodboard — PVB Estudio Creativo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #080808; --surface: #111; --surface2: #181818;
+            --border: #1f1f1f; --border2: #2a2a2a;
+            --text: #fff; --muted: #666; --subtle: #444;
+            --green: #4caf50; --red: #e55; --yellow: #f5c518; --blue: #6a8fff;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; }
+
+        /* ── HEADER ── */
+        .header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 24px; height: 56px;
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .back-btn {
+            background: none; border: none; color: var(--muted); cursor: pointer;
+            font-size: 18px; padding: 4px 8px; font-family: inherit;
+        }
+        .back-btn:hover { color: var(--text); }
+        .header-title { font-size: 14px; font-weight: 600; }
+        .header-sub { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+
+        /* ── BOARDS NAV ── */
+        .boards-nav {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 24px; display: flex; align-items: center; gap: 4px; overflow-x: auto;
+        }
+        .board-tab {
+            padding: 12px 16px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+            background: none; border: none; color: var(--muted); cursor: pointer;
+            border-bottom: 2px solid transparent; white-space: nowrap; font-family: inherit;
+            transition: all .15s;
+        }
+        .board-tab:hover { color: var(--text); }
+        .board-tab.active { color: var(--text); border-bottom-color: var(--text); }
+        .board-add-tab {
+            padding: 12px 14px; font-size: 18px; background: none; border: none;
+            color: var(--muted); cursor: pointer; font-family: inherit;
+        }
+        .board-add-tab:hover { color: var(--text); }
+
+        /* ── TOOLBAR ── */
+        .toolbar {
+            padding: 16px 24px; display: flex; align-items: center; gap: 10px;
+            flex-wrap: wrap; border-bottom: 1px solid var(--border);
+        }
+        .filter-chip {
+            padding: 6px 14px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            background: none; border: 1px solid var(--border2); color: var(--muted);
+            cursor: pointer; font-family: inherit; transition: all .15s;
+        }
+        .filter-chip.active { border-color: var(--text); color: var(--text); background: var(--surface2); }
+        .spacer { flex: 1; }
+        .btn {
+            padding: 8px 16px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; font-family: inherit; border: none; transition: all .15s;
+        }
+        .btn-primary { background: var(--text); color: #000; }
+        .btn-primary:hover { background: #ddd; }
+        .btn-ghost { background: none; border: 1px solid var(--border2); color: var(--muted); }
+        .btn-ghost:hover { border-color: #444; color: var(--text); }
+        .btn-sm { padding: 5px 12px; font-size: 11px; }
+        .btn-danger { background: none; border: 1px solid #5a1a1a; color: var(--red); }
+        .btn-danger:hover { background: #1a0808; }
+
+        /* ── GRID ── */
+        .board-content { padding: 24px; }
+        .items-grid {
+            columns: 4 240px; column-gap: 16px;
+        }
+        .item-card {
+            break-inside: avoid; margin-bottom: 16px;
+            background: var(--surface); border: 1px solid var(--border);
+            position: relative; transition: border-color .15s;
+        }
+        .item-card:hover { border-color: var(--border2); }
+        .item-card.approved { border-color: var(--green); }
+        .item-card.rejected { opacity: .45; }
+
+        .item-thumb {
+            width: 100%; display: block; object-fit: cover;
+            background: var(--surface2); min-height: 140px;
+            cursor: pointer;
+        }
+        .item-thumb-placeholder {
+            min-height: 140px; display: flex; align-items: center; justify-content: center;
+            font-size: 32px; background: var(--surface2); cursor: pointer;
+        }
+
+        .item-body { padding: 12px; }
+        .item-source {
+            font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+        }
+        .source-dot { width: 5px; height: 5px; border-radius: 50%; }
+        .dot-pinterest { background: #e60023; }
+        .dot-instagram { background: #c13584; }
+        .dot-google { background: #4285f4; }
+        .dot-upload { background: var(--green); }
+        .dot-url { background: var(--muted); }
+
+        .item-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; line-height: 1.4; }
+        .item-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+        .tag {
+            font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+            padding: 2px 8px; border-radius: 2px; border: 1px solid var(--border2); color: var(--subtle);
+        }
+
+        .item-actions { display: flex; gap: 6px; }
+        .action-btn {
+            flex: 1; padding: 6px; font-size: 11px; text-align: center;
+            cursor: pointer; border: none; font-family: inherit; transition: all .15s;
+            letter-spacing: 0.5px;
+        }
+        .action-approve { background: #0d1f0d; color: var(--green); border: 1px solid #1a3a1a; }
+        .action-approve:hover { background: #1a3a1a; }
+        .action-approve.active { background: #1a4a1a; }
+        .action-reject { background: #1a0808; color: var(--red); border: 1px solid #3a1010; }
+        .action-reject:hover { background: #2a1010; }
+        .action-comment { background: var(--surface2); color: var(--muted); border: 1px solid var(--border2); }
+        .action-comment:hover { color: var(--text); border-color: #444; }
+
+        .item-status-bar {
+            font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+            padding: 4px 12px; text-align: center;
+        }
+        .status-approved { background: #0d1f0d; color: var(--green); }
+        .status-rejected { background: #1a0808; color: var(--red); }
+        .status-pending  { background: #1a1200; color: var(--yellow); }
+
+        /* ── COMMENTS ── */
+        .item-comments { border-top: 1px solid var(--border); padding: 10px 12px; }
+        .comment { margin-bottom: 8px; }
+        .comment-meta { font-size: 10px; color: var(--muted); margin-bottom: 2px; }
+        .comment-meta strong { color: #aaa; }
+        .comment-body { font-size: 12px; color: #ccc; line-height: 1.5; }
+        .comment-input-row { display: flex; gap: 6px; margin-top: 8px; }
+        .comment-input {
+            flex: 1; padding: 6px 10px; background: var(--surface2);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 12px; font-family: inherit; outline: none;
+        }
+        .comment-input:focus { border-color: #444; }
+        .comment-send {
+            padding: 6px 12px; background: var(--surface2); border: 1px solid var(--border2);
+            color: var(--muted); cursor: pointer; font-family: inherit; font-size: 12px;
+        }
+        .comment-send:hover { color: var(--text); border-color: #444; }
+
+        /* ── ADD ITEM MODAL ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.9);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal {
+            width: min(560px, 95vw); background: var(--surface);
+            border: 1px solid var(--border2); padding: 28px;
+            transform: translateY(20px); transition: transform .2s;
+        }
+        .modal-overlay.open .modal { transform: translateY(0); }
+        .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+        .modal-close-btn {
+            float: right; background: none; border: none; color: var(--muted);
+            cursor: pointer; font-size: 20px; line-height: 1; margin-top: -4px;
+        }
+        .modal-close-btn:hover { color: var(--text); }
+
+        .source-tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+        .source-tab {
+            padding: 8px 14px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            background: none; border: 1px solid var(--border2); color: var(--muted);
+            cursor: pointer; font-family: inherit; transition: all .15s;
+        }
+        .source-tab.active { border-color: var(--text); color: var(--text); background: var(--surface2); }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; font-size: 10px; letter-spacing: 2px;
+            text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%; padding: 10px 14px; background: var(--surface2);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 13px; font-family: inherit; outline: none;
+        }
+        .form-input:focus { border-color: #444; }
+        .url-preview {
+            display: none; margin-top: 12px; background: var(--surface2);
+            border: 1px solid var(--border2); padding: 12px; gap: 12px;
+        }
+        .url-preview.show { display: flex; }
+        .url-preview img { width: 80px; height: 60px; object-fit: cover; flex-shrink: 0; }
+        .url-preview-info { flex: 1; }
+        .url-preview-info p { font-size: 12px; color: #aaa; line-height: 1.5; }
+        .url-preview-info strong { color: var(--text); font-size: 13px; display: block; margin-bottom: 4px; }
+
+        .tag-select { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag-option {
+            padding: 5px 12px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+            background: none; border: 1px solid var(--border2); color: var(--muted);
+            cursor: pointer; font-family: inherit; transition: all .15s;
+        }
+        .tag-option.active { border-color: var(--text); color: var(--text); background: var(--surface2); }
+
+        .upload-zone {
+            border: 2px dashed var(--border2); padding: 32px; text-align: center;
+            cursor: pointer; transition: border-color .15s;
+        }
+        .upload-zone:hover { border-color: #444; }
+        .upload-zone input { display: none; }
+        .upload-zone p { font-size: 13px; color: var(--muted); margin-top: 8px; }
+        .upload-zone .upload-icon { font-size: 32px; }
+        .upload-preview-img { width: 100%; max-height: 200px; object-fit: cover; margin-top: 12px; display: none; }
+
+        .fetching { font-size: 11px; color: var(--muted); letter-spacing: 1px; display: none; margin-top: 8px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+        /* ── NEW BOARD MODAL ── */
+        .cat-options { display: flex; flex-wrap: wrap; gap: 8px; }
+        .cat-option {
+            padding: 7px 14px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            background: none; border: 1px solid var(--border2); color: var(--muted);
+            cursor: pointer; font-family: inherit; transition: all .15s;
+        }
+        .cat-option.active { border-color: var(--text); color: var(--text); background: var(--surface2); }
+
+        /* ── EMPTY STATE ── */
+        .empty-board {
+            padding: 80px 20px; text-align: center; color: var(--muted);
+            border: 1px dashed var(--border2); margin: 24px;
+        }
+        .empty-board .empty-icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-board h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #aaa; }
+        .empty-board p { font-size: 13px; line-height: 1.6; margin-bottom: 20px; }
+
+        .loading { text-align: center; padding: 80px; color: var(--muted); letter-spacing: 3px; font-size: 11px; }
+        .error-msg { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="header-left">
+        <button type="button" class="back-btn" onclick="history.back()">←</button>
+        <div>
+            <div class="header-title" id="headerTitle">Moodboard</div>
+            <div class="header-sub" id="headerSub">Referencias & Inspiración</div>
+        </div>
+    </div>
+    <div class="header-right">
+        <span id="userBadge" style="font-size:11px;color:var(--muted);"></span>
+        <button type="button" class="btn btn-primary" onclick="openAddModal()">+ Agregar</button>
+    </div>
+</header>
+
+<!-- BOARDS NAV -->
+<nav class="boards-nav" id="boardsNav">
+    <div class="loading" style="padding:12px;">Cargando boards...</div>
+</nav>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+    <button type="button" class="filter-chip active" onclick="filterStatus('all',this)">Todos</button>
+    <button type="button" class="filter-chip" onclick="filterStatus('approved',this)">✓ Aprobados</button>
+    <button type="button" class="filter-chip" onclick="filterStatus('pending',this)">⏳ Pendientes</button>
+    <button type="button" class="filter-chip" onclick="filterStatus('rejected',this)">✕ Descartados</button>
+    <div class="spacer"></div>
+    <span id="itemCount" style="font-size:11px;color:var(--muted);letter-spacing:1px;"></span>
+</div>
+
+<!-- BOARD CONTENT -->
+<div class="board-content" id="boardContent">
+    <div class="loading">CARGANDO...</div>
+</div>
+
+<!-- ADD ITEM MODAL -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal">
+        <div class="modal-title">
+            Agregar referencia
+            <button type="button" class="modal-close-btn" onclick="closeAddModal()">×</button>
+        </div>
+
+        <div class="source-tabs">
+            <button type="button" class="source-tab active" onclick="setSource('url',this)">🔗 URL / Pinterest / IG</button>
+            <button type="button" class="source-tab" onclick="setSource('upload',this)">📁 Subir foto</button>
+        </div>
+
+        <!-- URL source -->
+        <div id="urlPanel">
+            <div class="form-group">
+                <label>Pega la URL de Pinterest, Instagram, Google u otro</label>
+                <input type="url" class="form-input" id="urlInput" placeholder="https://pinterest.com/pin/..." oninput="onUrlInput(this.value)">
+                <p class="fetching" id="fetchingMsg">⏳ Extrayendo preview...</p>
+            </div>
+            <div class="url-preview" id="urlPreview">
+                <img id="previewImg" src="" alt="">
+                <div class="url-preview-info">
+                    <strong id="previewTitle"></strong>
+                    <p id="previewDesc"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload source -->
+        <div id="uploadPanel" style="display:none;">
+            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📁</div>
+                <p>Haz clic para seleccionar una imagen</p>
+                <p style="font-size:11px;margin-top:4px;">JPG, PNG, WEBP · Máx 10MB</p>
+                <input type="file" id="fileInput" accept="image/*" onchange="onFileSelect(this)">
+                <img id="uploadPreviewImg" class="upload-preview-img" alt="">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top:16px;">
+            <label>Título <span style="color:var(--muted);font-size:9px;">(opcional — se auto-completa)</span></label>
+            <input type="text" class="form-input" id="itemTitle" placeholder="Ej: Locación industrial con luz natural">
+        </div>
+
+        <div class="form-group">
+            <label>Categorías / Tags</label>
+            <div class="tag-select" id="tagSelect">
+                <button type="button" class="tag-option" onclick="toggleTag('locacion',this)">📍 Locación</button>
+                <button type="button" class="tag-option" onclick="toggleTag('iluminacion',this)">💡 Iluminación</button>
+                <button type="button" class="tag-option" onclick="toggleTag('color',this)">🎨 Color</button>
+                <button type="button" class="tag-option" onclick="toggleTag('composicion',this)">📐 Composición</button>
+                <button type="button" class="tag-option" onclick="toggleTag('vestuario',this)">👗 Vestuario</button>
+                <button type="button" class="tag-option" onclick="toggleTag('camara',this)">🎬 Cámara</button>
+                <button type="button" class="tag-option" onclick="toggleTag('arte',this)">🖼 Arte</button>
+            </div>
+        </div>
+
+        <p class="error-msg" id="addError"></p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" id="addBtn" onclick="addItem()">Agregar al moodboard</button>
+            <button type="button" class="btn btn-ghost" onclick="closeAddModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- NEW BOARD MODAL -->
+<div class="modal-overlay" id="newBoardModal">
+    <div class="modal">
+        <div class="modal-title">
+            Nuevo board
+            <button type="button" class="modal-close-btn" onclick="closeNewBoard()">×</button>
+        </div>
+        <div class="form-group">
+            <label>Nombre del board</label>
+            <input type="text" class="form-input" id="newBoardTitle" placeholder="Ej: Locaciones exteriores">
+        </div>
+        <div class="form-group">
+            <label>Categoría</label>
+            <div class="cat-options" id="catOptions">
+                <button type="button" class="cat-option active" onclick="selectCat('general',this)">General</button>
+                <button type="button" class="cat-option" onclick="selectCat('locaciones',this)">🏠 Locaciones</button>
+                <button type="button" class="cat-option" onclick="selectCat('iluminacion',this)">💡 Iluminación</button>
+                <button type="button" class="cat-option" onclick="selectCat('color',this)">🎨 Color</button>
+                <button type="button" class="cat-option" onclick="selectCat('vestuario',this)">👗 Vestuario</button>
+                <button type="button" class="cat-option" onclick="selectCat('camara',this)">🎬 Cámara</button>
+                <button type="button" class="cat-option" onclick="selectCat('arte',this)">🖼 Arte</button>
+                <button type="button" class="cat-option" onclick="selectCat('otro',this)">✨ Otro</button>
+            </div>
+        </div>
+        <p class="error-msg" id="boardError"></p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="createBoard()">Crear board</button>
+            <button type="button" class="btn btn-ghost" onclick="closeNewBoard()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const params = new URLSearchParams(location.search);
+    const projectId = params.get('project');
+    const isAdmin = params.get('admin') === '1';
+
+    let currentUser = null;
+    let currentBoard = null;
+    let allBoards = [];
+    let allItems = [];
+    let statusFilter = 'all';
+    let selectedTags = [];
+    let selectedCatNew = 'general';
+    let addSource = 'url';
+    let urlDebounce = null;
+    let ogData = null;
+    let uploadFile = null;
+    let uploadPreviewUrl = null;
+
+    const SOURCE_ICONS = { pinterest:'🟥', instagram:'📸', google:'🔍', upload:'📁', url:'🔗' };
+    const SOURCE_DOTS = { pinterest:'dot-pinterest', instagram:'dot-instagram', google:'dot-google', upload:'dot-upload', url:'dot-url' };
+    const TAG_ICONS = { locacion:'📍', iluminacion:'💡', color:'🎨', composicion:'📐', vestuario:'👗', camara:'🎬', arte:'🖼' };
+
+    // ── INIT ──
+    async function init() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session && !isAdmin) {
+            document.getElementById('boardContent').innerHTML =
+                `<div class="empty-board"><div class="empty-icon">🔒</div><h3>Acceso requerido</h3><p>Debes iniciar sesión para ver tu moodboard.</p><a href="login.html" style="color:var(--text)">Iniciar sesión →</a></div>`;
+            return;
+        }
+        currentUser = session?.user || null;
+        if (currentUser) {
+            const name = currentUser.user_metadata?.full_name?.split(' ')[0] || currentUser.email;
+            document.getElementById('userBadge').textContent = isAdmin ? '🎬 Francisco' : `👤 ${name}`;
+        }
+        await loadBoards();
+    }
+
+    async function loadBoards() {
+        let query = supabase.from('moodboards').select('*').order('created_at');
+        if (projectId) query = query.eq('project_id', projectId);
+        else if (currentUser) query = query.eq('client_id', currentUser.id);
+
+        const { data } = await query;
+        allBoards = data || [];
+        renderBoardTabs();
+
+        if (allBoards.length > 0) {
+            currentBoard = allBoards[0];
+            await loadItems();
+        } else {
+            renderEmptyBoards();
+        }
+    }
+
+    function renderBoardTabs() {
+        const nav = document.getElementById('boardsNav');
+        nav.innerHTML = allBoards.map(b => `
+            <button type="button" class="board-tab ${b.id === currentBoard?.id ? 'active' : ''}"
+                onclick="switchBoard('${b.id}')">${b.title}</button>
+        `).join('') + `<button type="button" class="board-add-tab" onclick="openNewBoard()" title="Nuevo board">＋</button>`;
+    }
+
+    async function switchBoard(id) {
+        currentBoard = allBoards.find(b => b.id === id);
+        renderBoardTabs();
+        await loadItems();
+    }
+
+    async function loadItems() {
+        if (!currentBoard) return;
+        document.getElementById('boardContent').innerHTML = '<div class="loading">CARGANDO...</div>';
+
+        const { data } = await supabase
+            .from('moodboard_items')
+            .select('*, moodboard_comments(*)')
+            .eq('moodboard_id', currentBoard.id)
+            .order('sort_order').order('created_at');
+
+        allItems = data || [];
+        renderItems();
+    }
+
+    function filteredItems() {
+        return statusFilter === 'all' ? allItems : allItems.filter(i => i.status === statusFilter);
+    }
+
+    function renderItems() {
+        const items = filteredItems();
+        document.getElementById('itemCount').textContent = `${items.length} referencia${items.length !== 1 ? 's' : ''}`;
+
+        if (!currentBoard) { renderEmptyBoards(); return; }
+
+        if (items.length === 0) {
+            document.getElementById('boardContent').innerHTML = `
+                <div class="empty-board">
+                    <div class="empty-icon">📌</div>
+                    <h3>${statusFilter === 'all' ? 'Board vacío' : 'Sin referencias ' + statusFilter}</h3>
+                    <p>${statusFilter === 'all'
+                        ? 'Agrega referencias de Pinterest, Instagram, Google o sube tus propias fotos para construir la visión del proyecto.'
+                        : 'No hay referencias con este filtro todavía.'}</p>
+                    ${statusFilter === 'all' ? `<button type="button" class="btn btn-primary" onclick="openAddModal()">+ Agregar primera referencia</button>` : ''}
+                </div>`;
+            return;
+        }
+
+        document.getElementById('boardContent').innerHTML =
+            `<div class="items-grid">${items.map(item => renderItem(item)).join('')}</div>`;
+    }
+
+    function renderItem(item) {
+        const comments = item.moodboard_comments || [];
+        const tags = (item.tags || []).map(t => `<span class="tag">${TAG_ICONS[t] || ''} ${t}</span>`).join('');
+        const thumb = item.thumbnail_url || item.storage_path;
+
+        return `<div class="item-card ${item.status}" id="card-${item.id}">
+            ${item.status !== 'pending' ? `<div class="item-status-bar status-${item.status}">
+                ${item.status === 'approved' ? '✓ Aprobado' : '✕ Descartado'}
+            </div>` : ''}
+
+            ${thumb
+                ? `<img class="item-thumb" src="${thumb}" alt="${item.title||''}" onclick="openSource('${item.original_url||''}')">`
+                : `<div class="item-thumb-placeholder" onclick="openSource('${item.original_url||''}')">
+                    ${SOURCE_ICONS[item.source] || '🖼'}
+                </div>`}
+
+            <div class="item-body">
+                <div class="item-source">
+                    <span class="source-dot ${SOURCE_DOTS[item.source]}"></span>
+                    ${item.source}
+                    ${item.added_by_role === 'admin' ? '· <span style="color:#6a8fff">Francisco</span>' : ''}
+                </div>
+                ${item.title ? `<div class="item-title">${item.title}</div>` : ''}
+                ${tags ? `<div class="item-tags">${tags}</div>` : ''}
+                <div class="item-actions">
+                    <button type="button" class="action-btn action-approve ${item.status==='approved'?'active':''}"
+                        onclick="setStatus('${item.id}','${item.status==='approved'?'pending':'approved'}')">
+                        ${item.status === 'approved' ? '✓ Aprobado' : '✓ Aprobar'}
+                    </button>
+                    <button type="button" class="action-btn action-reject ${item.status==='rejected'?'active':''}"
+                        onclick="setStatus('${item.id}','${item.status==='rejected'?'pending':'rejected'}')">✕</button>
+                    <button type="button" class="action-btn action-comment"
+                        onclick="toggleComments('${item.id}')">💬 ${comments.length || ''}</button>
+                    ${isAdmin ? `<button type="button" class="action-btn action-reject btn-sm"
+                        onclick="deleteItem('${item.id}')">🗑</button>` : ''}
+                </div>
+            </div>
+
+            <div class="item-comments" id="comments-${item.id}" style="display:none;">
+                ${comments.map(c => `
+                    <div class="comment">
+                        <div class="comment-meta"><strong>${c.user_name}</strong> · ${new Date(c.created_at).toLocaleDateString('es-CL')}</div>
+                        <div class="comment-body">${c.body}</div>
+                    </div>`).join('')}
+                <div class="comment-input-row">
+                    <input type="text" class="comment-input" id="ci-${item.id}"
+                        placeholder="Agregar comentario..." onkeydown="if(event.key==='Enter') sendComment('${item.id}')">
+                    <button type="button" class="comment-send" onclick="sendComment('${item.id}')">→</button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function renderEmptyBoards() {
+        document.getElementById('boardsNav').innerHTML =
+            `<button type="button" class="board-add-tab" onclick="openNewBoard()" title="Nuevo board">＋ Crear primer board</button>`;
+        document.getElementById('boardContent').innerHTML = `
+            <div class="empty-board">
+                <div class="empty-icon">🎨</div>
+                <h3>Sin boards todavía</h3>
+                <p>Crea tu primer board para empezar a agregar referencias e inspiración para el proyecto.</p>
+                <button type="button" class="btn btn-primary" onclick="openNewBoard()">+ Crear board</button>
+            </div>`;
+    }
+
+    // ── STATUS ──
+    async function setStatus(itemId, status) {
+        await supabase.from('moodboard_items').update({
+            status,
+            approved_by: currentUser?.id || null,
+            approved_at: status === 'approved' ? new Date().toISOString() : null
+        }).eq('id', itemId);
+        const item = allItems.find(i => i.id === itemId);
+        if (item) item.status = status;
+        renderItems();
+    }
+
+    async function deleteItem(itemId) {
+        if (!confirm('¿Eliminar esta referencia?')) return;
+        await supabase.from('moodboard_items').delete().eq('id', itemId);
+        allItems = allItems.filter(i => i.id !== itemId);
+        renderItems();
+    }
+
+    // ── COMMENTS ──
+    function toggleComments(itemId) {
+        const el = document.getElementById(`comments-${itemId}`);
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        if (el.style.display === 'block') document.getElementById(`ci-${itemId}`)?.focus();
+    }
+
+    async function sendComment(itemId) {
+        const input = document.getElementById(`ci-${itemId}`);
+        const body = input?.value.trim();
+        if (!body) return;
+        const name = isAdmin ? 'Francisco' : (currentUser?.user_metadata?.full_name || currentUser?.email || 'Cliente');
+        await supabase.from('moodboard_comments').insert({
+            item_id: itemId, user_id: currentUser?.id, body,
+            user_name: name, user_role: isAdmin ? 'admin' : 'client'
+        });
+        if (input) input.value = '';
+        await loadItems();
+    }
+
+    // ── FILTER ──
+    function filterStatus(status, el) {
+        statusFilter = status;
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        renderItems();
+    }
+
+    // ── ADD ITEM ──
+    function openAddModal() {
+        ogData = null; uploadFile = null; uploadPreviewUrl = null;
+        document.getElementById('urlInput').value = '';
+        document.getElementById('urlPreview').classList.remove('show');
+        document.getElementById('itemTitle').value = '';
+        document.getElementById('addError').style.display = 'none';
+        document.querySelectorAll('.tag-option').forEach(t => t.classList.remove('active'));
+        selectedTags = [];
+        setSource('url', document.querySelector('.source-tab'));
+        document.getElementById('addModal').classList.add('open');
+    }
+
+    function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
+
+    function setSource(src, el) {
+        addSource = src;
+        document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('urlPanel').style.display = src === 'url' ? 'block' : 'none';
+        document.getElementById('uploadPanel').style.display = src === 'upload' ? 'block' : 'none';
+    }
+
+    function toggleTag(tag, el) {
+        const idx = selectedTags.indexOf(tag);
+        if (idx === -1) { selectedTags.push(tag); el.classList.add('active'); }
+        else { selectedTags.splice(idx, 1); el.classList.remove('active'); }
+    }
+
+    function onUrlInput(val) {
+        clearTimeout(urlDebounce);
+        document.getElementById('urlPreview').classList.remove('show');
+        ogData = null;
+        if (!val || !val.startsWith('http')) return;
+        document.getElementById('fetchingMsg').style.display = 'block';
+        urlDebounce = setTimeout(() => fetchOG(val), 800);
+    }
+
+    async function fetchOG(url) {
+        try {
+            const res = await fetch(`/api/og-fetch?url=${encodeURIComponent(url)}`);
+            const data = await res.json();
+            ogData = data;
+            document.getElementById('fetchingMsg').style.display = 'none';
+            if (data.image || data.title) {
+                document.getElementById('previewImg').src = data.image || '';
+                document.getElementById('previewImg').style.display = data.image ? 'block' : 'none';
+                document.getElementById('previewTitle').textContent = data.title || '';
+                document.getElementById('previewDesc').textContent = data.description || '';
+                document.getElementById('urlPreview').classList.add('show');
+                if (data.title && !document.getElementById('itemTitle').value) {
+                    document.getElementById('itemTitle').value = data.title;
+                }
+            }
+        } catch {
+            document.getElementById('fetchingMsg').style.display = 'none';
+        }
+    }
+
+    function onFileSelect(input) {
+        const file = input.files[0];
+        if (!file) return;
+        uploadFile = file;
+        uploadPreviewUrl = URL.createObjectURL(file);
+        const img = document.getElementById('uploadPreviewImg');
+        img.src = uploadPreviewUrl;
+        img.style.display = 'block';
+    }
+
+    async function addItem() {
+        const errEl = document.getElementById('addError');
+        errEl.style.display = 'none';
+        const btn = document.getElementById('addBtn');
+        btn.disabled = true;
+        btn.textContent = 'Agregando...';
+
+        try {
+            if (!currentBoard) throw new Error('Selecciona un board primero.');
+
+            let thumbnailUrl = null;
+            let originalUrl = null;
+            let storagePath = null;
+            let source = addSource;
+            let title = document.getElementById('itemTitle').value.trim();
+
+            if (addSource === 'url') {
+                originalUrl = document.getElementById('urlInput').value.trim();
+                if (!originalUrl) throw new Error('Ingresa una URL.');
+                thumbnailUrl = ogData?.image || null;
+                source = ogData?.source || 'url';
+                if (!title) title = ogData?.title || null;
+            } else {
+                if (!uploadFile) throw new Error('Selecciona una imagen.');
+                const ext = uploadFile.name.split('.').pop();
+                storagePath = `${currentBoard.id}/${Date.now()}.${ext}`;
+                const { error: upErr } = await supabase.storage
+                    .from('moodboard-assets').upload(storagePath, uploadFile, { upsert: true });
+                if (upErr) throw upErr;
+                const { data: urlData } = supabase.storage.from('moodboard-assets').getPublicUrl(storagePath);
+                thumbnailUrl = urlData.publicUrl;
+                source = 'upload';
+            }
+
+            const { error } = await supabase.from('moodboard_items').insert({
+                moodboard_id: currentBoard.id,
+                source, original_url: originalUrl,
+                thumbnail_url: thumbnailUrl, storage_path: storagePath,
+                title: title || null,
+                tags: selectedTags,
+                status: 'pending',
+                added_by: currentUser?.id || null,
+                added_by_role: isAdmin ? 'admin' : 'client',
+                sort_order: allItems.length
+            });
+
+            if (error) throw error;
+            closeAddModal();
+            await loadItems();
+        } catch (err) {
+            errEl.textContent = err.message || 'Error al agregar. Intenta de nuevo.';
+            errEl.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Agregar al moodboard';
+        }
+    }
+
+    function openSource(url) {
+        if (url) window.open(url, '_blank');
+    }
+
+    // ── NEW BOARD ──
+    function openNewBoard() { document.getElementById('newBoardModal').classList.add('open'); }
+    function closeNewBoard() { document.getElementById('newBoardModal').classList.remove('open'); }
+
+    function selectCat(cat, el) {
+        selectedCatNew = cat;
+        document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    async function createBoard() {
+        const title = document.getElementById('newBoardTitle').value.trim();
+        const errEl = document.getElementById('boardError');
+        errEl.style.display = 'none';
+        if (!title) { errEl.textContent = 'El nombre es requerido.'; errEl.style.display = 'block'; return; }
+
+        const { data, error } = await supabase.from('moodboards').insert({
+            title, category: selectedCatNew,
+            project_id: projectId || null,
+            client_id: isAdmin ? null : (currentUser?.id || null),
+            created_by: currentUser?.id || null
+        }).select().single();
+
+        if (error) { errEl.textContent = 'Error al crear el board.'; errEl.style.display = 'block'; return; }
+
+        allBoards.push(data);
+        currentBoard = data;
+        allItems = [];
+        closeNewBoard();
+        document.getElementById('newBoardTitle').value = '';
+        renderBoardTabs();
+        renderItems();
+    }
+
+    // Click fuera de modals
+    document.getElementById('addModal').addEventListener('click', e => {
+        if (e.target === document.getElementById('addModal')) closeAddModal();
+    });
+    document.getElementById('newBoardModal').addEventListener('click', e => {
+        if (e.target === document.getElementById('newBoardModal')) closeNewBoard();
+    });
+
+    init();
+</script>
+</body>
+</html>
