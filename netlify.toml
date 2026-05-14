@@ -87,6 +87,16 @@
   to = "/feed.html"
   status = 200
 
+[[redirects]]
+  from = "/payments"
+  to = "/payments.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/uf-value"
+  to = "/.netlify/functions/uf-value"
+  status = 200
+
 # Headers for security
 [[headers]]
   for = "/*"

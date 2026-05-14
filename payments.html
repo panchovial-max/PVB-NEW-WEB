@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos — PVB Estudio Creativo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #080808; --surface: #111; --surface2: #181818; --surface3: #1f1f1f;
+            --border: #1f1f1f; --border2: #2a2a2a;
+            --text: #fff; --muted: #666; --subtle: #444;
+            --green: #4caf50; --red: #e55; --yellow: #f5c518; --blue: #6a8fff;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; }
+
+        /* ── HEADER ── */
+        .header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 24px; height: 56px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; gap: 16px;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .back-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px 8px; }
+        .back-btn:hover { color: var(--text); }
+        .header-logo { font-size: 10px; letter-spacing: 4px; font-weight: 700; color: var(--muted); }
+        .header-title { font-size: 14px; font-weight: 600; }
+        .uf-badge { font-size: 11px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border2); padding: 4px 10px; }
+
+        /* ── MAIN ── */
+        .main { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+
+        /* ── STATS ── */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px; margin-bottom: 32px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px; }
+        .stat-num { font-size: 1.6rem; font-weight: 900; margin-bottom: 4px; }
+        .stat-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+        /* ── SECTION ── */
+        .section { margin-bottom: 40px; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .section-title { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+
+        /* ── PAYMENT CARD ── */
+        .payment-card {
+            background: var(--surface); border: 1px solid var(--border);
+            margin-bottom: 12px; overflow: hidden;
+        }
+        .payment-card.pending  { border-left: 3px solid var(--yellow); }
+        .payment-card.proof_uploaded { border-left: 3px solid var(--blue); }
+        .payment-card.confirmed { border-left: 3px solid var(--green); }
+        .payment-card.cancelled { border-left: 3px solid var(--subtle); opacity: .6; }
+
+        .payment-main { padding: 18px 20px; display: flex; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+        .payment-info { flex: 1; min-width: 200px; }
+        .payment-concept { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .payment-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+        .payment-meta span { display: flex; align-items: center; gap: 4px; }
+
+        .payment-amount { text-align: right; flex-shrink: 0; }
+        .amount-main { font-size: 1.5rem; font-weight: 900; }
+        .amount-equiv { font-size: 11px; color: var(--muted); margin-top: 2px; }
+        .currency-clp { color: var(--text); }
+        .currency-uf  { color: var(--blue); }
+        .currency-usd { color: var(--green); }
+
+        .badge {
+            display: inline-block; padding: 3px 10px; font-size: 10px;
+            letter-spacing: 1.5px; text-transform: uppercase; border-radius: 2px;
+        }
+        .badge-pending       { background: #1a1500; color: var(--yellow); border: 1px solid #3a3000; }
+        .badge-proof_uploaded{ background: #0d0f1f; color: var(--blue);   border: 1px solid #1a2060; }
+        .badge-confirmed     { background: #0d1f0d; color: var(--green);  border: 1px solid #1a3a1a; }
+        .badge-cancelled     { background: #1a1a1a; color: var(--muted);  border: 1px solid var(--border2); }
+
+        /* ── ITEMS DESGLOSE ── */
+        .payment-items { border-top: 1px solid var(--border); padding: 12px 20px; }
+        .item-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--border); }
+        .item-row:last-child { border-bottom: none; }
+        .item-row span:last-child { font-weight: 500; color: var(--text); }
+
+        /* ── ACTIONS ── */
+        .payment-actions { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .btn {
+            padding: 8px 16px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; font-family: inherit; border: none; transition: all .15s;
+        }
+        .btn-primary { background: var(--text); color: #000; }
+        .btn-primary:hover { background: #ddd; }
+        .btn-ghost { background: none; border: 1px solid var(--border2); color: var(--muted); }
+        .btn-ghost:hover { border-color: var(--subtle); color: var(--text); }
+        .btn-success { background: #0d1f0d; color: var(--green); border: 1px solid #1a3a1a; }
+        .btn-success:hover { background: #1a3a1a; }
+        .btn-sm { padding: 5px 12px; font-size: 11px; }
+        .btn-danger { background: none; border: 1px solid #3a1010; color: var(--red); }
+        .btn-danger:hover { background: #1a0808; }
+
+        .proof-link { font-size: 12px; color: var(--blue); text-decoration: none; display: flex; align-items: center; gap: 6px; }
+        .proof-link:hover { text-decoration: underline; }
+        .due-date-warn { font-size: 11px; color: var(--yellow); }
+
+        /* ── UPLOAD ZONE ── */
+        .upload-zone {
+            border: 2px dashed var(--border2); padding: 24px; text-align: center;
+            cursor: pointer; transition: border-color .15s; margin: 12px 20px;
+        }
+        .upload-zone:hover { border-color: var(--subtle); }
+        .upload-zone input { display: none; }
+        .upload-zone p { font-size: 13px; color: var(--muted); margin-top: 6px; }
+        .upload-zone .icon { font-size: 28px; }
+        .upload-progress { font-size: 12px; color: var(--blue); margin-top: 8px; display: none; }
+
+        /* ── NEW PAYMENT MODAL (admin) ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.9);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal {
+            width: min(560px, 95vw); background: var(--surface);
+            border: 1px solid var(--border2); padding: 28px; max-height: 90vh; overflow-y: auto;
+            transform: translateY(20px); transition: transform .2s;
+        }
+        .modal-overlay.open .modal { transform: translateY(0); }
+        .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; }
+        .modal-close:hover { color: var(--text); }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+        .form-input {
+            width: 100%; padding: 10px 14px; background: var(--surface2);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 13px; font-family: inherit; outline: none;
+        }
+        .form-input:focus { border-color: var(--subtle); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .currency-row { display: flex; gap: 8px; }
+        .currency-btn {
+            flex: 1; padding: 9px; background: none; border: 1px solid var(--border2);
+            color: var(--muted); cursor: pointer; font-family: inherit; font-size: 13px;
+            font-weight: 600; transition: all .15s;
+        }
+        .currency-btn.active { border-color: var(--text); color: var(--text); background: var(--surface2); }
+
+        .items-builder { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+        .item-input-row { display: flex; gap: 8px; }
+        .item-input-row .form-input { flex: 1; }
+        .item-input-row .form-input:last-child { max-width: 120px; }
+        .remove-item { background: none; border: none; color: var(--red); cursor: pointer; font-size: 16px; padding: 0 4px; }
+        .add-item-btn { background: none; border: 1px dashed var(--border2); color: var(--muted); padding: 8px; cursor: pointer; font-family: inherit; font-size: 12px; width: 100%; transition: all .15s; }
+        .add-item-btn:hover { border-color: var(--subtle); color: var(--text); }
+
+        .uf-info { font-size: 12px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border2); padding: 10px 14px; margin-top: 8px; display: none; }
+        .modal-error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+        /* ── EMPTY ── */
+        .empty { padding: 40px; text-align: center; color: var(--muted); border: 1px dashed var(--border2); }
+        .empty p { font-size: 13px; margin-top: 8px; }
+        .loading { text-align: center; padding: 60px; color: var(--muted); letter-spacing: 3px; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <button type="button" class="back-btn" onclick="history.back()">←</button>
+        <span class="header-logo">PVB</span>
+        <span class="header-title">Pagos & Comprobantes</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <span class="uf-badge" id="ufBadge">UF —</span>
+        <span style="font-size:11px;color:var(--muted);" id="userChip"></span>
+        <button type="button" class="btn btn-primary" id="newPaymentBtn" style="display:none;" onclick="openModal()">+ Nuevo cobro</button>
+    </div>
+</header>
+
+<main class="main">
+    <div class="loading" id="loadingState">CARGANDO...</div>
+
+    <div id="appContent" style="display:none;">
+
+        <!-- STATS -->
+        <div class="stats-row" id="statsRow"></div>
+
+        <!-- PENDING -->
+        <div class="section" id="pendingSection">
+            <div class="section-header">
+                <p class="section-title">⏳ Pendientes de pago</p>
+            </div>
+            <div id="pendingList"></div>
+        </div>
+
+        <!-- PROOF UPLOADED -->
+        <div class="section" id="proofSection" style="display:none;">
+            <div class="section-header">
+                <p class="section-title">📋 Comprobantes subidos — por confirmar</p>
+            </div>
+            <div id="proofList"></div>
+        </div>
+
+        <!-- CONFIRMED -->
+        <div class="section" id="confirmedSection">
+            <div class="section-header">
+                <p class="section-title">✅ Pagos confirmados</p>
+            </div>
+            <div id="confirmedList"></div>
+        </div>
+
+    </div>
+</main>
+
+<!-- NEW PAYMENT MODAL (solo admin) -->
+<div class="modal-overlay" id="newModal">
+    <div class="modal">
+        <div class="modal-title">
+            Nuevo cobro
+            <button type="button" class="modal-close" onclick="closeModal()">×</button>
+        </div>
+
+        <div class="form-group">
+            <label>Concepto</label>
+            <input type="text" class="form-input" id="mConcept" placeholder="Ej: Producción campaña Kaya Invierno 2026">
+        </div>
+
+        <div class="form-group">
+            <label>Moneda</label>
+            <div class="currency-row">
+                <button type="button" class="currency-btn active" onclick="setCurrency('CLP',this)">CLP</button>
+                <button type="button" class="currency-btn" onclick="setCurrency('UF',this)">UF</button>
+                <button type="button" class="currency-btn" onclick="setCurrency('USD',this)">USD</button>
+            </div>
+            <div class="uf-info" id="ufInfo">UF del día: <strong id="ufInfoValue">—</strong> — el equivalente en CLP se calcula al confirmar el pago.</div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label id="amountLabel">Monto total (CLP)</label>
+                <input type="number" class="form-input" id="mAmount" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>Fecha límite de pago</label>
+                <input type="date" class="form-input" id="mDueDate">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Desglose de ítems <span style="color:var(--muted);font-size:9px;">(opcional)</span></label>
+            <div class="items-builder" id="itemsBuilder">
+                <div class="item-input-row">
+                    <input type="text" class="form-input" placeholder="Concepto (ej: Pre-producción)">
+                    <input type="number" class="form-input" placeholder="Monto">
+                    <button type="button" class="remove-item" onclick="this.parentElement.remove()">×</button>
+                </div>
+            </div>
+            <button type="button" class="add-item-btn" onclick="addItemRow()">+ Agregar ítem</button>
+        </div>
+
+        <div class="form-group">
+            <label>Descripción adicional</label>
+            <textarea class="form-input" id="mDesc" rows="2" placeholder="Notas internas o instrucciones de pago..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Cliente / destinatario</label>
+            <input type="text" class="form-input" id="mRecipient" placeholder="Nombre del cliente o proveedor">
+        </div>
+
+        <p class="modal-error" id="modalError"></p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="createPayment()">Crear cobro</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const params = new URLSearchParams(location.search);
+    const isAdmin = params.get('admin') === '1';
+    const projectId = params.get('project') || null;
+
+    let currentUser = null;
+    let allPayments = [];
+    let ufValue = null;
+    let selectedCurrency = 'CLP';
+
+    const STATUS_LABELS = {
+        pending: 'Pendiente',
+        proof_uploaded: 'Comprobante subido',
+        confirmed: 'Confirmado',
+        cancelled: 'Cancelado'
+    };
+
+    // ── INIT ──
+    async function init() {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session && !isAdmin) {
+            document.getElementById('loadingState').textContent = 'Acceso requerido. Inicia sesión.';
+            return;
+        }
+        currentUser = session?.user || null;
+
+        const name = isAdmin ? 'Francisco' : (currentUser?.user_metadata?.full_name?.split(' ')[0] || currentUser?.email);
+        document.getElementById('userChip').textContent = isAdmin ? '🎬 Francisco' : `👤 ${name}`;
+        if (isAdmin) document.getElementById('newPaymentBtn').style.display = 'block';
+
+        await Promise.all([loadUF(), loadPayments()]);
+    }
+
+    async function loadUF() {
+        try {
+            const res = await fetch('/api/uf-value');
+            const data = await res.json();
+            ufValue = data.uf;
+            if (ufValue) {
+                document.getElementById('ufBadge').textContent = `UF $${Number(ufValue).toLocaleString('es-CL')}`;
+                document.getElementById('ufInfoValue').textContent = `$${Number(ufValue).toLocaleString('es-CL')} CLP`;
+            }
+        } catch { /* silent */ }
+    }
+
+    async function loadPayments() {
+        let query = sb.from('payments')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (!isAdmin && currentUser) {
+            query = query.eq('client_user_id', currentUser.id);
+        }
+        if (projectId) query = query.eq('project_id', projectId);
+
+        const { data } = await query;
+        allPayments = data || [];
+        render();
+    }
+
+    // ── RENDER ──
+    function render() {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+
+        const pending = allPayments.filter(p => p.status === 'pending');
+        const proof = allPayments.filter(p => p.status === 'proof_uploaded');
+        const confirmed = allPayments.filter(p => p.status === 'confirmed');
+        const totalPending = pending.reduce((s, p) => s + amountInCLP(p), 0);
+        const totalConfirmed = confirmed.reduce((s, p) => s + amountInCLP(p), 0);
+
+        document.getElementById('statsRow').innerHTML = `
+            <div class="stat-card">
+                <div class="stat-num" style="color:var(--yellow)">${pending.length}</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" style="color:var(--blue)">${proof.length}</div>
+                <div class="stat-label">Por confirmar</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" style="color:var(--green)">${confirmed.length}</div>
+                <div class="stat-label">Confirmados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">${formatCLP(totalPending)}</div>
+                <div class="stat-label">CLP pendiente</div>
+            </div>`;
+
+        renderList('pendingList', pending);
+        renderList('proofList', proof);
+        renderList('confirmedList', confirmed);
+
+        document.getElementById('proofSection').style.display = proof.length > 0 ? 'block' : 'none';
+        if (pending.length === 0) {
+            document.getElementById('pendingList').innerHTML = `<div class="empty"><p>${isAdmin ? 'No hay cobros pendientes.' : 'No tienes pagos pendientes. ✓'}</p></div>`;
+        }
+        if (confirmed.length === 0) {
+            document.getElementById('confirmedList').innerHTML = `<div class="empty"><p>Aún no hay pagos confirmados.</p></div>`;
+        }
+    }
+
+    function renderList(containerId, payments) {
+        const container = document.getElementById(containerId);
+        if (payments.length === 0) return;
+        container.innerHTML = payments.map(p => renderCard(p)).join('');
+    }
+
+    function renderCard(p) {
+        const items = p.items || [];
+        const isOverdue = p.due_date && p.status === 'pending' && new Date(p.due_date) < new Date();
+        const dueDateStr = p.due_date ? new Date(p.due_date).toLocaleDateString('es-CL', { day:'numeric', month:'long', year:'numeric' }) : null;
+        const confirmedStr = p.confirmed_at ? new Date(p.confirmed_at).toLocaleDateString('es-CL', { day:'numeric', month:'short', year:'numeric' }) : null;
+
+        return `<div class="payment-card ${p.status}">
+            <div class="payment-main">
+                <div class="payment-info">
+                    <div class="payment-concept">${p.concept}</div>
+                    <div style="margin:6px 0;"><span class="badge badge-${p.status}">${STATUS_LABELS[p.status]}</span></div>
+                    <div class="payment-meta">
+                        ${p.recipient_name ? `<span>👤 ${p.recipient_name}</span>` : ''}
+                        ${dueDateStr ? `<span ${isOverdue ? 'class="due-date-warn"' : ''}>📅 ${isOverdue ? '⚠ Vence: ' : 'Vence: '}${dueDateStr}</span>` : ''}
+                        ${confirmedStr ? `<span style="color:var(--green)">✓ Confirmado ${confirmedStr}</span>` : ''}
+                    </div>
+                    ${p.description ? `<div style="font-size:12px;color:var(--muted);margin-top:8px;">${p.description}</div>` : ''}
+                </div>
+                <div class="payment-amount">
+                    <div class="amount-main currency-${p.currency.toLowerCase()}">${formatAmount(p)}</div>
+                    ${p.currency !== 'CLP' && p.amount_clp_equiv ? `<div class="amount-equiv">≈ ${formatCLP(p.amount_clp_equiv)}</div>` : ''}
+                    ${p.currency === 'UF' && p.uf_value_at_payment ? `<div class="amount-equiv">UF $${Number(p.uf_value_at_payment).toLocaleString('es-CL')}</div>` : ''}
+                </div>
+            </div>
+
+            ${items.length > 0 ? `
+            <div class="payment-items">
+                ${items.map(i => `<div class="item-row"><span>${i.label}</span><span>${formatCLPNum(i.amount)} ${p.currency}</span></div>`).join('')}
+            </div>` : ''}
+
+            <div class="payment-actions">
+                ${p.status === 'pending' && !isAdmin ? `
+                    <div style="width:100%;">
+                        <div class="upload-zone" onclick="document.getElementById('file-${p.id}').click()">
+                            <div class="icon">📎</div>
+                            <p>Sube tu comprobante de transferencia</p>
+                            <p style="font-size:11px;margin-top:4px;">PDF, JPG, PNG · Máx 10MB</p>
+                            <input type="file" id="file-${p.id}" accept="image/*,.pdf" onchange="uploadProof('${p.id}',this)">
+                            <p class="upload-progress" id="prog-${p.id}">Subiendo...</p>
+                        </div>
+                    </div>` : ''}
+
+                ${p.proof_url ? `
+                    <a href="${p.proof_url}" target="_blank" class="proof-link">
+                        📎 Ver comprobante
+                    </a>` : ''}
+
+                ${p.status === 'proof_uploaded' && isAdmin ? `
+                    <button type="button" class="btn btn-success" onclick="confirmPayment('${p.id}')">✓ Confirmar pago recibido</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="rejectProof('${p.id}')">Rechazar comprobante</button>` : ''}
+
+                ${isAdmin && p.status !== 'confirmed' && p.status !== 'cancelled' ? `
+                    <button type="button" class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="cancelPayment('${p.id}')">Cancelar</button>` : ''}
+            </div>
+        </div>`;
+    }
+
+    // ── UPLOAD PROOF ──
+    async function uploadProof(paymentId, input) {
+        const file = input.files[0];
+        if (!file) return;
+        const prog = document.getElementById(`prog-${paymentId}`);
+        prog.style.display = 'block';
+
+        const ext = file.name.split('.').pop();
+        const path = `${paymentId}/${Date.now()}.${ext}`;
+
+        const { error: upErr } = await sb.storage.from('payment-proofs').upload(path, file, { upsert: true });
+        if (upErr) { prog.textContent = 'Error al subir. Intenta de nuevo.'; prog.style.color = 'var(--red)'; return; }
+
+        const { data: urlData } = sb.storage.from('payment-proofs').getPublicUrl(path);
+
+        await sb.from('payments').update({
+            proof_url: urlData.publicUrl,
+            status: 'proof_uploaded',
+            proof_uploaded_at: new Date().toISOString(),
+            proof_uploaded_by: currentUser?.id || null
+        }).eq('id', paymentId);
+
+        prog.style.display = 'none';
+        await loadPayments();
+    }
+
+    // ── ADMIN ACTIONS ──
+    async function confirmPayment(id) {
+        const p = allPayments.find(x => x.id === id);
+        let clpEquiv = null;
+        let ufAtPayment = null;
+
+        if (p?.currency === 'UF' && ufValue) {
+            ufAtPayment = ufValue;
+            clpEquiv = Math.round(p.amount * ufValue);
+        } else if (p?.currency === 'USD') {
+            // Tipo de cambio aproximado — Francisco puede corregirlo manualmente
+            clpEquiv = null;
+        } else {
+            clpEquiv = p?.amount;
+        }
+
+        await sb.from('payments').update({
+            status: 'confirmed',
+            confirmed_at: new Date().toISOString(),
+            confirmed_by: currentUser?.id || null,
+            uf_value_at_payment: ufAtPayment,
+            amount_clp_equiv: clpEquiv
+        }).eq('id', id);
+
+        await loadPayments();
+    }
+
+    async function rejectProof(id) {
+        await sb.from('payments').update({ status: 'pending', proof_url: null, proof_uploaded_at: null }).eq('id', id);
+        await loadPayments();
+    }
+
+    async function cancelPayment(id) {
+        if (!confirm('¿Cancelar este cobro?')) return;
+        await sb.from('payments').update({ status: 'cancelled' }).eq('id', id);
+        await loadPayments();
+    }
+
+    // ── NEW PAYMENT MODAL ──
+    function openModal() {
+        document.getElementById('modalError').style.display = 'none';
+        document.getElementById('newModal').classList.add('open');
+        loadUF();
+    }
+    function closeModal() { document.getElementById('newModal').classList.remove('open'); }
+    document.getElementById('newModal').addEventListener('click', e => { if (e.target === document.getElementById('newModal')) closeModal(); });
+
+    function setCurrency(currency, el) {
+        selectedCurrency = currency;
+        document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('amountLabel').textContent = `Monto total (${currency})`;
+        document.getElementById('ufInfo').style.display = currency === 'UF' ? 'block' : 'none';
+    }
+
+    function addItemRow() {
+        const row = document.createElement('div');
+        row.className = 'item-input-row';
+        row.innerHTML = `
+            <input type="text" class="form-input" placeholder="Concepto">
+            <input type="number" class="form-input" placeholder="Monto">
+            <button type="button" class="remove-item" onclick="this.parentElement.remove()">×</button>`;
+        document.getElementById('itemsBuilder').appendChild(row);
+    }
+
+    async function createPayment() {
+        const errEl = document.getElementById('modalError');
+        errEl.style.display = 'none';
+
+        const concept = document.getElementById('mConcept').value.trim();
+        const amount = parseFloat(document.getElementById('mAmount').value);
+        const recipient = document.getElementById('mRecipient').value.trim();
+
+        if (!concept) { errEl.textContent = 'El concepto es requerido.'; errEl.style.display = 'block'; return; }
+        if (!amount || isNaN(amount)) { errEl.textContent = 'Ingresa un monto válido.'; errEl.style.display = 'block'; return; }
+        if (!recipient) { errEl.textContent = 'Ingresa el nombre del cliente.'; errEl.style.display = 'block'; return; }
+
+        // Recopilar ítems
+        const itemRows = document.querySelectorAll('#itemsBuilder .item-input-row');
+        const items = [];
+        itemRows.forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            const label = inputs[0]?.value.trim();
+            const val = parseFloat(inputs[1]?.value);
+            if (label && val) items.push({ label, amount: val });
+        });
+
+        const { error } = await sb.from('payments').insert({
+            project_id: projectId,
+            recipient_type: 'client',
+            recipient_name: recipient,
+            amount,
+            currency: selectedCurrency,
+            concept,
+            description: document.getElementById('mDesc').value.trim() || null,
+            items: items.length > 0 ? items : null,
+            due_date: document.getElementById('mDueDate').value || null,
+            status: 'pending'
+        });
+
+        if (error) { errEl.textContent = 'Error al crear el cobro. Intenta de nuevo.'; errEl.style.display = 'block'; return; }
+
+        closeModal();
+        await loadPayments();
+    }
+
+    // ── HELPERS ──
+    function formatAmount(p) {
+        const n = Number(p.amount).toLocaleString('es-CL');
+        if (p.currency === 'CLP') return `$${n}`;
+        if (p.currency === 'UF') return `UF ${n}`;
+        if (p.currency === 'USD') return `USD ${n}`;
+        return n;
+    }
+    function amountInCLP(p) { return p.amount_clp_equiv || (p.currency === 'CLP' ? p.amount : 0); }
+    function formatCLP(n) { return `$${Math.round(n).toLocaleString('es-CL')}`; }
+    function formatCLPNum(n) { return Number(n).toLocaleString('es-CL'); }
+
+    init();
+</script>
+</body>
+</html>
