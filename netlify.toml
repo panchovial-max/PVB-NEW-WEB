@@ -117,6 +117,11 @@
   to = "/deliveries.html"
   status = 200
 
+[[redirects]]
+  from = "/reviews"
+  to = "/reviews.html"
+  status = 200
+
 # Headers for security
 [[headers]]
   for = "/*"

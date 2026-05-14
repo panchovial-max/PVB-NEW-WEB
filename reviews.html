@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprobación de Cortes — PVB Estudio Creativo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #080808; --surface: #111; --surface2: #181818; --surface3: #1f1f1f;
+            --border: #1f1f1f; --border2: #2a2a2a;
+            --text: #fff; --muted: #666; --subtle: #444;
+            --green: #4caf50; --red: #e55; --yellow: #f5c518; --blue: #6a8fff; --orange: #ff9800;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; }
+
+        /* ── HEADER ── */
+        .header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 24px; height: 56px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; gap: 16px;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .back-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px 8px; }
+        .back-btn:hover { color: var(--text); }
+        .header-logo { font-size: 10px; letter-spacing: 4px; font-weight: 700; color: var(--muted); }
+        .header-title { font-size: 14px; font-weight: 600; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+
+        /* ── REVIEW LIST (index) ── */
+        .main { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+
+        .review-card {
+            background: var(--surface); border: 1px solid var(--border);
+            margin-bottom: 12px; padding: 20px 24px;
+            display: flex; align-items: center; gap: 20px;
+            cursor: pointer; transition: border-color .15s; flex-wrap: wrap;
+        }
+        .review-card:hover { border-color: var(--border2); }
+        .review-card.pending_review { border-left: 3px solid var(--yellow); }
+        .review-card.in_review     { border-left: 3px solid var(--blue); }
+        .review-card.approved      { border-left: 3px solid var(--green); }
+        .review-card.revision_requested { border-left: 3px solid var(--orange); }
+        .review-card.final         { border-left: 3px solid var(--green); }
+
+        .review-thumb {
+            width: 120px; height: 68px; background: var(--surface2); border: 1px solid var(--border2);
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            font-size: 28px; overflow: hidden;
+        }
+        .review-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .review-info { flex: 1; min-width: 180px; }
+        .review-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .review-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+        .review-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+
+        .badge {
+            display: inline-block; padding: 3px 10px; font-size: 10px;
+            letter-spacing: 1.5px; text-transform: uppercase; border-radius: 2px;
+        }
+        .badge-pending_review { background: #1a1500; color: var(--yellow); border: 1px solid #3a3000; }
+        .badge-in_review      { background: #0d0f1f; color: var(--blue);   border: 1px solid #1a2060; }
+        .badge-approved       { background: #0d1f0d; color: var(--green);  border: 1px solid #1a3a1a; }
+        .badge-revision_requested { background: #1a0e00; color: var(--orange); border: 1px solid #3a2000; }
+        .badge-final          { background: #0d1020; color: var(--blue);   border: 1px solid #1a2050; }
+
+        /* ── REVIEW DETAIL ── */
+        #reviewDetail { display: none; }
+        .detail-back { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .detail-back-btn {
+            background: none; border: 1px solid var(--border2); color: var(--muted);
+            padding: 6px 14px; cursor: pointer; font-family: inherit; font-size: 12px;
+            letter-spacing: 1px; text-transform: uppercase; transition: all .15s;
+        }
+        .detail-back-btn:hover { color: var(--text); border-color: var(--subtle); }
+
+        /* ── VIDEO + COMMENTS SPLIT ── */
+        .review-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+        @media (max-width: 800px) { .review-layout { grid-template-columns: 1fr; } }
+
+        /* ── VIDEO PLAYER ── */
+        .video-section { display: flex; flex-direction: column; gap: 16px; }
+        .video-container {
+            position: relative; width: 100%; padding-bottom: 56.25%;
+            background: #000; border: 1px solid var(--border2);
+        }
+        .video-container iframe {
+            position: absolute; inset: 0; width: 100%; height: 100%; border: none;
+        }
+        .video-drive-link {
+            display: flex; align-items: center; justify-content: center;
+            background: #000; border: 1px solid var(--border2);
+            aspect-ratio: 16/9; flex-direction: column; gap: 12px;
+        }
+        .video-drive-link a {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--text); color: #000; padding: 12px 24px;
+            font-size: 13px; font-weight: 600; text-decoration: none; letter-spacing: 1px;
+        }
+        .video-drive-link p { font-size: 12px; color: var(--muted); }
+
+        .video-info { background: var(--surface); border: 1px solid var(--border); padding: 18px 20px; }
+        .video-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+        .video-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+
+        /* ── TIMECODE MARKER ── */
+        .add-comment-bar {
+            background: var(--surface); border: 1px solid var(--border); padding: 16px;
+        }
+        .add-comment-bar p { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+        .timecode-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+        .tc-input {
+            padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border2);
+            color: var(--text); font-size: 13px; font-family: monospace; outline: none; width: 100px;
+        }
+        .tc-input:focus { border-color: var(--subtle); }
+        .tc-label { font-size: 11px; color: var(--muted); }
+        .comment-textarea {
+            width: 100%; padding: 10px 14px; background: var(--surface2);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 13px; font-family: inherit; outline: none;
+            resize: vertical; min-height: 72px; line-height: 1.5;
+        }
+        .comment-textarea:focus { border-color: var(--subtle); }
+        .comment-textarea::placeholder { color: var(--muted); }
+        .comment-actions { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+
+        /* ── COMMENTS PANEL ── */
+        .comments-section { display: flex; flex-direction: column; gap: 0; }
+        .comments-header {
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: none;
+        }
+        .comments-header h3 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+        .comments-list {
+            background: var(--surface); border: 1px solid var(--border);
+            max-height: 480px; overflow-y: auto;
+        }
+        .comment-item {
+            padding: 14px 16px; border-bottom: 1px solid var(--border);
+            transition: background .15s; cursor: pointer;
+        }
+        .comment-item:last-child { border-bottom: none; }
+        .comment-item:hover { background: var(--surface2); }
+        .comment-item.resolved { opacity: .5; }
+        .comment-tc {
+            display: inline-block; font-size: 10px; letter-spacing: 1px;
+            background: var(--blue); color: #000; padding: 2px 8px;
+            font-family: monospace; margin-bottom: 6px; font-weight: 700;
+        }
+        .comment-tc.no-tc { background: var(--surface2); color: var(--muted); }
+        .comment-author { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+        .comment-author strong { color: #aaa; }
+        .comment-body { font-size: 13px; color: #ddd; line-height: 1.5; }
+        .comment-resolve {
+            display: inline-block; margin-top: 6px; font-size: 10px; letter-spacing: 1px;
+            background: none; border: none; color: var(--muted); cursor: pointer;
+            font-family: inherit; padding: 0; transition: color .15s;
+        }
+        .comment-resolve:hover { color: var(--green); }
+
+        /* ── APPROVAL BAR ── */
+        .approval-section {
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 16px; margin-top: 12px;
+        }
+        .approval-section p { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+        .approval-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .btn {
+            padding: 9px 18px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; font-family: inherit; border: none; transition: all .15s;
+        }
+        .btn-primary { background: var(--text); color: #000; }
+        .btn-primary:hover { background: #ddd; }
+        .btn-ghost { background: none; border: 1px solid var(--border2); color: var(--muted); }
+        .btn-ghost:hover { border-color: var(--subtle); color: var(--text); }
+        .btn-green { background: #0d1f0d; color: var(--green); border: 1px solid #1a3a1a; }
+        .btn-green:hover { background: #1a3a1a; }
+        .btn-orange { background: #1a0e00; color: var(--orange); border: 1px solid #3a2000; }
+        .btn-orange:hover { background: #2a1800; }
+        .btn-blue { background: #0d0f1f; color: var(--blue); border: 1px solid #1a2060; }
+        .btn-blue:hover { background: #1a2060; }
+        .btn-sm { padding: 5px 12px; font-size: 11px; }
+
+        /* ── NEW REVIEW MODAL ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.9);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal {
+            width: min(540px, 95vw); background: var(--surface);
+            border: 1px solid var(--border2); padding: 28px;
+            transform: translateY(20px); transition: transform .2s;
+        }
+        .modal-overlay.open .modal { transform: translateY(0); }
+        .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; }
+        .modal-close:hover { color: var(--text); }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+        .form-input {
+            width: 100%; padding: 9px 13px; background: var(--surface2);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 13px; font-family: inherit; outline: none;
+        }
+        .form-input:focus { border-color: var(--subtle); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .url-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+        .detected-source { display: none; font-size: 12px; margin-top: 8px; padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border2); }
+        .modal-error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+        .empty { padding: 60px 20px; text-align: center; color: var(--muted); border: 1px dashed var(--border2); }
+        .empty h3 { color: #aaa; margin-bottom: 8px; }
+        .empty p { font-size: 13px; line-height: 1.6; }
+        .loading { text-align: center; padding: 80px; color: var(--muted); letter-spacing: 3px; font-size: 11px; }
+
+        .version-pill { font-size: 10px; background: var(--surface2); border: 1px solid var(--border2); padding: 2px 8px; color: var(--muted); }
+        .unresolved-count { font-size: 10px; background: #1a0e00; color: var(--orange); border: 1px solid #3a2000; padding: 2px 8px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <button type="button" class="back-btn" id="headerBack" onclick="goBack()">←</button>
+        <span class="header-logo">PVB</span>
+        <span class="header-title" id="headerTitle">Aprobación de Cortes</span>
+    </div>
+    <div class="header-right">
+        <span style="font-size:11px;color:var(--muted);" id="userChip"></span>
+        <button type="button" class="btn btn-primary" id="newReviewBtn" style="display:none;" onclick="openModal()">+ Subir corte</button>
+    </div>
+</header>
+
+<main class="main">
+    <div class="loading" id="loadingState">CARGANDO...</div>
+
+    <!-- INDEX: lista de cortes -->
+    <div id="reviewIndex" style="display:none;"></div>
+
+    <!-- DETAIL: un corte específico -->
+    <div id="reviewDetail">
+        <div class="detail-back">
+            <button type="button" class="detail-back-btn" onclick="showIndex()">← Todos los cortes</button>
+            <span id="detailTitle" style="font-size:13px;color:var(--muted);"></span>
+        </div>
+
+        <div class="review-layout">
+            <!-- Video + Add comment -->
+            <div class="video-section">
+                <div id="videoEmbed"></div>
+
+                <div class="video-info" id="videoInfo"></div>
+
+                <div class="add-comment-bar" id="addCommentBar">
+                    <p>Dejar comentario</p>
+                    <div class="timecode-row">
+                        <input type="text" class="tc-input" id="tcInput" placeholder="00:00:00" title="Timecode del video">
+                        <span class="tc-label">Timecode (opcional — ej: 00:01:23)</span>
+                    </div>
+                    <textarea class="comment-textarea" id="commentText"
+                        placeholder="Describe el cambio que necesitas. Sé específico — ej: 'La transición en el segundo 0:23 se siente abrupta, prefiero un corte limpio'"></textarea>
+                    <div class="comment-actions">
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('commentText').value=''">Limpiar</button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="addComment()">Enviar comentario</button>
+                    </div>
+                </div>
+
+                <!-- Approval (client only) -->
+                <div class="approval-section" id="approvalSection" style="display:none;">
+                    <p>¿Este corte está aprobado? Una vez aprobado queda registrado y Francisco procede con la entrega final.</p>
+                    <div class="approval-btns">
+                        <button type="button" class="btn btn-green" onclick="approveReview()">✓ Aprobar este corte</button>
+                        <button type="button" class="btn btn-orange" onclick="requestRevision()">↩ Solicitar cambios</button>
+                    </div>
+                </div>
+
+                <!-- Admin status control -->
+                <div id="adminControls" style="display:none; margin-top:12px;">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button type="button" class="btn btn-blue btn-sm" onclick="setReviewStatus('in_review')">▶ Marcar en revisión</button>
+                        <button type="button" class="btn btn-green btn-sm" onclick="setReviewStatus('final')">✓ Marcar como final</button>
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="openVersionModal()">+ Nueva versión</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments panel -->
+            <div class="comments-section">
+                <div class="comments-header">
+                    <h3>Comentarios</h3>
+                    <span class="unresolved-count" id="unresolvedCount" style="display:none;"></span>
+                </div>
+                <div class="comments-list" id="commentsList">
+                    <div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Sin comentarios todavía</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- NEW REVIEW MODAL -->
+<div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+        <div class="modal-title">
+            Subir corte para revisión
+            <button type="button" class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="form-group">
+            <label>Título del corte</label>
+            <input type="text" class="form-input" id="mTitle" placeholder="Ej: Cut 1 — Campaña Kaya Invierno 2026">
+        </div>
+        <div class="form-group">
+            <label>Link del video</label>
+            <input type="url" class="form-input" id="mVideoUrl"
+                placeholder="https://youtu.be/... o https://drive.google.com/..."
+                oninput="detectSource(this.value)">
+            <p class="url-hint">Acepta YouTube (no listado) o Google Drive (compartido con el cliente)</p>
+            <div class="detected-source" id="detectedSource"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Versión</label>
+                <input type="number" class="form-input" id="mVersion" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Fecha límite revisión</label>
+                <input type="date" class="form-input" id="mDueDate" title="Fecha límite para revisión">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Descripción <span style="color:var(--muted);font-size:9px;">(instrucciones para el cliente)</span></label>
+            <textarea class="form-input" id="mDesc" rows="2"
+                placeholder="Ej: Este es el primer corte. Foco en ritmo y narración. Música e infografías se agregan en la siguiente versión."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Email del cliente</label>
+            <input type="email" class="form-input" id="mClientEmail" placeholder="cliente@email.com">
+        </div>
+        <p class="modal-error" id="modalError"></p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="createReview()">Publicar corte</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const params = new URLSearchParams(location.search);
+    const projectId = params.get('project');
+    const isAdmin = params.get('admin') === '1';
+    const reviewIdParam = params.get('review');
+
+    let currentUser = null;
+    let allReviews = [];
+    let currentReview = null;
+    let currentComments = [];
+
+    const STATUS_LABELS = {
+        pending_review: 'Pendiente de revisión',
+        in_review: 'En revisión',
+        approved: 'Aprobado',
+        revision_requested: 'Cambios solicitados',
+        final: 'Final aprobado'
+    };
+
+    // ── INIT ──
+    async function init() {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session && !isAdmin) { document.getElementById('loadingState').textContent = 'Acceso requerido.'; return; }
+        currentUser = session?.user || null;
+        const name = isAdmin ? 'Francisco' : (currentUser?.user_metadata?.full_name?.split(' ')[0] || currentUser?.email);
+        document.getElementById('userChip').textContent = isAdmin ? '🎬 Francisco' : `👤 ${name}`;
+        if (isAdmin) document.getElementById('newReviewBtn').style.display = 'block';
+
+        await loadReviews();
+
+        if (reviewIdParam) {
+            const r = allReviews.find(x => x.id === reviewIdParam);
+            if (r) openReview(r);
+        }
+    }
+
+    async function loadReviews() {
+        let q = sb.from('video_reviews')
+            .select('*, review_comments(*)')
+            .order('created_at', { ascending: false });
+        if (projectId) q = q.eq('project_id', projectId);
+        if (!isAdmin && currentUser) q = q.eq('client_user_id', currentUser.id);
+        const { data } = await q;
+        allReviews = data || [];
+        showIndex();
+    }
+
+    // ── INDEX ──
+    function showIndex() {
+        currentReview = null;
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('reviewIndex').style.display = 'block';
+        document.getElementById('reviewDetail').style.display = 'none';
+        document.getElementById('headerTitle').textContent = 'Aprobación de Cortes';
+
+        const idx = document.getElementById('reviewIndex');
+        if (allReviews.length === 0) {
+            idx.innerHTML = isAdmin
+                ? `<div class="empty"><h3>Sin cortes todavía</h3><p>Sube el primer corte para que el cliente pueda revisarlo y dejarte comentarios con timecode.</p></div>`
+                : `<div class="empty"><h3>Sin cortes para revisar</h3><p>Cuando Francisco suba un corte para revisión aparecerá aquí. Podrás dejar comentarios en puntos exactos del video y aprobar el resultado final.</p></div>`;
+            return;
+        }
+
+        idx.innerHTML = allReviews.map(r => {
+            const comments = r.review_comments || [];
+            const unresolved = comments.filter(c => !c.resolved).length;
+            const thumb = r.video_source === 'youtube' ? `https://img.youtube.com/vi/${r.embed_id}/mqdefault.jpg` : null;
+
+            return `<div class="review-card ${r.status}" onclick="openReview(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+                <div class="review-thumb">
+                    ${thumb ? `<img src="${thumb}" alt="">` : '🎬'}
+                </div>
+                <div class="review-info">
+                    <div class="review-title">${r.title}</div>
+                    <div style="display:flex;gap:8px;margin:6px 0;flex-wrap:wrap;">
+                        <span class="badge badge-${r.status}">${STATUS_LABELS[r.status]}</span>
+                        <span class="version-pill">v${r.version}</span>
+                        ${unresolved > 0 ? `<span class="unresolved-count">${unresolved} sin resolver</span>` : ''}
+                    </div>
+                    ${r.description ? `<div style="font-size:12px;color:var(--muted);margin-top:4px;">${r.description}</div>` : ''}
+                    <div class="review-meta">
+                        <span>💬 ${comments.length} comentario${comments.length !== 1 ? 's' : ''}</span>
+                        ${r.due_date ? `<span>📅 ${new Date(r.due_date).toLocaleDateString('es-CL', {day:'numeric',month:'short'})}</span>` : ''}
+                        ${r.approved_at ? `<span style="color:var(--green)">✓ Aprobado ${new Date(r.approved_at).toLocaleDateString('es-CL', {day:'numeric',month:'short'})}</span>` : ''}
+                    </div>
+                </div>
+                <div class="review-right">
+                    <button type="button" class="btn btn-primary btn-sm">Revisar →</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ── DETAIL ──
+    async function openReview(r) {
+        if (typeof r === 'string') r = allReviews.find(x => x.id === r);
+        currentReview = r;
+        document.getElementById('reviewIndex').style.display = 'none';
+        document.getElementById('reviewDetail').style.display = 'block';
+        document.getElementById('headerTitle').textContent = r.title;
+        document.getElementById('detailTitle').textContent = `v${r.version} · ${STATUS_LABELS[r.status]}`;
+
+        // Marcar como en revisión si estaba pendiente y es el cliente
+        if (!isAdmin && r.status === 'pending_review' && currentUser) {
+            await sb.from('video_reviews').update({ status: 'in_review' }).eq('id', r.id);
+            currentReview.status = 'in_review';
+        }
+
+        renderEmbed(r);
+        renderVideoInfo(r);
+        await loadComments();
+
+        // Mostrar panel de aprobación al cliente
+        const canApprove = !isAdmin && (r.status === 'in_review' || r.status === 'pending_review' || r.status === 'revision_requested');
+        document.getElementById('approvalSection').style.display = canApprove ? 'block' : 'none';
+        document.getElementById('adminControls').style.display = isAdmin ? 'block' : 'none';
+    }
+
+    function renderEmbed(r) {
+        const container = document.getElementById('videoEmbed');
+        if (r.video_source === 'youtube' && r.embed_id) {
+            container.innerHTML = `<div class="video-container">
+                <iframe src="https://www.youtube.com/embed/${r.embed_id}?rel=0&modestbranding=1"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+            </div>`;
+        } else if (r.video_source === 'drive' && r.embed_id) {
+            container.innerHTML = `<div class="video-container">
+                <iframe src="https://drive.google.com/file/d/${r.embed_id}/preview"
+                    allow="autoplay" allowfullscreen></iframe>
+            </div>`;
+        } else {
+            container.innerHTML = `<div class="video-drive-link">
+                <p>Ver video en el navegador</p>
+                <a href="${r.video_url}" target="_blank" rel="noopener">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    Abrir video
+                </a>
+            </div>`;
+        }
+    }
+
+    function renderVideoInfo(r) {
+        document.getElementById('videoInfo').innerHTML = `
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <div>
+                    <div class="video-title">${r.title}</div>
+                    <div class="video-meta">
+                        <span class="badge badge-${r.status}">${STATUS_LABELS[r.status]}</span>
+                        <span class="version-pill">Versión ${r.version}</span>
+                        ${r.due_date ? `<span>📅 Revisión antes del ${new Date(r.due_date).toLocaleDateString('es-CL',{day:'numeric',month:'long'})}</span>` : ''}
+                    </div>
+                    ${r.description ? `<p style="font-size:13px;color:var(--muted);margin-top:10px;line-height:1.6;">${r.description}</p>` : ''}
+                </div>
+                ${r.video_source !== 'youtube' ? `<a href="${r.video_url}" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;">Abrir en Drive →</a>` : ''}
+            </div>`;
+    }
+
+    async function loadComments() {
+        const { data } = await sb.from('review_comments')
+            .select('*')
+            .eq('review_id', currentReview.id)
+            .order('timecode_seconds', { ascending: true, nullsFirst: false })
+            .order('created_at');
+        currentComments = data || [];
+        renderComments();
+    }
+
+    function renderComments() {
+        const unresolved = currentComments.filter(c => !c.resolved).length;
+        const countEl = document.getElementById('unresolvedCount');
+        countEl.style.display = unresolved > 0 ? 'inline-block' : 'none';
+        countEl.textContent = `${unresolved} pendiente${unresolved !== 1 ? 's' : ''}`;
+
+        const list = document.getElementById('commentsList');
+        if (currentComments.length === 0) {
+            list.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">Sin comentarios todavía.<br>Deja el primero usando el formulario de la izquierda.</div>`;
+            return;
+        }
+
+        list.innerHTML = currentComments.map(c => `
+            <div class="comment-item ${c.resolved ? 'resolved' : ''}" id="cmt-${c.id}">
+                ${c.timecode_label
+                    ? `<span class="comment-tc">${c.timecode_label}</span>`
+                    : `<span class="comment-tc no-tc">General</span>`}
+                <div class="comment-author">
+                    <strong>${c.user_name}</strong> · ${new Date(c.created_at).toLocaleDateString('es-CL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+                    ${c.user_role === 'admin' ? ' · <span style="color:var(--blue)">Francisco</span>' : ''}
+                    ${c.resolved ? ' · <span style="color:var(--green)">✓ Resuelto</span>' : ''}
+                </div>
+                <div class="comment-body">${c.body}</div>
+                ${!c.resolved && isAdmin ? `<button type="button" class="comment-resolve" onclick="resolveComment('${c.id}')">✓ Marcar resuelto</button>` : ''}
+            </div>`).join('');
+    }
+
+    // ── ADD COMMENT ──
+    async function addComment() {
+        const body = document.getElementById('commentText').value.trim();
+        if (!body) return;
+        const tcRaw = document.getElementById('tcInput').value.trim();
+        const tcSeconds = parseTimecode(tcRaw);
+        const tcLabel = tcSeconds !== null ? formatTimecode(tcSeconds) : null;
+        const name = isAdmin ? 'Francisco' : (currentUser?.user_metadata?.full_name || currentUser?.email || 'Cliente');
+
+        await sb.from('review_comments').insert({
+            review_id: currentReview.id,
+            user_id: currentUser?.id,
+            user_name: name,
+            user_role: isAdmin ? 'admin' : 'client',
+            timecode_seconds: tcSeconds,
+            timecode_label: tcLabel,
+            body
+        });
+
+        document.getElementById('commentText').value = '';
+        document.getElementById('tcInput').value = '';
+        await loadComments();
+    }
+
+    async function resolveComment(id) {
+        await sb.from('review_comments').update({
+            resolved: true,
+            resolved_by: currentUser?.id,
+            resolved_at: new Date().toISOString()
+        }).eq('id', id);
+        await loadComments();
+    }
+
+    // ── APPROVAL ──
+    async function approveReview() {
+        if (!confirm('¿Aprobar este corte? Esto confirma que está listo para la entrega final.')) return;
+        await sb.from('video_reviews').update({
+            status: 'approved',
+            approved_at: new Date().toISOString(),
+            approved_by: currentUser?.id
+        }).eq('id', currentReview.id);
+        currentReview.status = 'approved';
+        document.getElementById('approvalSection').style.display = 'none';
+        document.getElementById('detailTitle').textContent = `v${currentReview.version} · Aprobado`;
+        alert('✓ Corte aprobado. Francisco recibirá la confirmación.');
+        await loadReviews();
+        openReview(currentReview);
+    }
+
+    async function requestRevision() {
+        await sb.from('video_reviews').update({ status: 'revision_requested' }).eq('id', currentReview.id);
+        currentReview.status = 'revision_requested';
+        document.getElementById('detailTitle').textContent = `v${currentReview.version} · Cambios solicitados`;
+        alert('Solicitud enviada. Deja tus comentarios en el panel de la derecha para que Francisco sepa qué ajustar.');
+        await loadReviews();
+    }
+
+    async function setReviewStatus(status) {
+        await sb.from('video_reviews').update({ status }).eq('id', currentReview.id);
+        currentReview.status = status;
+        await loadReviews();
+        openReview(currentReview);
+    }
+
+    // ── MODAL ──
+    function openModal() {
+        document.getElementById('modalError').style.display = 'none';
+        document.getElementById('mTitle').value = '';
+        document.getElementById('mVideoUrl').value = '';
+        document.getElementById('mDesc').value = '';
+        document.getElementById('mVersion').value = '1';
+        document.getElementById('mDueDate').value = '';
+        document.getElementById('mClientEmail').value = '';
+        document.getElementById('detectedSource').style.display = 'none';
+        document.getElementById('reviewModal').classList.add('open');
+    }
+    function closeModal() { document.getElementById('reviewModal').classList.remove('open'); }
+    document.getElementById('reviewModal').addEventListener('click', e => { if (e.target === document.getElementById('reviewModal')) closeModal(); });
+
+    function openVersionModal() { openModal(); document.getElementById('mVersion').value = (currentReview?.version || 1) + 1; }
+    function goBack() { if (currentReview) showIndex(); else history.back(); }
+
+    function detectSource(url) {
+        const el = document.getElementById('detectedSource');
+        const parsed = parseVideoUrl(url);
+        if (parsed) {
+            el.style.display = 'block';
+            el.innerHTML = `✓ Detectado: <strong>${parsed.source === 'youtube' ? 'YouTube' : 'Google Drive'}</strong>`;
+            el.style.color = 'var(--green)';
+        } else if (url.length > 10) {
+            el.style.display = 'block';
+            el.innerHTML = 'Link genérico — se abrirá en nueva pestaña';
+            el.style.color = 'var(--muted)';
+        } else {
+            el.style.display = 'none';
+        }
+    }
+
+    function parseVideoUrl(url) {
+        if (!url) return null;
+        // YouTube
+        const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+        if (ytMatch) return { source: 'youtube', embedId: ytMatch[1] };
+        // Google Drive
+        const driveMatch = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)/);
+        if (driveMatch) return { source: 'drive', embedId: driveMatch[1] };
+        return null;
+    }
+
+    async function createReview() {
+        const errEl = document.getElementById('modalError');
+        errEl.style.display = 'none';
+        const title = document.getElementById('mTitle').value.trim();
+        const videoUrl = document.getElementById('mVideoUrl').value.trim();
+        if (!title) { errEl.textContent = 'El título es requerido.'; errEl.style.display = 'block'; return; }
+        if (!videoUrl) { errEl.textContent = 'El link del video es requerido.'; errEl.style.display = 'block'; return; }
+
+        const parsed = parseVideoUrl(videoUrl);
+        const source = parsed?.source || 'url';
+        const embedId = parsed?.embedId || null;
+
+        // Buscar cliente por email
+        const clientEmail = document.getElementById('mClientEmail').value.trim();
+        let clientUserId = null;
+        if (clientEmail) {
+            const { data } = await sb.rpc('get_user_id_by_email', { email_input: clientEmail });
+            clientUserId = data || null;
+        }
+
+        const { data: created, error } = await sb.from('video_reviews').insert({
+            project_id: projectId || null,
+            client_user_id: clientUserId,
+            title,
+            description: document.getElementById('mDesc').value.trim() || null,
+            video_url: videoUrl,
+            video_source: source,
+            embed_id: embedId,
+            version: parseInt(document.getElementById('mVersion').value) || 1,
+            due_date: document.getElementById('mDueDate').value || null,
+            status: 'pending_review',
+            created_by: currentUser?.id
+        }).select().single();
+
+        if (error) { errEl.textContent = 'Error al publicar. Intenta de nuevo.'; errEl.style.display = 'block'; return; }
+
+        // Notificar al cliente
+        if (clientUserId) {
+            fetch('/api/send-notification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: clientUserId,
+                    user_email: clientEmail,
+                    type: 'stage_started',
+                    title: `Nuevo corte listo para revisar: ${title}`,
+                    body: 'Francisco subió un nuevo corte. Entra al portal para verlo y dejar tus comentarios.',
+                    link: `/reviews?review=${created.id}`
+                })
+            });
+        }
+
+        closeModal();
+        await loadReviews();
+    }
+
+    // ── HELPERS ──
+    function parseTimecode(str) {
+        if (!str) return null;
+        const parts = str.split(':').map(Number);
+        if (parts.some(isNaN)) return null;
+        if (parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
+        if (parts.length === 2) return parts[0]*60 + parts[1];
+        if (parts.length === 1) return parts[0];
+        return null;
+    }
+
+    function formatTimecode(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return h > 0
+            ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+            : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    init();
+</script>
+</body>
+</html>
