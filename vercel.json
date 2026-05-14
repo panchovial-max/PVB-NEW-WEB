@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "pvb-estudio-creativo",
+  "outputDirectory": ".",
   "redirects": [
     { "source": "/dashboard", "destination": "/dashboard.html", "permanent": false },
     { "source": "/login", "destination": "/login.html", "permanent": false },
