@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVB — Production CRM</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #080808;
+            --surface: #111;
+            --surface2: #181818;
+            --border: #1f1f1f;
+            --border2: #2a2a2a;
+            --text: #fff;
+            --muted: #666;
+            --subtle: #444;
+            --accent: #fff;
+            --green: #4caf50;
+            --blue: #6a8fff;
+            --yellow: #f5c518;
+            --red: #e55;
+            --orange: #ff9800;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; }
+
+        /* ── PIN GATE ── */
+        #pinGate {
+            position: fixed; inset: 0; background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 999; flex-direction: column; gap: 24px;
+        }
+        .pin-logo { font-size: 11px; letter-spacing: 6px; color: var(--muted); text-transform: uppercase; }
+        .pin-title { font-size: 1.8rem; font-weight: 900; }
+        .pin-sub { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+        .pin-input {
+            width: 180px; text-align: center; font-size: 2rem; letter-spacing: 12px;
+            background: var(--surface); border: 1px solid var(--border2);
+            color: var(--text); padding: 16px; font-family: inherit; outline: none;
+        }
+        .pin-input:focus { border-color: #444; }
+        .pin-error { color: var(--red); font-size: 12px; display: none; }
+
+        /* ── LAYOUT ── */
+        #app { display: none; flex-direction: column; min-height: 100vh; }
+        .topbar {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 24px; height: 56px;
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 20px; }
+        .topbar-logo { font-size: 11px; letter-spacing: 4px; font-weight: 700; color: var(--muted); }
+        .topbar-title { font-size: 13px; font-weight: 600; }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+        .nav-tabs { display: flex; gap: 2px; }
+        .nav-tab {
+            padding: 6px 14px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+            background: none; border: none; color: var(--muted); cursor: pointer;
+            font-family: inherit; border-bottom: 2px solid transparent; transition: all .15s;
+        }
+        .nav-tab.active { color: var(--text); border-bottom-color: var(--text); }
+        .nav-tab:hover { color: var(--text); }
+
+        .main { display: flex; flex: 1; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 220px; background: var(--surface); border-right: 1px solid var(--border);
+            padding: 20px 0; flex-shrink: 0; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto;
+        }
+        .sidebar-section { margin-bottom: 28px; }
+        .sidebar-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); padding: 0 16px; margin-bottom: 8px; }
+        .sidebar-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 16px; cursor: pointer; transition: background .15s;
+            font-size: 13px; color: var(--muted); border: none; background: none;
+            width: 100%; text-align: left; font-family: inherit;
+        }
+        .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+        .sidebar-item.active { background: var(--surface2); color: var(--text); }
+        .sidebar-count {
+            margin-left: auto; font-size: 10px; background: var(--border2);
+            padding: 2px 7px; border-radius: 10px; color: var(--muted);
+        }
+        .sidebar-item.active .sidebar-count { background: #333; color: #aaa; }
+
+        /* ── CONTENT ── */
+        .content { flex: 1; padding: 24px; overflow-y: auto; }
+
+        /* ── TOOLBAR ── */
+        .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-box {
+            flex: 1; min-width: 200px; padding: 9px 14px;
+            background: var(--surface); border: 1px solid var(--border2);
+            color: var(--text); font-size: 13px; font-family: inherit; outline: none;
+        }
+        .search-box:focus { border-color: #444; }
+        .search-box::placeholder { color: var(--muted); }
+        .btn {
+            padding: 9px 18px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; font-family: inherit; border: none; transition: all .15s;
+        }
+        .btn-primary { background: var(--text); color: #000; }
+        .btn-primary:hover { background: #ddd; }
+        .btn-ghost { background: none; border: 1px solid var(--border2); color: var(--muted); }
+        .btn-ghost:hover { border-color: #444; color: var(--text); }
+        .btn-sm { padding: 6px 12px; font-size: 11px; }
+
+        /* ── PROVIDER GRID ── */
+        .provider-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .provider-card {
+            background: var(--surface); border: 1px solid var(--border);
+            cursor: pointer; transition: border-color .15s; position: relative;
+        }
+        .provider-card:hover { border-color: var(--border2); }
+        .provider-card-photo {
+            width: 100%; height: 160px; object-fit: cover; background: var(--surface2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; color: var(--border2);
+        }
+        .provider-card-photo img { width: 100%; height: 100%; object-fit: cover; }
+        .provider-card-body { padding: 16px; }
+        .provider-card-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .provider-card-cat { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+        .provider-card-meta { display: flex; flex-direction: column; gap: 4px; }
+        .provider-card-meta span { font-size: 12px; color: var(--muted); }
+        .provider-card-footer {
+            padding: 10px 16px; border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .dot-pending  { background: var(--yellow); }
+        .dot-active   { background: var(--green); }
+        .dot-contacted{ background: var(--blue); }
+        .dot-paused   { background: var(--muted); }
+
+        /* ── PROVIDER TABLE (list view) ── */
+        .provider-table { width: 100%; border-collapse: collapse; }
+        .provider-table th {
+            text-align: left; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--border);
+            font-weight: 500;
+        }
+        .provider-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .provider-table tr:hover td { background: var(--surface2); cursor: pointer; }
+        .provider-table tr:last-child td { border-bottom: none; }
+
+        /* ── BADGE ── */
+        .badge {
+            display: inline-block; padding: 3px 10px; font-size: 10px;
+            letter-spacing: 1.5px; text-transform: uppercase; border-radius: 2px;
+        }
+        .badge-pending   { background: #1a1500; color: var(--yellow); border: 1px solid #3a3000; }
+        .badge-active    { background: #0d1f0d; color: var(--green);  border: 1px solid #1a3a1a; }
+        .badge-contacted { background: #0d0f1f; color: var(--blue);   border: 1px solid #1a2060; }
+        .badge-paused    { background: #1a1a1a; color: var(--muted);  border: 1px solid var(--border2); }
+        .cat-badge {
+            display: inline-block; padding: 2px 9px; font-size: 10px; letter-spacing: 1px;
+            text-transform: uppercase; border-radius: 2px; font-weight: 500;
+        }
+        .cat-vehiculos  { background: #1a1200; color: #f0a030; border: 1px solid #3a2800; }
+        .cat-locaciones { background: #0d1520; color: #6ab0ff; border: 1px solid #1a3060; }
+        .cat-modelos    { background: #1a0d20; color: #cc88ff; border: 1px solid #3a1a60; }
+        .cat-utileria   { background: #1a1a0d; color: #cccc44; border: 1px solid #3a3a1a; }
+        .cat-vestuario  { background: #200d15; color: #ff88aa; border: 1px solid #601a30; }
+        .cat-catering   { background: #0d1a10; color: #66cc88; border: 1px solid #1a4025; }
+        .cat-otro       { background: #181818; color: #aaa;    border: 1px solid var(--border2); }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.85);
+            display: flex; align-items: flex-start; justify-content: flex-end;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal-panel {
+            width: min(600px, 100vw); height: 100vh; background: var(--surface);
+            border-left: 1px solid var(--border2); overflow-y: auto;
+            transform: translateX(40px); transition: transform .2s;
+        }
+        .modal-overlay.open .modal-panel { transform: translateX(0); }
+        .modal-header {
+            position: sticky; top: 0; background: var(--surface);
+            border-bottom: 1px solid var(--border); padding: 16px 20px;
+            display: flex; align-items: center; justify-content: space-between; z-index: 10;
+        }
+        .modal-title { font-weight: 600; font-size: 15px; }
+        .modal-close {
+            background: none; border: none; color: var(--muted); cursor: pointer;
+            font-size: 20px; line-height: 1; padding: 4px 8px;
+        }
+        .modal-close:hover { color: var(--text); }
+        .modal-body { padding: 24px; }
+        .modal-photos {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px;
+        }
+        .modal-photos img {
+            width: 100%; height: 120px; object-fit: cover; background: var(--surface2);
+        }
+        .modal-section { margin-bottom: 24px; }
+        .modal-section-title {
+            font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 12px;
+        }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .info-item label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 4px; }
+        .info-item span { font-size: 14px; color: var(--text); }
+        .modal-assets { display: flex; flex-direction: column; gap: 10px; }
+        .modal-asset-card {
+            background: var(--surface2); border: 1px solid var(--border);
+            padding: 14px; display: flex; gap: 12px;
+        }
+        .modal-asset-thumb {
+            width: 60px; height: 60px; object-fit: cover;
+            background: var(--border); flex-shrink: 0; display: flex;
+            align-items: center; justify-content: center; font-size: 20px;
+        }
+        .modal-asset-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-asset-info h4 { font-size: 13px; margin-bottom: 4px; }
+        .modal-asset-info p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+        .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+        .btn-whatsapp { background: #25d366; color: #fff; }
+        .btn-whatsapp:hover { background: #1db954; }
+        .select-field {
+            padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border2);
+            color: var(--text); font-family: inherit; font-size: 13px; outline: none; cursor: pointer;
+        }
+
+        /* ── PROJECTS VIEW ── */
+        .project-list { display: flex; flex-direction: column; gap: 12px; }
+        .project-card {
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 20px 24px; cursor: pointer; transition: border-color .15s;
+            display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+        }
+        .project-card:hover { border-color: var(--border2); }
+        .project-card-info { flex: 1; }
+        .project-card-info h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+        .project-card-info p { font-size: 12px; color: var(--muted); }
+        .project-cats { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+
+        /* ── NEW PROJECT FORM ── */
+        .form-card { background: var(--surface); border: 1px solid var(--border); padding: 28px; max-width: 640px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+        .form-input {
+            width: 100%; padding: 10px 14px; background: var(--surface2);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 13px; font-family: inherit; outline: none;
+        }
+        .form-input:focus { border-color: #444; }
+        .cat-checkboxes { display: flex; gap: 10px; flex-wrap: wrap; }
+        .cat-check {
+            padding: 7px 14px; border: 1px solid var(--border2); cursor: pointer;
+            font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted);
+            transition: all .15s; -webkit-user-select: none; user-select: none;
+        }
+        .cat-check.selected { border-color: #fff; color: #fff; background: #111; }
+
+        /* ── STATS BAR ── */
+        .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stat-pill {
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 10px 16px; display: flex; align-items: center; gap: 8px;
+        }
+        .stat-pill-num { font-size: 1.4rem; font-weight: 900; }
+        .stat-pill-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+
+        /* ── EMPTY ── */
+        .empty { padding: 60px 20px; text-align: center; color: var(--muted); border: 1px dashed var(--border2); }
+        .empty p { font-size: 13px; margin-top: 8px; }
+
+        /* ── VIEW TOGGLE ── */
+        .view-toggle { display: flex; }
+        .view-btn {
+            padding: 7px 12px; background: none; border: 1px solid var(--border2);
+            color: var(--muted); cursor: pointer; font-size: 14px;
+        }
+        .view-btn.active { background: var(--surface2); color: var(--text); }
+        .view-btn:first-child { border-right: none; }
+
+        .loading { text-align: center; padding: 80px; color: var(--muted); letter-spacing: 3px; font-size: 11px; }
+
+        /* ── MATCH PANEL ── */
+        .match-banner {
+            background: #0d1f0d; border: 1px solid #1a3a1a;
+            padding: 14px 20px; margin-bottom: 20px;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+        }
+        .match-banner p { font-size: 13px; color: #aaa; }
+        .match-banner strong { color: var(--green); }
+    </style>
+</head>
+<body>
+
+<!-- PIN GATE -->
+<div id="pinGate">
+    <p class="pin-logo">PVB Estudio Creativo</p>
+    <h1 class="pin-title">Production CRM</h1>
+    <p class="pin-sub">Acceso interno</p>
+    <input type="password" class="pin-input" id="pinInput" maxlength="4" placeholder="····" autofocus>
+    <p class="pin-error" id="pinError">PIN incorrecto</p>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <span class="topbar-logo">PVB</span>
+            <span class="topbar-title">Production CRM</span>
+            <div class="nav-tabs">
+                <button type="button" class="nav-tab active" onclick="showView('providers')">Proveedores</button>
+                <button type="button" class="nav-tab" onclick="showView('projects')">Proyectos</button>
+                <button type="button" class="nav-tab" onclick="showView('new-project')">+ Nuevo Proyecto</button>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="refreshData()">↻ Actualizar</button>
+        </div>
+    </div>
+
+    <div class="main">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <p class="sidebar-label">Categoría</p>
+                <button type="button" class="sidebar-item active" onclick="filterCat('all', this)">
+                    Todos <span class="sidebar-count" id="cnt-all">0</span>
+                </button>
+                <button type="button" class="sidebar-item" onclick="filterCat('locaciones', this)">
+                    🏠 Locaciones <span class="sidebar-count" id="cnt-locaciones">0</span>
+                </button>
+                <button type="button" class="sidebar-item" onclick="filterCat('vehiculos', this)">
+                    🚗 Vehículos <span class="sidebar-count" id="cnt-vehiculos">0</span>
+                </button>
+                <button type="button" class="sidebar-item" onclick="filterCat('modelos', this)">
+                    🧍 Talento <span class="sidebar-count" id="cnt-modelos">0</span>
+                </button>
+                <button type="button" class="sidebar-item" onclick="filterCat('utileria', this)">
+                    🪑 Utilería <span class="sidebar-count" id="cnt-utileria">0</span>
+                </button>
+                <button type="button" class="sidebar-item" onclick="filterCat('vestuario', this)">
+                    👗 Vestuario <span class="sidebar-count" id="cnt-vestuario">0</span>
+                </button>
+                <button type="button" class="sidebar-item" onclick="filterCat('catering', this)">
+                    🍱 Catering <span class="sidebar-count" id="cnt-catering">0</span>
+                </button>
+                <button type="button" class="sidebar-item" onclick="filterCat('otro', this)">
+                    ✨ Otro <span class="sidebar-count" id="cnt-otro">0</span>
+                </button>
+            </div>
+            <div class="sidebar-section">
+                <p class="sidebar-label">Estado</p>
+                <button type="button" class="sidebar-item" onclick="filterStatus('active', this)">
+                    <span class="status-dot dot-active"></span> Activos
+                </button>
+                <button type="button" class="sidebar-item" onclick="filterStatus('pending', this)">
+                    <span class="status-dot dot-pending"></span> En revisión
+                </button>
+                <button type="button" class="sidebar-item" onclick="filterStatus('contacted', this)">
+                    <span class="status-dot dot-contacted"></span> Contactados
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTENT -->
+        <div class="content" id="content">
+            <div class="loading" id="loadingState">CARGANDO...</div>
+        </div>
+    </div>
+</div>
+
+<!-- PROVIDER DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal-panel" id="modalPanel">
+        <div class="modal-header">
+            <span id="modalTitle" class="modal-title"></span>
+            <button type="button" class="modal-close" onclick="closeModalDirect()">×</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+    const PIN = '1404';
+    const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const CAT_LABELS = {
+        vehiculos: '🚗 Vehículos', locaciones: '🏠 Locaciones', modelos: '🧍 Talento',
+        utileria: '🪑 Utilería', vestuario: '👗 Vestuario', catering: '🍱 Catering', otro: '✨ Otro'
+    };
+    const STATUS_LABELS = { pending: 'En revisión', active: 'Activo', contacted: 'Contactado', paused: 'Pausado' };
+
+    let allProviders = [];
+    let allProjects = [];
+    let currentView = 'providers';
+    let currentCat = 'all';
+    let currentStatus = null;
+    let viewMode = 'grid'; // grid | list
+    let searchQuery = '';
+
+    // ── PIN ──
+    document.getElementById('pinInput').addEventListener('input', e => {
+        if (e.target.value.length === 4) {
+            if (e.target.value === PIN) {
+                document.getElementById('pinGate').style.display = 'none';
+                document.getElementById('app').style.display = 'flex';
+                document.getElementById('app').style.flexDirection = 'column';
+                loadData();
+            } else {
+                document.getElementById('pinError').style.display = 'block';
+                e.target.value = '';
+                setTimeout(() => { document.getElementById('pinError').style.display = 'none'; }, 2000);
+            }
+        }
+    });
+
+    // ── DATA ──
+    async function loadData() {
+        document.getElementById('loadingState').style.display = 'block';
+
+        const { data: providers } = await supabase
+            .from('providers')
+            .select('*, provider_assets(*)')
+            .order('created_at', { ascending: false });
+
+        const { data: projects } = await supabase
+            .from('projects')
+            .select('*, project_matches(*, providers(full_name, phone, category))')
+            .order('created_at', { ascending: false });
+
+        allProviders = providers || [];
+        allProjects = projects || [];
+
+        updateCounts();
+        renderView();
+    }
+
+    async function refreshData() { await loadData(); }
+
+    function updateCounts() {
+        const cats = ['all','locaciones','vehiculos','modelos','utileria','vestuario','catering','otro'];
+        cats.forEach(cat => {
+            const el = document.getElementById('cnt-' + cat);
+            if (el) el.textContent = cat === 'all'
+                ? allProviders.length
+                : allProviders.filter(p => p.category === cat).length;
+        });
+    }
+
+    // ── VIEWS ──
+    function showView(view) {
+        currentView = view;
+        document.querySelectorAll('.nav-tab').forEach((t, i) => {
+            t.classList.toggle('active', ['providers','projects','new-project'][i] === view);
+        });
+        document.getElementById('sidebar').style.display = view === 'providers' ? 'block' : 'none';
+        renderView();
+    }
+
+    function renderView() {
+        document.getElementById('loadingState').style.display = 'none';
+        if (currentView === 'providers') renderProviders();
+        else if (currentView === 'projects') renderProjects();
+        else if (currentView === 'new-project') renderNewProject();
+    }
+
+    // ── PROVIDERS ──
+    function filteredProviders() {
+        return allProviders.filter(p => {
+            const catOk = currentCat === 'all' || p.category === currentCat;
+            const statusOk = !currentStatus || p.status === currentStatus;
+            const q = searchQuery.toLowerCase();
+            const searchOk = !q || p.full_name.toLowerCase().includes(q)
+                || (p.phone||'').includes(q)
+                || (p.email||'').toLowerCase().includes(q)
+                || (p.instagram||'').toLowerCase().includes(q)
+                || (p.category||'').includes(q);
+            return catOk && statusOk && searchOk;
+        });
+    }
+
+    function renderProviders() {
+        const providers = filteredProviders();
+        const active = allProviders.filter(p => p.status === 'active').length;
+
+        let html = `
+            <div class="stats-bar">
+                <div class="stat-pill"><span class="stat-pill-num">${allProviders.length}</span><span class="stat-pill-label">Total proveedores</span></div>
+                <div class="stat-pill"><span class="stat-pill-num" style="color:var(--green)">${active}</span><span class="stat-pill-label">Activos</span></div>
+                <div class="stat-pill"><span class="stat-pill-num">${allProviders.filter(p=>p.status==='pending').length}</span><span class="stat-pill-label">En revisión</span></div>
+                <div class="stat-pill"><span class="stat-pill-num">${allProviders.filter(p=>p.status==='contacted').length}</span><span class="stat-pill-label">Contactados</span></div>
+            </div>
+            <div class="toolbar">
+                <input type="text" class="search-box" placeholder="Buscar por nombre, teléfono, email, categoría..." oninput="searchProviders(this.value)" value="${searchQuery}">
+                <div class="view-toggle">
+                    <button class="view-btn ${viewMode==='grid'?'active':''}" onclick="setView('grid')">⊞</button>
+                    <button class="view-btn ${viewMode==='list'?'active':''}" onclick="setView('list')">☰</button>
+                </div>
+            </div>`;
+
+        if (providers.length === 0) {
+            html += `<div class="empty"><p>No hay proveedores para este filtro.</p></div>`;
+        } else if (viewMode === 'grid') {
+            html += `<div class="provider-grid">${providers.map(p => providerCard(p)).join('')}</div>`;
+        } else {
+            html += `<table class="provider-table">
+                <thead><tr>
+                    <th>Nombre</th><th>Categoría</th><th>Teléfono</th><th>Email</th><th>Assets</th><th>Estado</th><th></th>
+                </tr></thead>
+                <tbody>${providers.map(p => providerRow(p)).join('')}</tbody>
+            </table>`;
+        }
+
+        document.getElementById('content').innerHTML = html;
+    }
+
+    function providerCard(p) {
+        const assets = p.provider_assets || [];
+        const cover = assets.find(a => a.photos?.[0])?.photos?.[0];
+        const icon = { vehiculos:'🚗', locaciones:'🏠', modelos:'🧍', utileria:'🪑', vestuario:'👗', catering:'🍱', otro:'✨' }[p.category] || '📦';
+
+        return `<div class="provider-card" onclick="openProvider('${p.id}')">
+            <div class="provider-card-photo">
+                ${cover ? `<img src="${cover}" alt="${p.full_name}">` : icon}
+            </div>
+            <div class="provider-card-body">
+                <div class="provider-card-name">${p.full_name}</div>
+                <div class="provider-card-cat">${CAT_LABELS[p.category] || p.category}</div>
+                <div class="provider-card-meta">
+                    ${p.phone ? `<span>📱 ${p.phone}</span>` : ''}
+                    ${p.email ? `<span>✉ ${p.email}</span>` : ''}
+                    ${p.instagram ? `<span>📸 ${p.instagram}</span>` : ''}
+                    <span>📦 ${assets.length} asset${assets.length !== 1 ? 's' : ''}</span>
+                </div>
+            </div>
+            <div class="provider-card-footer">
+                <span><span class="status-dot dot-${p.status}"></span>${STATUS_LABELS[p.status]}</span>
+                ${p.referral_code ? `<span style="font-size:10px;color:var(--muted);letter-spacing:1px;">${p.referral_code}</span>` : ''}
+            </div>
+        </div>`;
+    }
+
+    function providerRow(p) {
+        const assets = p.provider_assets || [];
+        return `<tr onclick="openProvider('${p.id}')">
+            <td><strong>${p.full_name}</strong></td>
+            <td><span class="cat-badge cat-${p.category}">${p.category}</span></td>
+            <td>${p.phone || '—'}</td>
+            <td>${p.email || '—'}</td>
+            <td>${assets.length}</td>
+            <td><span class="badge badge-${p.status}">${STATUS_LABELS[p.status]}</span></td>
+            <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openWhatsApp('${p.phone}','${p.full_name}')">WhatsApp</button></td>
+        </tr>`;
+    }
+
+    // ── PROVIDER DETAIL MODAL ──
+    function openProvider(id) {
+        const p = allProviders.find(x => x.id === id);
+        if (!p) return;
+        const assets = p.provider_assets || [];
+        const allPhotos = assets.flatMap(a => a.photos || []).slice(0, 6);
+
+        document.getElementById('modalTitle').textContent = p.full_name;
+        document.getElementById('modalBody').innerHTML = `
+
+            ${allPhotos.length > 0 ? `
+                <div class="modal-photos">
+                    ${allPhotos.map(url => `<img src="${url}" alt="">`).join('')}
+                </div>` : ''}
+
+            <div class="modal-section">
+                <p class="modal-section-title">Información de contacto</p>
+                <div class="info-grid">
+                    <div class="info-item"><label>Nombre</label><span>${p.full_name}</span></div>
+                    <div class="info-item"><label>Teléfono</label><span>${p.phone || '—'}</span></div>
+                    <div class="info-item"><label>Email</label><span>${p.email || '—'}</span></div>
+                    <div class="info-item"><label>Instagram</label><span>${p.instagram || '—'}</span></div>
+                    <div class="info-item"><label>Categoría</label><span>${CAT_LABELS[p.category]}</span></div>
+                    <div class="info-item"><label>Referido por</label><span>${p.referred_by || '—'}</span></div>
+                    <div class="info-item"><label>Código referido</label><span>${p.referral_code || '—'}</span></div>
+                    <div class="info-item"><label>Registro</label><span>${new Date(p.created_at).toLocaleDateString('es-CL')}</span></div>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <p class="modal-section-title">Estado</p>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <span class="badge badge-${p.status}">${STATUS_LABELS[p.status]}</span>
+                    <select class="select-field" onchange="updateStatus('${p.id}', this.value)">
+                        <option value="">Cambiar estado...</option>
+                        <option value="pending">En revisión</option>
+                        <option value="active">Activo</option>
+                        <option value="contacted">Contactado</option>
+                        <option value="paused">Pausado</option>
+                    </select>
+                </div>
+            </div>
+
+            ${assets.length > 0 ? `
+            <div class="modal-section">
+                <p class="modal-section-title">Assets (${assets.length})</p>
+                <div class="modal-assets">
+                    ${assets.map(a => `
+                        <div class="modal-asset-card">
+                            <div class="modal-asset-thumb">
+                                ${a.photos?.[0] ? `<img src="${a.photos[0]}" alt="">` : '📦'}
+                            </div>
+                            <div class="modal-asset-info">
+                                <h4>${a.title}</h4>
+                                ${a.description ? `<p>${a.description}</p>` : ''}
+                                ${a.location ? `<p>📍 ${a.location}</p>` : ''}
+                            </div>
+                        </div>`).join('')}
+                </div>
+            </div>` : ''}
+
+            <div class="modal-actions">
+                ${p.phone ? `<button class="btn btn-whatsapp" onclick="openWhatsApp('${p.phone}','${p.full_name}')">💬 WhatsApp</button>` : ''}
+                ${p.email ? `<button class="btn btn-ghost" onclick="window.open('mailto:${p.email}')">✉ Email</button>` : ''}
+                ${p.instagram ? `<button class="btn btn-ghost" onclick="window.open('https://instagram.com/${p.instagram.replace('@','')}','_blank')">📸 Instagram</button>` : ''}
+            </div>`;
+
+        document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function closeModal(e) {
+        if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+    }
+    function closeModalDirect() {
+        document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    async function updateStatus(id, status) {
+        if (!status) return;
+        await supabase.from('providers').update({ status }).eq('id', id);
+        const p = allProviders.find(x => x.id === id);
+        if (p) p.status = status;
+        updateCounts();
+        renderProviders();
+        closeModalDirect();
+    }
+
+    function openWhatsApp(phone, name) {
+        const msg = encodeURIComponent(`Hola ${name.split(' ')[0]}! Soy Francisco de PVB Estudio Creativo. `);
+        window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+    }
+
+    // ── FILTERS ──
+    function filterCat(cat, el) {
+        currentCat = cat;
+        currentStatus = null;
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        if (el) el.classList.add('active');
+        renderProviders();
+    }
+
+    function filterStatus(status, el) {
+        currentStatus = currentStatus === status ? null : status;
+        currentCat = 'all';
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        if (currentStatus && el) el.classList.add('active');
+        renderProviders();
+    }
+
+    function searchProviders(q) { searchQuery = q; renderProviders(); }
+    function setView(mode) { viewMode = mode; renderProviders(); }
+
+    // ── PROJECTS ──
+    function renderProjects() {
+        let html = `
+            <div class="toolbar">
+                <h2 style="font-size:16px;font-weight:700;">Proyectos</h2>
+                <button class="btn btn-primary" onclick="showView('new-project')">+ Nuevo proyecto</button>
+            </div>`;
+
+        if (allProjects.length === 0) {
+            html += `<div class="empty"><p>No hay proyectos aún. Crea el primero.</p></div>`;
+        } else {
+            html += `<div class="project-list">${allProjects.map(proj => `
+                <div class="project-card">
+                    <div class="project-card-info">
+                        <h3>${proj.title}</h3>
+                        <p>${proj.description || ''} ${proj.shoot_date ? '· 📅 ' + proj.shoot_date : ''} ${proj.location ? '· 📍 ' + proj.location : ''}</p>
+                        <div class="project-cats">
+                            ${(proj.categories_needed||[]).map(c => `<span class="cat-badge cat-${c}">${CAT_LABELS[c]||c}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                        <span class="badge badge-${proj.status}">${proj.status}</span>
+                        <span style="font-size:12px;color:var(--muted);">${(proj.project_matches||[]).length} matches</span>
+                        <button class="btn btn-primary btn-sm" onclick="runMatch('${proj.id}')">Match proveedores</button>
+                    </div>
+                </div>`).join('')}
+            </div>`;
+        }
+
+        document.getElementById('content').innerHTML = html;
+    }
+
+    // ── NEW PROJECT ──
+    let selectedCats = [];
+    function renderNewProject() {
+        selectedCats = [];
+        const cats = ['vehiculos','locaciones','modelos','utileria','vestuario','catering','otro'];
+        document.getElementById('content').innerHTML = `
+            <h2 style="font-size:16px;font-weight:700;margin-bottom:20px;">Nuevo Proyecto</h2>
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Título del proyecto</label>
+                    <input type="text" class="form-input" id="projTitle" placeholder="Ej: Campaña Verano Kaya 2026">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea class="form-input" id="projDesc" rows="3" placeholder="Brief del proyecto, qué se va a filmar..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Fecha de rodaje</label>
+                    <input type="date" class="form-input" id="projDate">
+                </div>
+                <div class="form-group">
+                    <label>Locación</label>
+                    <input type="text" class="form-input" id="projLocation" placeholder="Ej: Santiago, Lo Barnechea">
+                </div>
+                <div class="form-group">
+                    <label>Categorías necesarias</label>
+                    <div class="cat-checkboxes" id="catCheckboxes">
+                        ${cats.map(c => `<span class="cat-check" onclick="toggleCat('${c}',this)">${CAT_LABELS[c]}</span>`).join('')}
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:8px;">
+                    <button class="btn btn-primary" onclick="createProject()">Crear proyecto</button>
+                    <button class="btn btn-ghost" onclick="showView('projects')">Cancelar</button>
+                </div>
+                <p id="projError" style="color:var(--red);font-size:12px;margin-top:12px;display:none;"></p>
+            </div>`;
+    }
+
+    function toggleCat(cat, el) {
+        const idx = selectedCats.indexOf(cat);
+        if (idx === -1) { selectedCats.push(cat); el.classList.add('selected'); }
+        else { selectedCats.splice(idx, 1); el.classList.remove('selected'); }
+    }
+
+    async function createProject() {
+        const title = document.getElementById('projTitle').value.trim();
+        const errEl = document.getElementById('projError');
+        if (!title) { errEl.textContent = 'El título es requerido.'; errEl.style.display = 'block'; return; }
+
+        const { data, error } = await supabase.from('projects').insert({
+            title,
+            description: document.getElementById('projDesc').value.trim() || null,
+            shoot_date: document.getElementById('projDate').value || null,
+            location: document.getElementById('projLocation').value.trim() || null,
+            categories_needed: selectedCats.length > 0 ? selectedCats : null,
+            status: 'draft'
+        }).select().single();
+
+        if (error) { errEl.textContent = 'Error al crear el proyecto. Intenta de nuevo.'; errEl.style.display = 'block'; return; }
+
+        allProjects.unshift(data);
+
+        // Auto-match si hay categorías
+        if (selectedCats.length > 0) {
+            await runMatch(data.id);
+        } else {
+            showView('projects');
+        }
+    }
+
+    async function runMatch(projectId) {
+        const proj = allProjects.find(p => p.id === projectId);
+        if (!proj) return;
+
+        const cats = proj.categories_needed || [];
+        const matched = allProviders.filter(p => p.status === 'active' && (cats.length === 0 || cats.includes(p.category)));
+
+        if (matched.length === 0) {
+            alert(`No hay proveedores activos para las categorías: ${cats.join(', ')}`);
+            showView('projects');
+            return;
+        }
+
+        const records = matched.map(p => ({
+            project_id: projectId,
+            provider_id: p.id,
+            status: 'notified',
+            notified_at: new Date().toISOString()
+        }));
+
+        await supabase.from('project_matches').upsert(records, { onConflict: 'project_id,provider_id' });
+        await supabase.from('projects').update({ status: 'matching' }).eq('id', projectId);
+
+        // Generar links WhatsApp
+        const links = matched.map(p => {
+            const msg = encodeURIComponent(`Hola ${p.full_name.split(' ')[0]}! 👋 Soy Francisco de PVB.\n\nTenemos el proyecto *${proj.title}* y tu perfil hace match. ¿Puedes participar?\n\nRevisa tu perfil: https://panchovial.com/proveedor-dashboard.html`);
+            return `<a href="https://wa.me/${p.phone.replace(/\D/g,'')}?text=${msg}" target="_blank" style="display:block;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);margin-bottom:6px;color:var(--text);text-decoration:none;font-size:13px;">💬 ${p.full_name} <span style="color:var(--muted);font-size:11px;">${CAT_LABELS[p.category]}</span></a>`;
+        }).join('');
+
+        document.getElementById('content').innerHTML = `
+            <div class="match-banner">
+                <p>✅ Match completado — <strong>${matched.length} proveedores</strong> notificados para <strong>${proj.title}</strong></p>
+                <button class="btn btn-ghost btn-sm" onclick="showView('projects')">Ver proyectos</button>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:16px;letter-spacing:1px;">ENVIAR NOTIFICACIÓN POR WHATSAPP:</p>
+            ${links}`;
+
+        await loadData();
+    }
+</script>
+</body>
+</html>

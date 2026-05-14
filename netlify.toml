@@ -52,6 +52,21 @@
   to = "/master-brain.html"
   status = 200
 
+[[redirects]]
+  from = "/produccion"
+  to = "/produccion.html"
+  status = 200
+
+[[redirects]]
+  from = "/proveedores"
+  to = "/proveedores.html"
+  status = 200
+
+[[redirects]]
+  from = "/proveedor-dashboard"
+  to = "/proveedor-dashboard.html"
+  status = 200
+
 # Headers for security
 [[headers]]
   for = "/*"
