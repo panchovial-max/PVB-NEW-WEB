@@ -876,17 +876,17 @@
                             provider_id: provider.id,
                             title: titleInput.value.trim(),
                             description: descInput?.value.trim() || '',
-                            category: form.category.value,
-                            availability_notes: locInput?.value.trim() || null,
-                            is_active: true
+                            location: locInput?.value.trim() || null,
+                            status: 'available'
                         })
                         .select()
                         .single();
 
                     if (assetErr) throw assetErr;
 
-                    // 3. Subir fotos a Storage
+                    // 3. Subir fotos a Storage → guardar URLs en photos[]
                     const photos = filesMap[idx] || [];
+                    const photoUrls = [];
                     for (let i = 0; i < photos.length; i++) {
                         const file = photos[i];
                         const ext = file.name.split('.').pop();
@@ -900,15 +900,14 @@
                             const { data: urlData } = supabase.storage
                                 .from('provider-assets')
                                 .getPublicUrl(path);
-
-                            await supabase.from('provider_asset_photos').insert({
-                                asset_id: asset.id,
-                                storage_path: path,
-                                url: urlData.publicUrl,
-                                is_cover: i === 0,
-                                sort_order: i
-                            });
+                            photoUrls.push(urlData.publicUrl);
                         }
+                    }
+
+                    if (photoUrls.length > 0) {
+                        await supabase.from('provider_assets')
+                            .update({ photos: photoUrls })
+                            .eq('id', asset.id);
                     }
                 }
 
