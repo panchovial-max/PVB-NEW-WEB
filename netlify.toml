@@ -102,6 +102,16 @@
   to = "/timeline.html"
   status = 200
 
+[[redirects]]
+  from = "/notifications"
+  to = "/payments.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/send-notification"
+  to = "/.netlify/functions/send-notification"
+  status = 200
+
 # Headers for security
 [[headers]]
   for = "/*"

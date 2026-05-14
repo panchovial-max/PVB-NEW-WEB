@@ -246,7 +246,7 @@
             </div>
             <div class="form-group">
                 <label>Fecha límite de pago</label>
-                <input type="date" class="form-input" id="mDueDate">
+                <input type="date" class="form-input" id="mDueDate" title="Fecha límite de pago" placeholder="dd/mm/aaaa">
             </div>
         </div>
 
@@ -594,6 +594,32 @@
     function formatCLPNum(n) { return Number(n).toLocaleString('es-CL'); }
 
     init();
+
+    // Notificaciones in-app
+    const _sbForNotif = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const notifScript = document.createElement('script');
+    notifScript.src = '/assets/notifications.js';
+    notifScript.onload = () => window.PVBNotif?.init(_sbForNotif);
+    document.head.appendChild(notifScript);
+
+    // Disparar notificación cuando Francisco confirma un pago
+    const _origConfirm = confirmPayment;
+    confirmPayment = async function(id) {
+        await _origConfirm(id);
+        const p = allPayments.find(x => x.id === id);
+        if (p?.client_user_id) {
+            fetch('/api/send-notification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: p.client_user_id,
+                    type: 'payment_confirmed',
+                    title: p.concept,
+                    link: '/payments'
+                })
+            });
+        }
+    };
 </script>
 </body>
 </html>
