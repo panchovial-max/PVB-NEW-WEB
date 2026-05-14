@@ -2,7 +2,7 @@
 // Extrae og:image, og:title, og:description de cualquier URL pública.
 // Detecta automáticamente Pinterest, Instagram, Google Images.
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
     const url = event.queryStringParameters?.url;
     if (!url) return { statusCode: 400, body: 'url required' };
 

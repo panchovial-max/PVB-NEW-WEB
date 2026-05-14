@@ -4,7 +4,7 @@
 
 let cache = { value: null, date: null };
 
-exports.handler = async () => {
+export const handler = async () => {
     const today = new Date().toISOString().split('T')[0];
 
     if (cache.date === today && cache.value) {

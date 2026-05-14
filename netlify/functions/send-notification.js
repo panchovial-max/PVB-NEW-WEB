@@ -2,7 +2,7 @@
 // Crea notificación in-app + envía email via Resend
 // Body: { user_id, user_email, user_name, type, title, body, link, metadata }
 
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -146,7 +146,7 @@ function emailBase(content, link, cta) {
 </body></html>`;
 }
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
     if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
 
     const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
