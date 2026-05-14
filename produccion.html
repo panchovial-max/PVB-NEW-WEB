@@ -703,6 +703,7 @@
                     <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
                         <span class="badge badge-${proj.status}">${proj.status}</span>
                         <span style="font-size:12px;color:var(--muted);">${(proj.project_matches||[]).length} matches</span>
+                        <a href="/deliveries?project=${proj.id}&admin=1" class="btn btn-ghost btn-sm" style="text-decoration:none;">📦 Entregas</a>
                         <a href="/timeline?project=${proj.id}&admin=1" class="btn btn-ghost btn-sm" style="text-decoration:none;">📋 Timeline</a>
                         <a href="/payments?project=${proj.id}&admin=1" class="btn btn-ghost btn-sm" style="text-decoration:none;">💰 Cobros</a>
                         <a href="/feed?project=${proj.id}&admin=1" class="btn btn-ghost btn-sm" style="text-decoration:none;">💬 Feed</a>

@@ -112,6 +112,11 @@
   to = "/.netlify/functions/send-notification"
   status = 200
 
+[[redirects]]
+  from = "/deliveries"
+  to = "/deliveries.html"
+  status = 200
+
 # Headers for security
 [[headers]]
   for = "/*"

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entregas — PVB Estudio Creativo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #080808; --surface: #111; --surface2: #181818; --surface3: #1f1f1f;
+            --border: #1f1f1f; --border2: #2a2a2a;
+            --text: #fff; --muted: #666; --subtle: #444;
+            --green: #4caf50; --red: #e55; --yellow: #f5c518; --blue: #6a8fff; --orange: #ff9800;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; }
+
+        .header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 24px; height: 56px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; gap: 16px;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .back-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px 8px; }
+        .back-btn:hover { color: var(--text); }
+        .header-logo { font-size: 10px; letter-spacing: 4px; font-weight: 700; color: var(--muted); }
+        .header-title { font-size: 14px; font-weight: 600; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+
+        .main { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+
+        /* ── STATS ── */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 12px; margin-bottom: 32px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 18px 20px; }
+        .stat-num { font-size: 1.5rem; font-weight: 900; margin-bottom: 4px; }
+        .stat-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+        /* ── DELIVERABLE CARD ── */
+        .deliverable-card {
+            background: var(--surface); border: 1px solid var(--border);
+            margin-bottom: 16px; overflow: hidden;
+        }
+        .deliverable-card.available { border-left: 3px solid var(--green); }
+        .deliverable-card.draft     { border-left: 3px solid var(--yellow); }
+        .deliverable-card.revision_requested { border-left: 3px solid var(--orange); }
+        .deliverable-card.approved  { border-left: 3px solid var(--blue); }
+
+        .card-header { padding: 20px 24px; display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+        .card-icon { font-size: 28px; flex-shrink: 0; }
+        .card-info { flex: 1; min-width: 180px; }
+        .card-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .card-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+        .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+
+        .badge {
+            display: inline-block; padding: 3px 10px; font-size: 10px;
+            letter-spacing: 1.5px; text-transform: uppercase; border-radius: 2px;
+        }
+        .badge-pending   { background: #1a1a1a; color: var(--muted); border: 1px solid var(--border2); }
+        .badge-available { background: #0d1f0d; color: var(--green); border: 1px solid #1a3a1a; }
+        .badge-draft     { background: #1a1500; color: var(--yellow); border: 1px solid #3a3000; }
+        .badge-downloaded{ background: #0d0f1f; color: var(--blue); border: 1px solid #1a2060; }
+        .badge-approved  { background: #0d1020; color: var(--blue); border: 1px solid #1a2050; }
+        .badge-revision_requested { background: #1a0e00; color: var(--orange); border: 1px solid #3a2000; }
+
+        .type-badge {
+            font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+            padding: 2px 8px; border-radius: 2px; background: var(--surface2); color: var(--subtle);
+        }
+
+        /* ── FILES ── */
+        .files-section { border-top: 1px solid var(--border); padding: 16px 24px; }
+        .files-grid { display: flex; flex-direction: column; gap: 10px; }
+        .file-row {
+            display: flex; align-items: center; gap: 14px;
+            padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border2);
+            flex-wrap: wrap;
+        }
+        .file-icon { font-size: 22px; flex-shrink: 0; }
+        .file-info { flex: 1; min-width: 0; }
+        .file-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-meta { font-size: 11px; color: var(--muted); margin-top: 3px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .file-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+        .btn {
+            padding: 7px 14px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; font-family: inherit; border: none; transition: all .15s;
+        }
+        .btn-primary { background: var(--text); color: #000; }
+        .btn-primary:hover { background: #ddd; }
+        .btn-ghost { background: none; border: 1px solid var(--border2); color: var(--muted); }
+        .btn-ghost:hover { border-color: var(--subtle); color: var(--text); }
+        .btn-green { background: #0d1f0d; color: var(--green); border: 1px solid #1a3a1a; }
+        .btn-green:hover { background: #1a3a1a; }
+        .btn-orange { background: #1a0e00; color: var(--orange); border: 1px solid #3a2000; }
+        .btn-orange:hover { background: #2a1800; }
+        .btn-red { background: none; color: var(--red); border: 1px solid #3a1010; }
+        .btn-red:hover { background: #1a0808; }
+        .btn-sm { padding: 5px 10px; font-size: 10px; }
+        .btn-download { background: var(--text); color: #000; display: flex; align-items: center; gap: 6px; }
+        .btn-download:hover { background: #ddd; }
+
+        /* ── FEEDBACK ── */
+        .feedback-section { border-top: 1px solid var(--border); padding: 16px 24px; }
+        .feedback-title { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+        .feedback-item { padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .feedback-item:last-of-type { border-bottom: none; }
+        .feedback-meta { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+        .feedback-meta strong { color: #aaa; }
+        .feedback-body { font-size: 13px; color: #ccc; line-height: 1.5; }
+        .feedback-timecode { font-size: 10px; color: var(--blue); letter-spacing: 1px; margin-top: 2px; }
+
+        .approval-bar {
+            padding: 14px 24px; border-top: 1px solid var(--border);
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            background: var(--surface2);
+        }
+        .approval-bar p { font-size: 12px; color: var(--muted); flex: 1; }
+
+        .revision-form { padding: 16px 24px; border-top: 1px solid var(--border); display: none; }
+        .revision-form.open { display: block; }
+        .revision-input {
+            width: 100%; padding: 10px 14px; background: var(--bg);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 13px; font-family: inherit; outline: none; resize: vertical;
+            margin-bottom: 10px; min-height: 80px;
+        }
+        .revision-input:focus { border-color: var(--subtle); }
+        .timecode-input {
+            padding: 8px 12px; background: var(--bg); border: 1px solid var(--border2);
+            color: var(--text); font-size: 12px; font-family: monospace; outline: none;
+            width: 100px; margin-bottom: 10px; margin-right: 10px;
+        }
+
+        /* ── ADMIN UPLOAD ── */
+        .upload-zone {
+            border: 2px dashed var(--border2); padding: 32px; text-align: center;
+            cursor: pointer; transition: border-color .15s; margin: 16px 24px;
+        }
+        .upload-zone:hover { border-color: var(--subtle); }
+        .upload-zone input { display: none; }
+        .upload-zone .icon { font-size: 36px; margin-bottom: 10px; }
+        .upload-zone p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+        .upload-zone small { font-size: 11px; color: var(--subtle); }
+        .upload-progress { font-size: 12px; color: var(--blue); margin-top: 8px; display: none; }
+
+        /* ── NEW DELIVERABLE MODAL ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.9);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal {
+            width: min(540px, 95vw); background: var(--surface);
+            border: 1px solid var(--border2); padding: 28px;
+            transform: translateY(20px); transition: transform .2s; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-overlay.open .modal { transform: translateY(0); }
+        .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; }
+        .modal-close:hover { color: var(--text); }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+        .form-input {
+            width: 100%; padding: 9px 13px; background: var(--surface2);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 13px; font-family: inherit; outline: none;
+        }
+        .form-input:focus { border-color: var(--subtle); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .type-options { display: flex; gap: 6px; flex-wrap: wrap; }
+        .type-opt {
+            padding: 6px 12px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            background: none; border: 1px solid var(--border2); color: var(--muted);
+            cursor: pointer; font-family: inherit; transition: all .15s;
+        }
+        .type-opt.active { border-color: var(--text); color: var(--text); background: var(--surface2); }
+        .modal-error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+        .empty { padding: 60px 20px; text-align: center; color: var(--muted); border: 1px dashed var(--border2); }
+        .empty h3 { color: #aaa; margin-bottom: 8px; font-size: 15px; }
+        .empty p { font-size: 13px; line-height: 1.6; }
+        .loading { text-align: center; padding: 80px; color: var(--muted); letter-spacing: 3px; font-size: 11px; }
+
+        .version-badge { font-size: 10px; background: var(--surface2); border: 1px solid var(--border2); padding: 2px 8px; color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <button type="button" class="back-btn" onclick="history.back()">←</button>
+        <span class="header-logo">PVB</span>
+        <span class="header-title">Entregas</span>
+    </div>
+    <div class="header-right">
+        <span style="font-size:11px;color:var(--muted);" id="userChip"></span>
+        <button type="button" class="btn btn-primary" id="newDelivBtn" style="display:none;" onclick="openModal()">+ Nueva entrega</button>
+    </div>
+</header>
+
+<main class="main">
+    <div class="loading" id="loadingState">CARGANDO...</div>
+    <div id="appContent" style="display:none;"></div>
+</main>
+
+<!-- NEW DELIVERABLE MODAL -->
+<div class="modal-overlay" id="delivModal">
+    <div class="modal">
+        <div class="modal-title">
+            Nueva entrega
+            <button type="button" class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="form-group">
+            <label>Título</label>
+            <input type="text" class="form-input" id="mTitle" placeholder="Ej: Cut final — Campaña Kaya Invierno 2026">
+        </div>
+        <div class="form-group">
+            <label>Tipo de entrega</label>
+            <div class="type-options" id="typeOptions">
+                <button type="button" class="type-opt" onclick="setType('draft',this)">Borrador</button>
+                <button type="button" class="type-opt" onclick="setType('review',this)">Para revisión</button>
+                <button type="button" class="type-opt active" onclick="setType('final',this)">Final</button>
+                <button type="button" class="type-opt" onclick="setType('asset',this)">Asset</button>
+                <button type="button" class="type-opt" onclick="setType('export',this)">Export</button>
+                <button type="button" class="type-opt" onclick="setType('raw',this)">RAW</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Descripción</label>
+            <textarea class="form-input" id="mDesc" rows="2" placeholder="Qué incluye esta entrega, formatos, especificaciones..."></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Versión</label>
+                <input type="number" class="form-input" id="mVersion" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Expira el <span style="color:var(--muted);font-size:9px;">(opcional)</span></label>
+                <input type="date" class="form-input" id="mExpires" title="Fecha de expiración del acceso">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Cliente</label>
+            <input type="text" class="form-input" id="mClientEmail" placeholder="Email del cliente">
+        </div>
+        <p class="modal-error" id="modalError"></p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="createDeliverable()">Crear entrega</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const params = new URLSearchParams(location.search);
+    const projectId = params.get('project');
+    const isAdmin = params.get('admin') === '1';
+
+    let currentUser = null;
+    let allDeliverables = [];
+    let selectedType = 'final';
+
+    const TYPE_LABELS = { draft:'Borrador', review:'Revisión', final:'Final', asset:'Asset', export:'Export', raw:'RAW' };
+    const TYPE_ICONS = { draft:'📝', review:'👁', final:'🎬', asset:'📦', export:'⬇', raw:'🎞' };
+    const FORMAT_ICONS = { MP4:'🎬', MOV:'🎬', PDF:'📄', JPG:'🖼', PNG:'🖼', ZIP:'🗜', WAV:'🎵', MP3:'🎵', default:'📁' };
+
+    const STATUS_LABELS = {
+        pending:'Pendiente', available:'Disponible', downloaded:'Descargado',
+        approved:'Aprobado', revision_requested:'Revisión solicitada'
+    };
+
+    function fileIcon(fmt) { return FORMAT_ICONS[fmt?.toUpperCase()] || FORMAT_ICONS.default; }
+    function formatSize(bytes) {
+        if (!bytes) return '';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+        if (bytes < 1073741824) return (bytes/1048576).toFixed(1) + ' MB';
+        return (bytes/1073741824).toFixed(2) + ' GB';
+    }
+
+    // ── INIT ──
+    async function init() {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session && !isAdmin) { document.getElementById('loadingState').textContent = 'Acceso requerido.'; return; }
+        currentUser = session?.user || null;
+        const name = isAdmin ? 'Francisco' : (currentUser?.user_metadata?.full_name?.split(' ')[0] || currentUser?.email);
+        document.getElementById('userChip').textContent = isAdmin ? '🎬 Francisco' : `👤 ${name}`;
+        if (isAdmin) document.getElementById('newDelivBtn').style.display = 'block';
+        await load();
+    }
+
+    async function load() {
+        let q = sb.from('deliverables')
+            .select('*, delivery_files(*), delivery_feedback(*)')
+            .order('created_at', { ascending: false });
+        if (projectId) q = q.eq('project_id', projectId);
+        if (!isAdmin && currentUser) q = q.eq('client_user_id', currentUser.id);
+        const { data } = await q;
+        allDeliverables = data || [];
+        render();
+    }
+
+    function render() {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+
+        const available = allDeliverables.filter(d => d.status === 'available').length;
+        const approved = allDeliverables.filter(d => d.status === 'approved').length;
+        const revision = allDeliverables.filter(d => d.status === 'revision_requested').length;
+
+        let html = `
+            <div class="stats-row">
+                <div class="stat-card"><div class="stat-num">${allDeliverables.length}</div><div class="stat-label">Total entregas</div></div>
+                <div class="stat-card"><div class="stat-num" style="color:var(--green)">${available}</div><div class="stat-label">Disponibles</div></div>
+                <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${approved}</div><div class="stat-label">Aprobadas</div></div>
+                ${revision > 0 ? `<div class="stat-card"><div class="stat-num" style="color:var(--orange)">${revision}</div><div class="stat-label">En revisión</div></div>` : ''}
+            </div>`;
+
+        if (allDeliverables.length === 0) {
+            html += isAdmin
+                ? `<div class="empty"><h3>Sin entregas todavía</h3><p>Crea la primera entrega para que el cliente pueda descargar sus archivos.</p></div>`
+                : `<div class="empty"><h3>Sin entregas todavía</h3><p>Cuando Francisco suba los archivos del proyecto aparecerán aquí para descargar y aprobar.</p></div>`;
+        } else {
+            html += allDeliverables.map(d => renderCard(d)).join('');
+        }
+
+        document.getElementById('appContent').innerHTML = html;
+    }
+
+    function renderCard(d) {
+        const files = d.delivery_files || [];
+        const feedback = d.delivery_feedback || [];
+        const totalSize = files.reduce((s, f) => s + (f.file_size || 0), 0);
+        const isExpired = d.expires_at && new Date(d.expires_at) < new Date();
+
+        return `<div class="deliverable-card ${d.status}">
+            <div class="card-header">
+                <div class="card-icon">${TYPE_ICONS[d.type] || '📁'}</div>
+                <div class="card-info">
+                    <div class="card-title">${d.title}</div>
+                    <div style="display:flex;gap:8px;margin:6px 0;flex-wrap:wrap;">
+                        <span class="badge badge-${d.status}">${STATUS_LABELS[d.status]}</span>
+                        <span class="type-badge">${TYPE_LABELS[d.type]}</span>
+                        <span class="version-badge">v${d.version}</span>
+                    </div>
+                    ${d.description ? `<div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5;">${d.description}</div>` : ''}
+                    <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+                        <span style="font-size:11px;color:var(--muted);">📁 ${files.length} archivo${files.length !== 1?'s':''}</span>
+                        ${totalSize ? `<span style="font-size:11px;color:var(--muted);">${formatSize(totalSize)}</span>` : ''}
+                        ${d.expires_at ? `<span style="font-size:11px;color:${isExpired?'var(--red)':'var(--muted)'};">${isExpired?'⚠ Expirado':'Expira: '+ new Date(d.expires_at).toLocaleDateString('es-CL')}</span>` : ''}
+                    </div>
+                </div>
+                <div class="card-right">
+                    ${isAdmin ? `
+                        <select style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:inherit;font-size:12px;cursor:pointer;"
+                            onchange="updateStatus('${d.id}',this.value)">
+                            <option value="">Cambiar estado...</option>
+                            <option value="pending">Pendiente</option>
+                            <option value="available">Disponible</option>
+                            <option value="approved">Aprobado</option>
+                        </select>` : ''}
+                </div>
+            </div>
+
+            ${files.length > 0 ? `
+            <div class="files-section">
+                <div class="files-grid">
+                    ${files.map(f => `
+                        <div class="file-row">
+                            <div class="file-icon">${fileIcon(f.format)}</div>
+                            <div class="file-info">
+                                <div class="file-name">${f.filename}</div>
+                                <div class="file-meta">
+                                    ${f.format ? `<span>${f.format}</span>` : ''}
+                                    ${f.resolution ? `<span>${f.resolution}</span>` : ''}
+                                    ${f.duration_seconds ? `<span>${Math.floor(f.duration_seconds/60)}:${String(f.duration_seconds%60).padStart(2,'0')}</span>` : ''}
+                                    ${f.file_size ? `<span>${formatSize(f.file_size)}</span>` : ''}
+                                    ${f.download_count > 0 ? `<span style="color:var(--blue);">${f.download_count}x descargado</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="file-actions">
+                                ${!isExpired && (d.status === 'available' || d.status === 'approved' || d.status === 'downloaded' || isAdmin) ? `
+                                    <button type="button" class="btn btn-download btn-sm" onclick="downloadFile('${f.id}','${f.storage_path}','${f.filename}','${d.id}')">
+                                        ↓ Descargar
+                                    </button>` : ''}
+                                ${isAdmin ? `<button type="button" class="btn btn-red btn-sm" onclick="deleteFile('${f.id}')">✕</button>` : ''}
+                            </div>
+                        </div>`).join('')}
+                </div>
+            </div>` : ''}
+
+            ${isAdmin && d.status !== 'approved' ? `
+            <div class="upload-zone" onclick="document.getElementById('upload-${d.id}').click()">
+                <div class="icon">📎</div>
+                <p>Subir archivos a esta entrega</p>
+                <small>Video, imágenes, PDF, ZIP — sin límite de tipo</small>
+                <input type="file" id="upload-${d.id}" multiple onchange="uploadFiles('${d.id}',this)">
+                <p class="upload-progress" id="uprog-${d.id}"></p>
+            </div>` : ''}
+
+            ${feedback.length > 0 ? `
+            <div class="feedback-section">
+                <div class="feedback-title">Historial de revisiones</div>
+                ${feedback.map(fb => `
+                    <div class="feedback-item">
+                        <div class="feedback-meta">
+                            <strong>${fb.user_name}</strong> · ${new Date(fb.created_at).toLocaleDateString('es-CL', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+                            · <span style="color:${fb.action==='approved'?'var(--green)':fb.action==='revision_requested'?'var(--orange)':'var(--muted)'}">
+                                ${fb.action==='approved'?'✓ Aprobó':fb.action==='revision_requested'?'↩ Solicitó revisión':fb.action==='downloaded'?'↓ Descargó':'💬 Comentó'}
+                            </span>
+                        </div>
+                        ${fb.body ? `<div class="feedback-body">${fb.body}</div>` : ''}
+                        ${fb.timecode ? `<div class="feedback-timecode">⏱ ${fb.timecode}</div>` : ''}
+                    </div>`).join('')}
+            </div>` : ''}
+
+            ${!isAdmin && (d.status === 'available' || d.status === 'downloaded') ? `
+            <div class="approval-bar">
+                <p>¿Este entregable cumple con lo acordado?</p>
+                <button type="button" class="btn btn-green" onclick="submitFeedback('${d.id}','approved')">✓ Aprobar</button>
+                <button type="button" class="btn btn-orange" onclick="toggleRevision('${d.id}')">↩ Solicitar cambio</button>
+            </div>
+            <div class="revision-form" id="rev-${d.id}">
+                <textarea class="revision-input" id="revtext-${d.id}" placeholder="Describe qué debe cambiar. Sé específico — ej: 'El corte del segundo 0:23 se siente abrupto, prefiero que haya una transición más suave'"></textarea>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <input type="text" class="timecode-input" id="revtc-${d.id}" placeholder="00:00:00" title="Timecode (opcional)">
+                    <button type="button" class="btn btn-orange" onclick="submitRevision('${d.id}')">Enviar solicitud</button>
+                    <button type="button" class="btn btn-ghost" onclick="toggleRevision('${d.id}')">Cancelar</button>
+                </div>
+            </div>` : ''}
+        </div>`;
+    }
+
+    // ── DOWNLOAD ──
+    async function downloadFile(fileId, storagePath, filename, deliverableId) {
+        const { data, error } = await sb.storage.from('deliveries').createSignedUrl(storagePath, 3600);
+        if (error || !data?.signedUrl) { alert('Error al generar enlace de descarga.'); return; }
+
+        const a = document.createElement('a');
+        a.href = data.signedUrl;
+        a.download = filename;
+        a.click();
+
+        // Registrar descarga
+        await sb.from('delivery_files').update({ download_count: sb.rpc('increment') }).eq('id', fileId);
+        await sb.from('deliverables').update({ status: 'downloaded' }).eq('id', deliverableId).eq('status', 'available');
+
+        if (!isAdmin) {
+            await sb.from('delivery_feedback').insert({
+                deliverable_id: deliverableId,
+                user_id: currentUser?.id,
+                user_name: currentUser?.user_metadata?.full_name || currentUser?.email || 'Cliente',
+                user_role: 'client',
+                action: 'downloaded'
+            });
+        }
+        await load();
+    }
+
+    // ── UPLOAD (admin) ──
+    async function uploadFiles(deliverableId, input) {
+        const files = Array.from(input.files);
+        if (!files.length) return;
+        const prog = document.getElementById(`uprog-${deliverableId}`);
+        prog.style.display = 'block';
+        prog.style.color = 'var(--blue)';
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            prog.textContent = `Subiendo ${i+1}/${files.length}: ${file.name}...`;
+            const ext = file.name.split('.').pop().toUpperCase();
+            const path = `${deliverableId}/${Date.now()}_${file.name}`;
+
+            const { error: upErr } = await sb.storage.from('deliveries').upload(path, file, { upsert: true });
+            if (upErr) { prog.textContent = `Error: ${file.name}`; prog.style.color = 'var(--red)'; continue; }
+
+            const { data: urlData } = sb.storage.from('deliveries').getPublicUrl(path);
+
+            await sb.from('delivery_files').insert({
+                deliverable_id: deliverableId,
+                filename: file.name,
+                storage_path: path,
+                file_size: file.size,
+                mime_type: file.type,
+                format: ext,
+                public_url: urlData.publicUrl
+            });
+        }
+
+        prog.textContent = `✓ ${files.length} archivo${files.length > 1 ? 's' : ''} subido${files.length > 1 ? 's' : ''}`;
+        prog.style.color = 'var(--green)';
+        setTimeout(() => { prog.style.display = 'none'; }, 3000);
+        await load();
+    }
+
+    // ── FEEDBACK ──
+    async function submitFeedback(deliverableId, action, body = null, timecode = null) {
+        const name = currentUser?.user_metadata?.full_name || currentUser?.email || 'Cliente';
+        await sb.from('delivery_feedback').insert({
+            deliverable_id: deliverableId,
+            user_id: currentUser?.id,
+            user_name: name,
+            user_role: isAdmin ? 'admin' : 'client',
+            action, body, timecode
+        });
+        if (action === 'approved') {
+            await sb.from('deliverables').update({ status: 'approved' }).eq('id', deliverableId);
+        } else if (action === 'revision_requested') {
+            await sb.from('deliverables').update({ status: 'revision_requested' }).eq('id', deliverableId);
+        }
+        await load();
+    }
+
+    function toggleRevision(id) {
+        const el = document.getElementById(`rev-${id}`);
+        el.classList.toggle('open');
+    }
+
+    async function submitRevision(id) {
+        const body = document.getElementById(`revtext-${id}`)?.value.trim();
+        const timecode = document.getElementById(`revtc-${id}`)?.value.trim();
+        if (!body) { alert('Describe qué debe cambiar.'); return; }
+        await submitFeedback(id, 'revision_requested', body, timecode || null);
+    }
+
+    // ── ADMIN ──
+    async function updateStatus(id, status) {
+        if (!status) return;
+        await sb.from('deliverables').update({ status }).eq('id', id);
+        await load();
+    }
+
+    async function deleteFile(id) {
+        if (!confirm('¿Eliminar este archivo?')) return;
+        await sb.from('delivery_files').delete().eq('id', id);
+        await load();
+    }
+
+    // ── MODAL ──
+    function openModal() {
+        document.getElementById('modalError').style.display = 'none';
+        document.getElementById('mTitle').value = '';
+        document.getElementById('mDesc').value = '';
+        document.getElementById('mVersion').value = '1';
+        document.getElementById('mClientEmail').value = '';
+        document.getElementById('mExpires').value = '';
+        document.getElementById('delivModal').classList.add('open');
+    }
+    function closeModal() { document.getElementById('delivModal').classList.remove('open'); }
+    document.getElementById('delivModal').addEventListener('click', e => { if (e.target === document.getElementById('delivModal')) closeModal(); });
+
+    function setType(type, el) {
+        selectedType = type;
+        document.querySelectorAll('.type-opt').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    async function createDeliverable() {
+        const errEl = document.getElementById('modalError');
+        errEl.style.display = 'none';
+        const title = document.getElementById('mTitle').value.trim();
+        if (!title) { errEl.textContent = 'El título es requerido.'; errEl.style.display = 'block'; return; }
+
+        // Buscar cliente por email
+        const clientEmail = document.getElementById('mClientEmail').value.trim();
+        let clientUserId = null;
+        if (clientEmail) {
+            const { data: users } = await sb.from('auth.users').select('id').eq('email', clientEmail).limit(1);
+            clientUserId = users?.[0]?.id || null;
+        }
+
+        const { error } = await sb.from('deliverables').insert({
+            project_id: projectId || null,
+            client_user_id: clientUserId,
+            title,
+            description: document.getElementById('mDesc').value.trim() || null,
+            type: selectedType,
+            version: parseInt(document.getElementById('mVersion').value) || 1,
+            expires_at: document.getElementById('mExpires').value ? new Date(document.getElementById('mExpires').value).toISOString() : null,
+            status: 'pending',
+            created_by: currentUser?.id
+        });
+
+        if (error) { errEl.textContent = 'Error al crear. Intenta de nuevo.'; errEl.style.display = 'block'; return; }
+        closeModal();
+        await load();
+    }
+
+    init();
+</script>
+</body>
+</html>
