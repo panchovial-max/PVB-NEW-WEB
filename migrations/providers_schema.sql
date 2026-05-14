@@ -97,6 +97,7 @@ CREATE TRIGGER providers_updated_at
 -- ── RLS ──
 ALTER TABLE public.providers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.provider_assets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
 
@@ -111,6 +112,13 @@ CREATE POLICY "assets_owner" ON public.provider_assets
     );
 
 -- Proveedor ve sus propios matches
+-- Proyectos: lectura pública para autenticados, escritura solo service_role
+CREATE POLICY "projects_public_read" ON public.projects
+    FOR SELECT USING (true);
+
+CREATE POLICY "projects_admin_write" ON public.projects
+    FOR ALL USING (auth.role() = 'service_role');
+
 CREATE POLICY "matches_owner" ON public.project_matches
     FOR SELECT USING (
         provider_id IN (SELECT id FROM public.providers WHERE user_id = auth.uid())
