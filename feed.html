@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspiration Feed — PVB Estudio Creativo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #080808; --surface: #111; --surface2: #181818; --surface3: #1f1f1f;
+            --border: #1f1f1f; --border2: #2a2a2a;
+            --text: #fff; --muted: #666; --subtle: #444;
+            --green: #4caf50; --red: #e55; --blue: #6a8fff;
+            --ig: #e1306c; --pin: #e60023; --tk: #ff0050; --yt: #ff0000;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* ── HEADER ── */
+        .header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0 24px; height: 56px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; gap: 16px;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .back-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px 8px; }
+        .back-btn:hover { color: var(--text); }
+        .header-logo { font-size: 10px; letter-spacing: 4px; font-weight: 700; color: var(--muted); }
+        .header-title { font-size: 14px; font-weight: 600; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .user-chip { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; }
+
+        /* ── LAYOUT ── */
+        .layout { display: flex; flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; padding: 24px 16px; gap: 24px; }
+
+        /* ── FEED ── */
+        .feed-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; }
+
+        /* ── COMPOSER ── */
+        .composer {
+            background: var(--surface); border: 1px solid var(--border2);
+            padding: 16px; margin-bottom: 20px;
+        }
+        .composer-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+        .composer-tab {
+            padding: 6px 14px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            background: none; border: 1px solid var(--border2); color: var(--muted);
+            cursor: pointer; font-family: inherit; transition: all .15s; display: flex; align-items: center; gap: 6px;
+        }
+        .composer-tab.active { border-color: var(--text); color: var(--text); background: var(--surface2); }
+        .composer-tab svg { flex-shrink: 0; }
+
+        .composer-input {
+            width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+            color: var(--text); font-size: 14px; font-family: inherit; padding: 12px 14px;
+            outline: none; resize: none; line-height: 1.5;
+        }
+        .composer-input:focus { border-color: var(--subtle); }
+        .composer-input::placeholder { color: var(--muted); }
+
+        .url-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .url-field {
+            flex: 1; padding: 10px 14px; background: var(--surface2);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 13px; font-family: inherit; outline: none;
+        }
+        .url-field:focus { border-color: var(--subtle); }
+        .url-field::placeholder { color: var(--muted); }
+        .fetch-btn {
+            padding: 10px 16px; background: var(--surface2); border: 1px solid var(--border2);
+            color: var(--muted); cursor: pointer; font-size: 12px; font-family: inherit;
+            letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; transition: all .15s;
+        }
+        .fetch-btn:hover { color: var(--text); border-color: var(--subtle); }
+
+        .link-preview {
+            display: none; background: var(--surface3); border: 1px solid var(--border2);
+            padding: 12px; gap: 14px; margin-bottom: 10px; align-items: flex-start;
+        }
+        .link-preview.show { display: flex; }
+        .link-preview img { width: 80px; height: 64px; object-fit: cover; flex-shrink: 0; background: var(--border2); }
+        .link-preview-info strong { font-size: 13px; display: block; margin-bottom: 4px; }
+        .link-preview-info p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+        .link-preview-source { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
+        .source-ig { color: var(--ig); }
+        .source-pin { color: var(--pin); }
+        .source-tk { color: var(--tk); }
+        .source-yt { color: var(--yt); }
+        .source-url { color: var(--muted); }
+
+        .composer-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 10px; }
+        .composer-note { font-size: 11px; color: var(--muted); }
+        .post-btn {
+            padding: 8px 20px; background: var(--text); color: #000;
+            border: none; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; font-family: inherit; transition: background .15s;
+        }
+        .post-btn:hover { background: #ddd; }
+        .post-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+        /* ── FEED ITEMS ── */
+        .feed-item {
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0; display: flex; gap: 14px;
+        }
+        .feed-item:last-child { border-bottom: none; }
+        .avatar {
+            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700;
+        }
+        .avatar-admin { background: #1a2060; color: var(--blue); }
+        .avatar-client { background: #1a1a1a; color: #aaa; }
+
+        .item-main { flex: 1; min-width: 0; }
+        .item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .item-name { font-size: 13px; font-weight: 600; }
+        .item-role { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+        .item-time { font-size: 11px; color: var(--muted); margin-left: auto; }
+        .pin-badge {
+            font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+            background: #0d1f0d; color: var(--green); border: 1px solid #1a3a1a;
+            padding: 2px 8px;
+        }
+
+        .item-body { font-size: 14px; color: #ddd; line-height: 1.6; margin-bottom: 10px; }
+
+        /* Link card */
+        .link-card {
+            border: 1px solid var(--border2); background: var(--surface2);
+            display: flex; gap: 0; overflow: hidden; margin-bottom: 10px;
+            cursor: pointer; text-decoration: none; transition: border-color .15s;
+        }
+        .link-card:hover { border-color: var(--subtle); }
+        .link-card-img { width: 120px; height: 90px; object-fit: cover; flex-shrink: 0; background: var(--surface3); }
+        .link-card-body { padding: 12px 14px; flex: 1; min-width: 0; }
+        .link-card-source { display: flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+        .link-card-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .link-card-desc { font-size: 12px; color: var(--muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* Reactions */
+        .item-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .reaction-btn {
+            padding: 4px 10px; background: none; border: 1px solid var(--border2);
+            color: var(--muted); cursor: pointer; font-size: 12px; font-family: inherit;
+            transition: all .15s; display: flex; align-items: center; gap: 4px;
+        }
+        .reaction-btn:hover { border-color: var(--subtle); color: var(--text); }
+        .reaction-btn.active { border-color: var(--subtle); background: var(--surface2); color: var(--text); }
+        .reply-toggle {
+            padding: 4px 10px; background: none; border: none; color: var(--muted);
+            cursor: pointer; font-size: 12px; font-family: inherit; letter-spacing: 0.5px;
+        }
+        .reply-toggle:hover { color: var(--text); }
+        .pin-btn {
+            margin-left: auto; padding: 4px 10px; background: none; border: 1px solid var(--border2);
+            color: var(--muted); cursor: pointer; font-size: 11px; font-family: inherit;
+            letter-spacing: 1px; text-transform: uppercase; transition: all .15s;
+        }
+        .pin-btn:hover { border-color: var(--green); color: var(--green); }
+        .pin-btn.pinned { border-color: var(--green); color: var(--green); background: #0d1f0d; }
+
+        /* Replies */
+        .replies { margin-top: 12px; padding-left: 16px; border-left: 2px solid var(--border2); display: none; }
+        .replies.open { display: block; }
+        .reply { padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .reply:last-of-type { border-bottom: none; }
+        .reply-meta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+        .reply-meta strong { color: #aaa; }
+        .reply-body { font-size: 13px; color: #ccc; line-height: 1.5; }
+        .reply-composer { display: flex; gap: 8px; margin-top: 10px; }
+        .reply-input {
+            flex: 1; padding: 8px 12px; background: var(--surface2);
+            border: 1px solid var(--border2); color: var(--text);
+            font-size: 13px; font-family: inherit; outline: none;
+        }
+        .reply-input:focus { border-color: var(--subtle); }
+        .reply-send {
+            padding: 8px 14px; background: none; border: 1px solid var(--border2);
+            color: var(--muted); cursor: pointer; font-family: inherit; font-size: 12px; transition: all .15s;
+        }
+        .reply-send:hover { color: var(--text); border-color: var(--subtle); }
+
+        /* ── SIDEBAR ── */
+        .sidebar-col { width: 280px; flex-shrink: 0; }
+        .sidebar-card { background: var(--surface); border: 1px solid var(--border); padding: 18px; margin-bottom: 16px; }
+        .sidebar-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+        .sidebar-link {
+            display: flex; align-items: center; gap: 10px; padding: 8px 0;
+            border-bottom: 1px solid var(--border); color: var(--muted); text-decoration: none;
+            font-size: 13px; transition: color .15s;
+        }
+        .sidebar-link:last-child { border-bottom: none; }
+        .sidebar-link:hover { color: var(--text); }
+        .tip-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); line-height: 1.5; }
+        .tip-item:last-child { border-bottom: none; }
+        .tip-item strong { color: #aaa; display: block; margin-bottom: 2px; font-size: 11px; letter-spacing: 0.5px; }
+
+        /* ── EMPTY ── */
+        .feed-empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+        .feed-empty .icon { font-size: 40px; margin-bottom: 14px; }
+        .feed-empty h3 { font-size: 15px; color: #aaa; margin-bottom: 8px; }
+        .feed-empty p { font-size: 13px; line-height: 1.6; }
+
+        .loading { text-align: center; padding: 60px; color: var(--muted); letter-spacing: 3px; font-size: 11px; }
+        .post-error { color: var(--red); font-size: 12px; margin-top: 8px; display: none; }
+
+        @media (max-width: 720px) {
+            .layout { flex-direction: column; padding: 16px; }
+            .sidebar-col { width: 100%; }
+            .link-card-img { width: 80px; height: 70px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <button type="button" class="back-btn" onclick="history.back()">←</button>
+        <span class="header-logo">PVB</span>
+        <span class="header-title" id="headerTitle">Inspiration Feed</span>
+    </div>
+    <div class="header-right">
+        <span class="user-chip" id="userChip"></span>
+    </div>
+</header>
+
+<div class="layout">
+
+    <!-- FEED -->
+    <div class="feed-col">
+
+        <!-- COMPOSER -->
+        <div class="composer">
+            <div class="composer-tabs">
+                <button type="button" class="composer-tab active" onclick="setMode('link', this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    Link / URL
+                </button>
+                <button type="button" class="composer-tab" onclick="setMode('text', this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Mensaje
+                </button>
+            </div>
+
+            <!-- Link mode -->
+            <div id="linkMode">
+                <div class="url-input-row">
+                    <input type="url" class="url-field" id="urlField"
+                        placeholder="Pega link de Instagram, Pinterest, TikTok, YouTube u otro..."
+                        oninput="onUrlChange(this.value)">
+                </div>
+                <div class="link-preview" id="linkPreview">
+                    <img id="previewImg" src="" alt="">
+                    <div class="link-preview-info">
+                        <strong id="previewTitle"></strong>
+                        <p id="previewDesc"></p>
+                        <p class="link-preview-source" id="previewSource"></p>
+                    </div>
+                </div>
+                <textarea class="composer-input" id="linkBody" rows="2"
+                    placeholder="Agrega un comentario o contexto (opcional)..."></textarea>
+            </div>
+
+            <!-- Text mode -->
+            <div id="textMode" style="display:none;">
+                <textarea class="composer-input" id="textBody" rows="3"
+                    placeholder="Comparte una idea, referencia de texto, contexto creativo..."></textarea>
+            </div>
+
+            <div class="composer-footer">
+                <span class="composer-note" id="composerNote">Instagram, Pinterest, TikTok, YouTube...</span>
+                <button type="button" class="post-btn" id="postBtn" onclick="post()">Compartir</button>
+            </div>
+            <p class="post-error" id="postError"></p>
+        </div>
+
+        <!-- FEED LIST -->
+        <div id="feedList"><div class="loading">CARGANDO...</div></div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar-col">
+        <div class="sidebar-card">
+            <p class="sidebar-title">Herramientas rápidas</p>
+            <a href="#" class="sidebar-link" id="moodboardLink">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Ver Moodboard
+            </a>
+            <a href="#" class="sidebar-link" id="bookmarkletLink" title="Arrastra este botón a tu barra de favoritos">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                <span>Guardar desde Pinterest <span style="font-size:10px;color:var(--muted);">(bookmarklet)</span></span>
+            </a>
+        </div>
+
+        <div class="sidebar-card">
+            <p class="sidebar-title">Cómo compartir</p>
+            <div class="tip-item">
+                <strong>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="#e1306c"/></svg>
+                    Instagram
+                </strong>
+                Pega el link del post, perfil o reel
+            </div>
+            <div class="tip-item">
+                <strong>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12.017 24c6.624 0 11.99-5.367 11.99-11.987C24.007 5.367 18.641 0 12.017 0z" fill="#e60023"/></svg>
+                    Pinterest
+                </strong>
+                Pega el link de un pin o usa el bookmarklet
+            </div>
+            <div class="tip-item">
+                <strong>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" fill="#ff0050"/></svg>
+                    TikTok
+                </strong>
+                Pega el link de un video como referencia
+            </div>
+            <div class="tip-item">
+                <strong>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z" fill="#ff0000"/></svg>
+                    YouTube
+                </strong>
+                Comparte un video de referencia visual
+            </div>
+        </div>
+
+        <div class="sidebar-card" id="pinnedCard" style="display:none;">
+            <p class="sidebar-title">📌 Fijados al moodboard</p>
+            <div id="pinnedList"></div>
+        </div>
+    </aside>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://krmoihryyvooymvhsuno.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtybW9paHJ5eXZvb3ltdmhzdW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEzMjcxNjAsImV4cCI6MjA1NjkwMzE2MH0.Yr9RHcFqBpONfGRrIxiFRqnfhIEkFmkJQGJX7WmV4Ik';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const params = new URLSearchParams(location.search);
+    const projectId = params.get('project');
+    const isAdmin = params.get('admin') === '1';
+
+    let currentUser = null;
+    let currentMode = 'link';
+    let ogData = null;
+    let urlDebounce = null;
+    let allItems = [];
+
+    const SOURCE_COLORS = { instagram:'source-ig', pinterest:'source-pin', tiktok:'source-tk', youtube:'source-yt', url:'source-url', text:'' };
+    const SOURCE_ICONS = {
+        instagram: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="#e1306c"/></svg> Instagram`,
+        pinterest: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12.017 24c6.624 0 11.99-5.367 11.99-11.987C24.007 5.367 18.641.0 12.017 0z" fill="#e60023"/></svg> Pinterest`,
+        tiktok: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" fill="#ff0050"/></svg> TikTok`,
+        youtube: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z" fill="#ff0000"/></svg> YouTube`,
+        url: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Link`
+    };
+
+    // ── INIT ──
+    async function init() {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session && !isAdmin) {
+            document.getElementById('feedList').innerHTML =
+                `<div class="feed-empty"><div class="icon">🔒</div><h3>Acceso requerido</h3><p>Inicia sesión para ver el feed.</p></div>`;
+            return;
+        }
+        currentUser = session?.user || null;
+        const name = isAdmin ? 'Francisco' : (currentUser?.user_metadata?.full_name?.split(' ')[0] || currentUser?.email || 'Cliente');
+        document.getElementById('userChip').textContent = isAdmin ? '🎬 Francisco' : `👤 ${name}`;
+
+        if (projectId) {
+            document.getElementById('moodboardLink').href = `/moodboard?project=${projectId}${isAdmin ? '&admin=1' : ''}`;
+            // Bookmarklet: guarda el pin actual de Pinterest al feed de este proyecto
+            const bm = `javascript:(function(){var u=encodeURIComponent(location.href);var i=encodeURIComponent(document.querySelector('img[src*="pinimg"]')?.src||'');window.open('${location.origin}/feed?project=${projectId}&pin='+u+'&img='+i,'_blank','width=600,height=400');})()`;
+            document.getElementById('bookmarkletLink').href = bm;
+            document.getElementById('bookmarkletLink').setAttribute('draggable', 'true');
+        }
+
+        // Auto-detect if opened from bookmarklet
+        const pinUrl = params.get('pin');
+        const pinImg = params.get('img');
+        if (pinUrl) {
+            document.getElementById('urlField').value = decodeURIComponent(pinUrl);
+            if (pinImg) {
+                ogData = { image: decodeURIComponent(pinImg), title: 'Pin de Pinterest', source: 'pinterest' };
+                showPreview(ogData);
+            }
+        }
+
+        await loadFeed();
+
+        // Realtime updates
+        sb.channel('feed').on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'feed_items'
+        }, () => loadFeed()).subscribe();
+    }
+
+    async function loadFeed() {
+        let query = sb.from('feed_items')
+            .select('*, feed_reactions(*), feed_replies(*)')
+            .order('created_at', { ascending: false });
+        if (projectId) query = query.eq('project_id', projectId);
+
+        const { data } = await query;
+        allItems = data || [];
+        renderFeed();
+        renderPinned();
+    }
+
+    function renderFeed() {
+        const list = document.getElementById('feedList');
+        if (allItems.length === 0) {
+            list.innerHTML = `<div class="feed-empty">
+                <div class="icon">💬</div>
+                <h3>El feed está vacío</h3>
+                <p>Comparte el primer link de inspiración — Instagram, Pinterest, TikTok, YouTube o cualquier referencia visual.</p>
+            </div>`;
+            return;
+        }
+        list.innerHTML = allItems.map(item => renderItem(item)).join('');
+    }
+
+    function renderItem(item) {
+        const reactions = item.feed_reactions || [];
+        const replies = item.feed_replies || [];
+        const initials = item.user_name?.slice(0,2).toUpperCase() || '??';
+        const timeStr = new Date(item.created_at).toLocaleString('es-CL', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+        const EMOJIS = ['👍','❤️','🔥','✓','✕'];
+
+        const reactionCounts = {};
+        reactions.forEach(r => { reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1; });
+        const myReactions = reactions.filter(r => r.user_id === currentUser?.id).map(r => r.emoji);
+
+        return `<div class="feed-item" id="fi-${item.id}">
+            <div class="avatar avatar-${item.user_role}">${initials}</div>
+            <div class="item-main">
+                <div class="item-header">
+                    <span class="item-name">${item.user_name}</span>
+                    <span class="item-role">${item.user_role === 'admin' ? 'Director' : 'Cliente'}</span>
+                    ${item.pinned ? `<span class="pin-badge">📌 En moodboard</span>` : ''}
+                    <span class="item-time">${timeStr}</span>
+                </div>
+
+                ${item.body ? `<div class="item-body">${escHtml(item.body)}</div>` : ''}
+
+                ${item.content_url ? `
+                <a class="link-card" href="${item.content_url}" target="_blank" rel="noopener">
+                    ${item.thumbnail_url ? `<img class="link-card-img" src="${item.thumbnail_url}" alt="">` : ''}
+                    <div class="link-card-body">
+                        <div class="link-card-source ${SOURCE_COLORS[item.source] || ''}">
+                            ${SOURCE_ICONS[item.source] || ''}
+                        </div>
+                        ${item.link_title ? `<div class="link-card-title">${escHtml(item.link_title)}</div>` : ''}
+                        ${item.link_description ? `<div class="link-card-desc">${escHtml(item.link_description)}</div>` : ''}
+                    </div>
+                </a>` : ''}
+
+                <div class="item-actions">
+                    ${EMOJIS.map(e => `
+                        <button type="button" class="reaction-btn ${myReactions.includes(e) ? 'active' : ''}"
+                            onclick="react('${item.id}','${e}')">
+                            ${e} ${reactionCounts[e] ? `<span>${reactionCounts[e]}</span>` : ''}
+                        </button>`).join('')}
+                    <button type="button" class="reply-toggle" onclick="toggleReplies('${item.id}')">
+                        💬 ${replies.length > 0 ? replies.length : 'Responder'}
+                    </button>
+                    ${isAdmin ? `<button type="button" class="pin-btn ${item.pinned ? 'pinned' : ''}"
+                        onclick="togglePin('${item.id}',${item.pinned})">
+                        ${item.pinned ? '📌 Fijado' : '📌 Fijar'}
+                    </button>` : ''}
+                </div>
+
+                <div class="replies" id="replies-${item.id}">
+                    ${replies.map(r => `
+                        <div class="reply">
+                            <div class="reply-meta"><strong>${r.user_name}</strong> · ${new Date(r.created_at).toLocaleString('es-CL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                            <div class="reply-body">${escHtml(r.body)}</div>
+                        </div>`).join('')}
+                    <div class="reply-composer">
+                        <input type="text" class="reply-input" id="ri-${item.id}" placeholder="Responder..."
+                            onkeydown="if(event.key==='Enter') sendReply('${item.id}')">
+                        <button type="button" class="reply-send" onclick="sendReply('${item.id}')">→</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function renderPinned() {
+        const pinned = allItems.filter(i => i.pinned);
+        const card = document.getElementById('pinnedCard');
+        if (pinned.length === 0) { card.style.display = 'none'; return; }
+        card.style.display = 'block';
+        document.getElementById('pinnedList').innerHTML = pinned.map(i => `
+            <a href="${i.content_url || '#'}" target="_blank" class="sidebar-link">
+                ${SOURCE_ICONS[i.source] || '🔗'} ${i.link_title || i.content_url || 'Ver referencia'}
+            </a>`).join('');
+    }
+
+    // ── COMPOSER ──
+    function setMode(mode, el) {
+        currentMode = mode;
+        document.querySelectorAll('.composer-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('linkMode').style.display = mode === 'link' ? 'block' : 'none';
+        document.getElementById('textMode').style.display = mode === 'text' ? 'block' : 'none';
+        document.getElementById('composerNote').textContent = mode === 'link'
+            ? 'Instagram, Pinterest, TikTok, YouTube...'
+            : 'Texto libre, ideas, contexto creativo...';
+    }
+
+    function onUrlChange(val) {
+        clearTimeout(urlDebounce);
+        ogData = null;
+        document.getElementById('linkPreview').classList.remove('show');
+        if (!val.startsWith('http')) return;
+        urlDebounce = setTimeout(() => fetchOG(val), 700);
+    }
+
+    async function fetchOG(url) {
+        try {
+            const res = await fetch(`/api/og-fetch?url=${encodeURIComponent(url)}`);
+            const data = await res.json();
+            ogData = data;
+            if (data.image || data.title) showPreview(data);
+        } catch { /* silent */ }
+    }
+
+    function showPreview(data) {
+        document.getElementById('previewImg').src = data.image || '';
+        document.getElementById('previewImg').style.display = data.image ? 'block' : 'none';
+        document.getElementById('previewTitle').textContent = data.title || '';
+        document.getElementById('previewDesc').textContent = data.description || '';
+        document.getElementById('previewSource').innerHTML = SOURCE_ICONS[data.source] || '';
+        document.getElementById('previewSource').className = `link-preview-source ${SOURCE_COLORS[data.source] || ''}`;
+        document.getElementById('linkPreview').classList.add('show');
+    }
+
+    async function post() {
+        const errEl = document.getElementById('postError');
+        errEl.style.display = 'none';
+        const btn = document.getElementById('postBtn');
+        btn.disabled = true;
+
+        const name = isAdmin ? 'Francisco' : (currentUser?.user_metadata?.full_name || currentUser?.email || 'Cliente');
+
+        try {
+            let payload = {
+                project_id: projectId || null,
+                user_id: currentUser?.id || null,
+                user_name: name,
+                user_role: isAdmin ? 'admin' : 'client'
+            };
+
+            if (currentMode === 'link') {
+                const url = document.getElementById('urlField').value.trim();
+                if (!url) throw new Error('Ingresa una URL.');
+                payload.content_url = url;
+                payload.source = ogData?.source || 'url';
+                payload.thumbnail_url = ogData?.image || null;
+                payload.link_title = ogData?.title || null;
+                payload.link_description = ogData?.description || null;
+                payload.body = document.getElementById('linkBody').value.trim() || null;
+            } else {
+                const body = document.getElementById('textBody').value.trim();
+                if (!body) throw new Error('Escribe un mensaje.');
+                payload.body = body;
+                payload.source = 'text';
+            }
+
+            const { error } = await sb.from('feed_items').insert(payload);
+            if (error) throw error;
+
+            // Reset
+            document.getElementById('urlField').value = '';
+            document.getElementById('linkBody').value = '';
+            document.getElementById('textBody').value = '';
+            document.getElementById('linkPreview').classList.remove('show');
+            ogData = null;
+            await loadFeed();
+        } catch (err) {
+            errEl.textContent = err.message || 'Error al publicar.';
+            errEl.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // ── INTERACTIONS ──
+    async function react(itemId, emoji) {
+        if (!currentUser) return;
+        const name = isAdmin ? 'Francisco' : (currentUser.user_metadata?.full_name || currentUser.email);
+        const existing = allItems.find(i => i.id === itemId)?.feed_reactions?.find(r => r.user_id === currentUser.id && r.emoji === emoji);
+        if (existing) {
+            await sb.from('feed_reactions').delete().eq('id', existing.id);
+        } else {
+            await sb.from('feed_reactions').insert({ item_id: itemId, user_id: currentUser.id, user_name: name, emoji });
+        }
+        await loadFeed();
+    }
+
+    function toggleReplies(itemId) {
+        const el = document.getElementById(`replies-${itemId}`);
+        el.classList.toggle('open');
+        if (el.classList.contains('open')) document.getElementById(`ri-${itemId}`)?.focus();
+    }
+
+    async function sendReply(itemId) {
+        const input = document.getElementById(`ri-${itemId}`);
+        const body = input?.value.trim();
+        if (!body || !currentUser) return;
+        const name = isAdmin ? 'Francisco' : (currentUser.user_metadata?.full_name || currentUser.email);
+        await sb.from('feed_replies').insert({ item_id: itemId, user_id: currentUser.id, user_name: name, user_role: isAdmin ? 'admin' : 'client', body });
+        if (input) input.value = '';
+        await loadFeed();
+        document.getElementById(`replies-${itemId}`)?.classList.add('open');
+    }
+
+    async function togglePin(itemId, isPinned) {
+        await sb.from('feed_items').update({ pinned: !isPinned }).eq('id', itemId);
+        await loadFeed();
+    }
+
+    function escHtml(str) {
+        return str?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') || '';
+    }
+
+    init();
+</script>
+</body>
+</html>

@@ -82,6 +82,11 @@
   to = "/.netlify/functions/provider-match"
   status = 200
 
+[[redirects]]
+  from = "/feed"
+  to = "/feed.html"
+  status = 200
+
 # Headers for security
 [[headers]]
   for = "/*"
