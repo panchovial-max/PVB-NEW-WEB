@@ -219,6 +219,35 @@
         }
 
         .loading { text-align: center; padding: 80px 20px; color: #444; font-size: 13px; letter-spacing: 2px; }
+        /* Modal asset */
+        .asset-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.9);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .asset-modal-overlay.open { opacity: 1; pointer-events: all; }
+        .asset-modal {
+            width: min(520px,95vw); background: #111; border: 1px solid #2a2a2a;
+            padding: 28px; max-height: 90vh; overflow-y: auto;
+            transform: translateY(20px); transition: transform .2s;
+        }
+        .asset-modal-overlay.open .asset-modal { transform: translateY(0); }
+        .asset-modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .asset-modal-close { background: none; border: none; color: #666; cursor: pointer; font-size: 20px; }
+        .am-group { margin-bottom: 14px; }
+        .am-group label { display: block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #666; margin-bottom: 7px; }
+        .am-input { width: 100%; padding: 9px 13px; background: #1a1a1a; border: 1px solid #2a2a2a; color: #fff; font-size: 13px; font-family: inherit; outline: none; }
+        .am-input:focus { border-color: #444; }
+        .am-upload { border: 2px dashed #2a2a2a; padding: 20px; text-align: center; cursor: pointer; transition: border-color .15s; }
+        .am-upload:hover { border-color: #444; }
+        .am-upload input { display: none; }
+        .am-upload p { font-size: 12px; color: #666; margin-top: 6px; }
+        .am-photos-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .am-photos-preview img { width: 70px; height: 70px; object-fit: cover; border: 1px solid #2a2a2a; }
+        .am-error { color: #e55; font-size: 12px; margin-top: 8px; display: none; }
+        .am-actions { display: flex; gap: 10px; margin-top: 18px; }
+        .am-btn-primary { padding: 9px 18px; background: #fff; color: #000; border: none; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; font-family: inherit; }
+        .am-btn-ghost { padding: 9px 18px; background: none; border: 1px solid #2a2a2a; color: #666; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; font-family: inherit; }
     </style>
 </head>
 <body>
@@ -344,16 +373,23 @@
 
                 <!-- Assets -->
                 <div class="dash-section">
-                    <p class="dash-section-title">Tus assets (${assets.length})</p>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                        <p class="dash-section-title" style="margin-bottom:0;">Tus assets (${assets.length})</p>
+                        <button onclick="openAssetModal()" style="padding:8px 16px;background:#fff;color:#000;border:none;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:inherit;">+ Agregar asset</button>
+                    </div>
                     ${assets.length === 0
-                        ? '<div class="empty-state">No tienes assets registrados.</div>'
+                        ? '<div class="empty-state">No tienes assets registrados. Agrega el primero.</div>'
                         : `<div class="assets-grid">${assets.map(a => `
                             <div class="asset-card">
-                                ${a.photos?.[0] ? `<img src="${a.photos[0]}" class="asset-photo" alt="${a.title}">` : ''}
+                                ${a.photos?.[0] ? `<img src="${a.photos[0]}" class="asset-photo" alt="${a.title}">` : '<div class="asset-photo" style="background:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:32px;">📦</div>'}
                                 <h4>${a.title}</h4>
                                 <p>${a.description || ''}</p>
                                 ${a.location ? `<p>📍 ${a.location}</p>` : ''}
                                 <p class="asset-status">● ${a.status === 'available' ? 'Disponible' : a.status}</p>
+                                <div style="display:flex;gap:8px;margin-top:10px;">
+                                    <button onclick="openAssetModal('${a.id}')" style="flex:1;padding:6px;background:none;border:1px solid #333;color:#aaa;font-size:11px;cursor:pointer;font-family:inherit;">✎ Editar</button>
+                                    <button onclick="deleteAsset('${a.id}')" style="padding:6px 10px;background:none;border:1px solid #3a1010;color:#e55;font-size:11px;cursor:pointer;font-family:inherit;">✕</button>
+                                </div>
                             </div>`).join('')}
                         </div>`
                     }
@@ -396,5 +432,181 @@
             }
         });
     </script>
+<!-- Modal Agregar/Editar Asset -->
+<div class="asset-modal-overlay" id="assetModal">
+    <div class="asset-modal">
+        <h3>
+            <span id="assetModalTitle">Agregar asset</span>
+            <button type="button" class="asset-modal-close" onclick="closeAssetModal()">×</button>
+        </h3>
+        <div class="am-group">
+            <label>Título</label>
+            <input type="text" class="am-input" id="amTitle" placeholder="Ej: Departamento moderno Providencia">
+        </div>
+        <div class="am-group">
+            <label>Descripción</label>
+            <textarea class="am-input" id="amDesc" rows="3" placeholder="Describe tu asset con todos los detalles relevantes para una producción..."></textarea>
+        </div>
+        <div class="am-group">
+            <label>Zona / Disponibilidad</label>
+            <input type="text" class="am-input" id="amLocation" placeholder="Ej: Las Condes — disponible fines de semana">
+        </div>
+        <div class="am-group">
+            <label>Fotos <span style="color:#555;font-size:9px;">(hasta 5, JPG/PNG)</span></label>
+            <div class="am-upload" onclick="document.getElementById('amFiles').click()">
+                <div style="font-size:28px;">📷</div>
+                <p>Haz clic para subir fotos</p>
+                <input type="file" id="amFiles" accept="image/*" multiple onchange="previewPhotos(this)">
+            </div>
+            <div class="am-photos-preview" id="amPreview"></div>
+        </div>
+        <p class="am-error" id="amError"></p>
+        <div class="am-actions">
+            <button type="button" class="am-btn-primary" id="amSaveBtn" onclick="saveAsset()">Guardar</button>
+            <button type="button" class="am-btn-ghost" onclick="closeAssetModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let _editingAssetId = null;
+    let _providerIdCache = null;
+    let _newPhotos = [];
+
+    function openAssetModal(assetId = null) {
+        _editingAssetId = assetId;
+        _newPhotos = [];
+        document.getElementById('amTitle').value = '';
+        document.getElementById('amDesc').value = '';
+        document.getElementById('amLocation').value = '';
+        document.getElementById('amPreview').innerHTML = '';
+        document.getElementById('amError').style.display = 'none';
+        document.getElementById('amFiles').value = '';
+        document.getElementById('assetModalTitle').textContent = assetId ? 'Editar asset' : 'Agregar asset';
+
+        if (assetId) {
+            // Pre-cargar datos del asset desde el DOM
+            const session = sb.auth.getSession();
+            sb.from('provider_assets').select('*').eq('id', assetId).single().then(({ data }) => {
+                if (data) {
+                    document.getElementById('amTitle').value = data.title || '';
+                    document.getElementById('amDesc').value = data.description || '';
+                    document.getElementById('amLocation').value = data.location || '';
+                    if (data.photos?.length) {
+                        const preview = document.getElementById('amPreview');
+                        data.photos.forEach(url => {
+                            const img = document.createElement('img');
+                            img.src = url;
+                            preview.appendChild(img);
+                        });
+                    }
+                }
+            });
+        }
+        document.getElementById('assetModal').classList.add('open');
+    }
+
+    function closeAssetModal() {
+        document.getElementById('assetModal').classList.remove('open');
+        _editingAssetId = null;
+    }
+
+    document.getElementById('assetModal').addEventListener('click', e => {
+        if (e.target === document.getElementById('assetModal')) closeAssetModal();
+    });
+
+    function previewPhotos(input) {
+        _newPhotos = Array.from(input.files).slice(0, 5);
+        const preview = document.getElementById('amPreview');
+        // Mantener fotos existentes si estamos editando
+        const existing = preview.querySelectorAll('img[data-existing]');
+        preview.innerHTML = '';
+        existing.forEach(img => preview.appendChild(img));
+        _newPhotos.forEach(file => {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            preview.appendChild(img);
+        });
+    }
+
+    async function saveAsset() {
+        const title = document.getElementById('amTitle').value.trim();
+        const errEl = document.getElementById('amError');
+        const btn = document.getElementById('amSaveBtn');
+        errEl.style.display = 'none';
+        if (!title) { errEl.textContent = 'El título es requerido.'; errEl.style.display = 'block'; return; }
+
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+
+        try {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) throw new Error('No autenticado');
+
+            // Obtener provider_id
+            if (!_providerIdCache) {
+                const { data: prov } = await sb.from('providers').select('id').eq('user_id', session.user.id).single();
+                _providerIdCache = prov?.id;
+            }
+
+            const payload = {
+                title,
+                description: document.getElementById('amDesc').value.trim() || null,
+                location: document.getElementById('amLocation').value.trim() || null,
+            };
+
+            let assetId = _editingAssetId;
+
+            if (_editingAssetId) {
+                await sb.from('provider_assets').update(payload).eq('id', _editingAssetId);
+            } else {
+                payload.provider_id = _providerIdCache;
+                payload.status = 'available';
+                const { data } = await sb.from('provider_assets').insert(payload).select().single();
+                assetId = data?.id;
+            }
+
+            // Subir nuevas fotos
+            if (_newPhotos.length > 0 && assetId) {
+                const photoUrls = [];
+                for (let i = 0; i < _newPhotos.length; i++) {
+                    const file = _newPhotos[i];
+                    const ext = file.name.split('.').pop();
+                    const path = `${_providerIdCache}/${assetId}/${Date.now()}_${i}.${ext}`;
+                    const { error } = await sb.storage.from('provider-assets').upload(path, file, { upsert: true });
+                    if (!error) {
+                        const { data: urlData } = sb.storage.from('provider-assets').getPublicUrl(path);
+                        photoUrls.push(urlData.publicUrl);
+                    }
+                }
+                if (photoUrls.length > 0) {
+                    // Combinar con fotos existentes si es edición
+                    if (_editingAssetId) {
+                        const { data: existing } = await sb.from('provider_assets').select('photos').eq('id', assetId).single();
+                        const allPhotos = [...(existing?.photos || []), ...photoUrls].slice(0, 5);
+                        await sb.from('provider_assets').update({ photos: allPhotos }).eq('id', assetId);
+                    } else {
+                        await sb.from('provider_assets').update({ photos: photoUrls }).eq('id', assetId);
+                    }
+                }
+            }
+
+            closeAssetModal();
+            location.reload();
+        } catch (err) {
+            errEl.textContent = err.message || 'Error al guardar.';
+            errEl.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Guardar';
+        }
+    }
+
+    async function deleteAsset(assetId) {
+        if (!confirm('¿Eliminar este asset?')) return;
+        await sb.from('provider_assets').delete().eq('id', assetId);
+        location.reload();
+    }
+</script>
 </body>
 </html>
