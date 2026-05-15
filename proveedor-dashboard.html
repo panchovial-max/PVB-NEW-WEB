@@ -322,18 +322,6 @@
                     </div>
                 </div>
 
-                <!-- Código de referido -->
-                <div class="dash-section">
-                    <p class="dash-section-title">Tu código de referido</p>
-                    <div class="referral-box">
-                        <div>
-                            <p>Comparte este código con personas que puedan sumarse a la red. Si se concreta un trabajo, <strong>ganas un 5%</strong>.</p>
-                            <div class="referral-code">${p.referral_code || '—'}</div>
-                        </div>
-                        <button class="copy-btn" onclick="copyCode('${p.referral_code}')">Copiar código</button>
-                    </div>
-                </div>
-
                 <!-- Matches / proyectos -->
                 <div class="dash-section">
                     <p class="dash-section-title">Proyectos en los que puedes participar ${activeMatches.length > 0 ? '(' + activeMatches.length + ')' : ''}</p>
@@ -369,6 +357,18 @@
                             </div>`).join('')}
                         </div>`
                     }
+                </div>
+
+                <!-- Código de referido -->
+                <div class="dash-section">
+                    <p class="dash-section-title">Tu código de referido</p>
+                    <div class="referral-box">
+                        <div>
+                            <p>Comparte este código con personas que puedan sumarse a la red. Si se concreta un trabajo, <strong>ganas un 5%</strong>.</p>
+                            <div class="referral-code">${p.referral_code || '—'}</div>
+                        </div>
+                        <button class="copy-btn" onclick="copyCode('${p.referral_code}')">Copiar código</button>
+                    </div>
                 </div>
             `;
         }
