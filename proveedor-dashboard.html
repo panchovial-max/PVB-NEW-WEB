@@ -219,6 +219,60 @@
         }
 
         .loading { text-align: center; padding: 80px 20px; color: #444; font-size: 13px; letter-spacing: 2px; }
+
+        /* Book fotográfico */
+        .book-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .book-alert {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #1a1000; border: 1px solid #3a2500; color: #f5a623;
+            font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 4px 12px; border-radius: 2px;
+        }
+        .book-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;
+        }
+        .book-photo {
+            position: relative; aspect-ratio: 3/4; overflow: hidden;
+            background: #1a1a1a; border: 1px solid #2a2a2a; cursor: pointer;
+        }
+        .book-photo img { width: 100%; height: 100%; object-fit: cover; }
+        .book-photo-label {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,.85));
+            padding: 20px 8px 8px;
+            font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #aaa;
+        }
+        .book-photo-del {
+            position: absolute; top: 6px; right: 6px;
+            background: rgba(0,0,0,.7); border: none; color: #e55;
+            width: 24px; height: 24px; cursor: pointer; font-size: 12px;
+            display: none; align-items: center; justify-content: center; border-radius: 2px;
+        }
+        .book-photo:hover .book-photo-del { display: flex; }
+        .book-add-card {
+            aspect-ratio: 3/4; border: 2px dashed #2a2a2a; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; gap: 8px; transition: border-color .15s; color: #444;
+        }
+        .book-add-card:hover { border-color: #555; color: #888; }
+        .book-add-card span { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* Datos casting */
+        .casting-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
+        }
+        .casting-field { background: #111; border: 1px solid #1f1f1f; padding: 12px 14px; }
+        .casting-field label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #555; display: block; margin-bottom: 4px; }
+        .casting-field span { font-size: 14px; color: #fff; }
+        .casting-field input, .casting-field select {
+            width: 100%; background: none; border: none; color: #fff;
+            font-size: 14px; font-family: inherit; outline: none; padding: 0;
+        }
+        .casting-save-btn {
+            margin-top: 12px; padding: 8px 18px; background: #fff; color: #000;
+            border: none; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; font-family: inherit;
+        }
         /* Modal asset */
         .asset-modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,.9);
@@ -351,6 +405,49 @@
                     </div>
                 </div>
 
+                ${p.category === 'modelos' ? `
+                <!-- BOOK FOTOGRÁFICO — solo modelos/talent -->
+                <div class="dash-section" id="bookSection">
+                    <div class="book-header">
+                        <p class="dash-section-title" style="margin-bottom:0;">📸 Tu book</p>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            ${bookAgeAlert(p)}
+                            <label style="padding:8px 16px;background:#fff;color:#000;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:inherit;">
+                                + Subir foto
+                                <input type="file" accept="image/*" multiple style="display:none;" onchange="uploadBookPhotos(this,'${p.id}')">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="book-grid" id="bookGrid">
+                        ${renderBookPhotos(assets)}
+                    </div>
+                </div>
+
+                <!-- DATOS DE CASTING -->
+                <div class="dash-section">
+                    <p class="dash-section-title">Ficha de casting</p>
+                    <div class="casting-grid">
+                        <div class="casting-field"><label>Altura</label><input type="text" id="cast_altura" value="${p.casting?.altura||''}" placeholder="Ej: 1.75m"></div>
+                        <div class="casting-field"><label>Peso</label><input type="text" id="cast_peso" value="${p.casting?.peso||''}" placeholder="Ej: 65kg"></div>
+                        <div class="casting-field"><label>Talla ropa</label><input type="text" id="cast_talla" value="${p.casting?.talla||''}" placeholder="Ej: M / 38"></div>
+                        <div class="casting-field"><label>Talla zapatos</label><input type="text" id="cast_zapatos" value="${p.casting?.zapatos||''}" placeholder="Ej: 42"></div>
+                        <div class="casting-field"><label>Color ojos</label><input type="text" id="cast_ojos" value="${p.casting?.ojos||''}" placeholder="Ej: Café"></div>
+                        <div class="casting-field"><label>Color cabello</label><input type="text" id="cast_cabello" value="${p.casting?.cabello||''}" placeholder="Ej: Castaño oscuro"></div>
+                        <div class="casting-field"><label>Idiomas</label><input type="text" id="cast_idiomas" value="${p.casting?.idiomas||''}" placeholder="Ej: Español, Inglés"></div>
+                        <div class="casting-field"><label>Experiencia</label><input type="text" id="cast_exp" value="${p.casting?.experiencia||''}" placeholder="Ej: Comerciales, moda"></div>
+                    </div>
+                    <div class="casting-field" style="margin-top:10px;">
+                        <label>Habilidades especiales</label>
+                        <input type="text" id="cast_skills" value="${p.casting?.habilidades||''}" placeholder="Ej: Baile, natación, equitación, música...">
+                    </div>
+                    <div class="casting-field" style="margin-top:10px;">
+                        <label>Agencia representante <span style="color:#555;font-size:9px;">(opcional)</span></label>
+                        <input type="text" id="cast_agencia" value="${p.casting?.agencia||''}" placeholder="Ej: Independiente">
+                    </div>
+                    <button class="casting-save-btn" onclick="saveCasting('${p.id}')">Guardar ficha</button>
+                </div>
+                ` : ''}
+
                 <!-- Matches / proyectos -->
                 <div class="dash-section">
                     <p class="dash-section-title">Proyectos en los que puedes participar ${activeMatches.length > 0 ? '(' + activeMatches.length + ')' : ''}</p>
@@ -469,6 +566,108 @@
 </div>
 
 <script>
+    // ── BOOK FOTOGRÁFICO ──
+    function bookAgeAlert(p) {
+        const lastUpdate = p.book_updated_at || p.created_at;
+        const days = Math.floor((Date.now() - new Date(lastUpdate)) / 86400000);
+        if (days > 90) return `<span class="book-alert">⚠ Fotos hace +${days} días — actualiza tu book</span>`;
+        if (days > 60) return `<span class="book-alert" style="background:#1a1500;border-color:#3a2800;">Fotos hace ${days} días</span>`;
+        return '';
+    }
+
+    const BOOK_CATEGORIES = ['Headshot','Cuerpo completo','Editorial','Casual','Sport','Otros'];
+
+    function renderBookPhotos(assets) {
+        // Las fotos del book están en assets con title que empieza con categoría de book
+        const bookAsset = assets.find(a => a.title === 'Book fotográfico');
+        const photos = bookAsset?.photos || [];
+        if (photos.length === 0) {
+            return `<div class="book-add-card" onclick="document.querySelector('#bookSection input[type=file]').click()">
+                <div style="font-size:36px;">📷</div>
+                <span>Subir primera foto</span>
+            </div>`;
+        }
+        return photos.map((url, i) => `
+            <div class="book-photo">
+                <img src="${url}" alt="Book ${i+1}">
+                <div class="book-photo-label">${BOOK_CATEGORIES[i] || 'Foto ' + (i+1)}</div>
+                <button class="book-photo-del" onclick="deleteBookPhoto('${bookAsset.id}',${i})">✕</button>
+            </div>`).join('') +
+            (photos.length < 10 ? `<div class="book-add-card" onclick="document.querySelector('#bookSection input[type=file]').click()">
+                <div style="font-size:28px;">+</div><span>Agregar foto</span></div>` : '');
+    }
+
+    async function uploadBookPhotos(input, providerId) {
+        const files = Array.from(input.files).slice(0, 10);
+        if (!files.length) return;
+        const btn = document.querySelector('#bookSection label');
+        if (btn) btn.textContent = 'Subiendo...';
+
+        // Buscar o crear asset "Book fotográfico"
+        let { data: bookAsset } = await sb.from('provider_assets')
+            .select('id, photos').eq('provider_id', providerId).eq('title', 'Book fotográfico').single();
+
+        if (!bookAsset) {
+            const { data } = await sb.from('provider_assets').insert({
+                provider_id: providerId, title: 'Book fotográfico',
+                description: 'Fotos de book para casting', status: 'available'
+            }).select().single();
+            bookAsset = data;
+        }
+
+        const existingPhotos = bookAsset?.photos || [];
+        const newUrls = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const ext = file.name.split('.').pop();
+            const path = `${providerId}/book/${Date.now()}_${i}.${ext}`;
+            const { error } = await sb.storage.from('provider-assets').upload(path, file, { upsert: true });
+            if (!error) {
+                const { data: urlData } = sb.storage.from('provider-assets').getPublicUrl(path);
+                newUrls.push(urlData.publicUrl);
+            }
+        }
+
+        const allPhotos = [...existingPhotos, ...newUrls].slice(0, 10);
+        await sb.from('provider_assets').update({
+            photos: allPhotos, book_updated_at: new Date().toISOString()
+        }).eq('id', bookAsset.id);
+
+        // Actualizar timestamp en provider
+        await sb.from('providers').update({ book_updated_at: new Date().toISOString() }).eq('id', providerId);
+
+        location.reload();
+    }
+
+    async function deleteBookPhoto(assetId, index) {
+        if (!confirm('¿Eliminar esta foto del book?')) return;
+        const { data } = await sb.from('provider_assets').select('photos').eq('id', assetId).single();
+        const photos = data?.photos || [];
+        photos.splice(index, 1);
+        await sb.from('provider_assets').update({ photos }).eq('id', assetId);
+        location.reload();
+    }
+
+    async function saveCasting(providerId) {
+        const casting = {
+            altura: document.getElementById('cast_altura')?.value.trim(),
+            peso: document.getElementById('cast_peso')?.value.trim(),
+            talla: document.getElementById('cast_talla')?.value.trim(),
+            zapatos: document.getElementById('cast_zapatos')?.value.trim(),
+            ojos: document.getElementById('cast_ojos')?.value.trim(),
+            cabello: document.getElementById('cast_cabello')?.value.trim(),
+            idiomas: document.getElementById('cast_idiomas')?.value.trim(),
+            experiencia: document.getElementById('cast_exp')?.value.trim(),
+            habilidades: document.getElementById('cast_skills')?.value.trim(),
+            agencia: document.getElementById('cast_agencia')?.value.trim(),
+        };
+        await sb.from('providers').update({ casting }).eq('id', providerId);
+        const btn = document.querySelector('.casting-save-btn');
+        btn.textContent = '✓ Guardado';
+        setTimeout(() => { btn.textContent = 'Guardar ficha'; }, 2000);
+    }
+
     let _editingAssetId = null;
     let _providerIdCache = null;
     let _newPhotos = [];
