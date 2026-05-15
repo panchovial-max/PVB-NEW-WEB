@@ -5,10 +5,17 @@
 import Anthropic from '@anthropic-ai/sdk';
 import {
   getProyectosActivos,
+  getTodosProyectos,
   getBoletasPendientes,
+  getResumenFinanciero,
+  getEntregasPendientes,
   createProyecto,
+  updateProyecto,
   updateProyectoEstado,
-  addNotaProyecto
+  addNotaProyecto,
+  createBoleta,
+  searchNotion,
+  getPage
 } from './notion-query.js';
 
 const SYSTEM_PROMPT = `Eres el asistente de IA de PVB Estudio Creativo, una productora audiovisual y agencia de marketing en Santiago, Chile.
@@ -45,13 +52,34 @@ Herramientas disponibles:
 const TOOLS = [
   {
     name: 'notion_get_proyectos',
-    description: 'Obtiene los proyectos activos de PVB desde Notion',
-    input_schema: { type: 'object', properties: {}, required: [] }
+    description: 'Obtiene proyectos activos (Brief, Pre-produccion, Produccion, Post-produccion) desde Notion',
+    input_schema: { type: 'object', properties: { todos: { type: 'boolean', description: 'Si true, trae todos incluyendo Entregado y Archivado' } }, required: [] }
   },
   {
     name: 'notion_get_boletas',
-    description: 'Obtiene las boletas/facturas pendientes desde Notion',
+    description: 'Obtiene boletas/facturas pendientes desde Notion',
     input_schema: { type: 'object', properties: {}, required: [] }
+  },
+  {
+    name: 'notion_resumen_financiero',
+    description: 'Obtiene resumen financiero del mes actual desde Notion',
+    input_schema: { type: 'object', properties: {}, required: [] }
+  },
+  {
+    name: 'notion_get_entregas',
+    description: 'Obtiene entregas pendientes desde Notion',
+    input_schema: { type: 'object', properties: {}, required: [] }
+  },
+  {
+    name: 'notion_search',
+    description: 'Busca páginas o bases de datos en Notion por texto',
+    input_schema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Texto a buscar' }
+      },
+      required: ['query']
+    }
   },
   {
     name: 'notion_create_proyecto',
@@ -63,26 +91,31 @@ const TOOLS = [
         cliente: { type: 'string', description: 'Nombre del cliente' },
         tipo: { type: 'string', description: 'Tipo: Video, Foto, Branding, Web, Social Media, Print' },
         presupuesto: { type: 'number', description: 'Presupuesto en CLP' },
-        fechaEntrega: { type: 'string', description: 'Fecha entrega YYYY-MM-DD' }
+        fechaEntrega: { type: 'string', description: 'Fecha entrega YYYY-MM-DD' },
+        notas: { type: 'string', description: 'Notas adicionales del proyecto' }
       },
       required: ['nombre']
     }
   },
   {
-    name: 'notion_update_estado',
-    description: 'Cambia el estado de un proyecto en Notion',
+    name: 'notion_update_proyecto',
+    description: 'Actualiza estado, cliente, presupuesto, fecha o notas de un proyecto en Notion',
     input_schema: {
       type: 'object',
       properties: {
         busqueda: { type: 'string', description: 'Nombre o parte del nombre del proyecto' },
-        estado: { type: 'string', description: 'Nuevo estado: Brief, Pre-produccion, Produccion, Post-produccion, Entregado, Archivado' }
+        estado: { type: 'string', description: 'Brief, Pre-produccion, Produccion, Post-produccion, Entregado, Archivado' },
+        cliente: { type: 'string' },
+        presupuesto: { type: 'number' },
+        fechaEntrega: { type: 'string', description: 'YYYY-MM-DD' },
+        notas: { type: 'string' }
       },
-      required: ['busqueda', 'estado']
+      required: ['busqueda']
     }
   },
   {
     name: 'notion_add_nota',
-    description: 'Agrega una nota a un proyecto en Notion',
+    description: 'Agrega una nota con timestamp a un proyecto en Notion',
     input_schema: {
       type: 'object',
       properties: {
@@ -91,21 +124,51 @@ const TOOLS = [
       },
       required: ['busqueda', 'nota']
     }
+  },
+  {
+    name: 'notion_create_boleta',
+    description: 'Registra una boleta o factura en Notion',
+    input_schema: {
+      type: 'object',
+      properties: {
+        descripcion: { type: 'string', description: 'Descripción de la boleta/factura' },
+        monto: { type: 'number', description: 'Monto en CLP' },
+        tipo: { type: 'string', description: 'Boleta, Factura, Nota Credito, Otro' },
+        categoria: { type: 'string', description: 'Produccion, Software, Oficina, Marketing, Profesional, Otro' },
+        fecha: { type: 'string', description: 'YYYY-MM-DD' }
+      },
+      required: ['descripcion']
+    }
   }
 ];
+
+function mapProyecto(p) {
+  return {
+    nombre: p.properties.Nombre?.title?.[0]?.plain_text || 'Sin nombre',
+    cliente: p.properties.Cliente?.rich_text?.[0]?.plain_text || '',
+    estado: p.properties.Estado?.select?.name || '',
+    entrega: p.properties['Fecha Entrega']?.date?.start || '',
+    presupuesto: p.properties['Presupuesto CLP']?.number || 0,
+    notas: p.properties.Notas?.rich_text?.[0]?.plain_text || '',
+    id: p.id,
+    url: p.url
+  };
+}
+
+async function findProyecto(notionKey, busqueda) {
+  const data = await getTodosProyectos(notionKey);
+  return data.results?.find(p =>
+    p.properties.Nombre?.title?.[0]?.plain_text?.toLowerCase().includes(busqueda.toLowerCase())
+  );
+}
 
 async function executeTool(toolName, toolInput, notionKey) {
   switch (toolName) {
     case 'notion_get_proyectos': {
-      const data = await getProyectosActivos(notionKey);
-      return data.results?.map(p => ({
-        nombre: p.properties.Nombre?.title?.[0]?.plain_text || 'Sin nombre',
-        cliente: p.properties.Cliente?.rich_text?.[0]?.plain_text || '',
-        estado: p.properties.Estado?.select?.name || '',
-        entrega: p.properties['Fecha Entrega']?.date?.start || '',
-        presupuesto: p.properties['Presupuesto CLP']?.number || 0,
-        id: p.id
-      })) || [];
+      const data = toolInput.todos
+        ? await getTodosProyectos(notionKey)
+        : await getProyectosActivos(notionKey);
+      return data.results?.map(mapProyecto) || [];
     }
     case 'notion_get_boletas': {
       const data = await getBoletasPendientes(notionKey);
@@ -113,30 +176,57 @@ async function executeTool(toolName, toolInput, notionKey) {
         descripcion: p.properties.Descripcion?.title?.[0]?.plain_text || '',
         monto: p.properties['Monto CLP']?.number || 0,
         fecha: p.properties.Fecha?.date?.start || '',
-        tipo: p.properties['Tipo Documento']?.select?.name || ''
+        tipo: p.properties['Tipo Documento']?.select?.name || '',
+        id: p.id
+      })) || [];
+    }
+    case 'notion_resumen_financiero': {
+      const data = await getResumenFinanciero(notionKey);
+      const porCategoria = {};
+      let total = 0;
+      for (const p of data.results || []) {
+        const cat = p.properties.Categoria?.select?.name || 'Otro';
+        const monto = p.properties['Monto CLP']?.number || 0;
+        porCategoria[cat] = (porCategoria[cat] || 0) + monto;
+        total += monto;
+      }
+      return { total, por_categoria: porCategoria, registros: data.results?.length || 0 };
+    }
+    case 'notion_get_entregas': {
+      const data = await getEntregasPendientes(notionKey);
+      return data.results?.map(p => ({
+        nombre: p.properties.Nombre?.title?.[0]?.plain_text || 'Sin nombre',
+        id: p.id, url: p.url
+      })) || [];
+    }
+    case 'notion_search': {
+      const data = await searchNotion(notionKey, toolInput.query);
+      return data.results?.map(r => ({
+        titulo: r.properties?.Nombre?.title?.[0]?.plain_text || r.properties?.title?.title?.[0]?.plain_text || r.title?.[0]?.plain_text || 'Sin título',
+        tipo: r.object,
+        url: r.url,
+        id: r.id
       })) || [];
     }
     case 'notion_create_proyecto': {
       const page = await createProyecto(notionKey, toolInput);
       return { ok: !!page.id, url: page.url, id: page.id };
     }
-    case 'notion_update_estado': {
-      const data = await getProyectosActivos(notionKey);
-      const proyecto = data.results?.find(p =>
-        p.properties.Nombre?.title?.[0]?.plain_text?.toLowerCase().includes(toolInput.busqueda.toLowerCase())
-      );
+    case 'notion_update_proyecto': {
+      const proyecto = await findProyecto(notionKey, toolInput.busqueda);
       if (!proyecto) return { error: `No encontré proyecto con "${toolInput.busqueda}"` };
-      await updateProyectoEstado(notionKey, proyecto.id, toolInput.estado);
-      return { ok: true, nombre: proyecto.properties.Nombre?.title?.[0]?.plain_text };
+      await updateProyecto(notionKey, proyecto.id, toolInput);
+      return { ok: true, nombre: proyecto.properties.Nombre?.title?.[0]?.plain_text, url: proyecto.url };
     }
     case 'notion_add_nota': {
-      const data = await getProyectosActivos(notionKey);
-      const proyecto = data.results?.find(p =>
-        p.properties.Nombre?.title?.[0]?.plain_text?.toLowerCase().includes(toolInput.busqueda.toLowerCase())
-      );
+      const proyecto = await findProyecto(notionKey, toolInput.busqueda);
       if (!proyecto) return { error: `No encontré proyecto con "${toolInput.busqueda}"` };
       await addNotaProyecto(notionKey, proyecto.id, toolInput.nota);
       return { ok: true, nombre: proyecto.properties.Nombre?.title?.[0]?.plain_text };
+    }
+    case 'notion_create_boleta': {
+      const page = await createBoleta(notionKey, toolInput);
+      return { ok: !!page.id, url: page.url, id: page.id };
     }
     default:
       return { error: 'Herramienta no encontrada' };
