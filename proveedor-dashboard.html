@@ -251,7 +251,7 @@
         };
 
         async function signOut() {
-            await supabase.auth.signOut();
+            await sb.auth.signOut();
             window.location.href = 'proveedores.html';
         }
 
@@ -374,7 +374,7 @@
         }
 
         async function respondMatch(matchId, status) {
-            await supabase.from('project_matches').update({
+            await sb.from('project_matches').update({
                 status,
                 responded_at: new Date().toISOString()
             }).eq('id', matchId);
@@ -388,7 +388,7 @@
         }
 
         // Auth guard
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        sb.auth.getSession().then(({ data: { session } }) => {
             if (!session) {
                 window.location.href = 'proveedores.html';
             } else {

@@ -561,7 +561,7 @@
             document.getElementById('successAlert').classList.remove('show');
         }
 
-        supabase.auth.onAuthStateChange((event, session) => {
+        sb.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' && session) {
                 storeSession(session);
                 window.history.replaceState({}, document.title, window.location.pathname);
@@ -593,7 +593,7 @@
             btn.disabled = true;
             btn.textContent = 'Ingresando...';
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                const { data, error } = await sb.auth.signInWithPassword({ email, password });
                 if (error) showError(error.message);
                 else if (data.session) { storeSession(data.session); window.location.replace('dashboard.html'); }
             } catch { showError('No se pudo iniciar sesión. Intenta de nuevo.'); }
@@ -614,7 +614,7 @@
             btn.disabled = true;
             btn.textContent = 'Creando cuenta...';
             try {
-                const { data, error } = await supabase.auth.signUp({
+                const { data, error } = await sb.auth.signUp({
                     email, password, options: { data: { full_name: fullName } }
                 });
                 if (error) showError(error.message);
@@ -629,7 +629,7 @@
             const supabaseProvider = supported[provider];
             if (!supabaseProvider) return showError(`Proveedor "${provider}" no soportado.`);
             try {
-                const { error } = await supabase.auth.signInWithOAuth({
+                const { error } = await sb.auth.signInWithOAuth({
                     provider: supabaseProvider,
                     options: { redirectTo: `${window.location.origin}/login.html` }
                 });
@@ -641,7 +641,7 @@
             e.preventDefault();
             const email = document.getElementById('email').value.trim();
             if (!email) return showError('Ingresa tu email arriba primero.');
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            const { error } = await sb.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/settings.html`
             });
             if (error) showError(error.message);
@@ -665,7 +665,7 @@
                 showError(oauthErrorDesc ? decodeURIComponent(oauthErrorDesc) : decodeURIComponent(oauthError));
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await sb.auth.getSession();
             if (session) { storeSession(session); window.location.replace('dashboard.html'); }
         });
     </script>

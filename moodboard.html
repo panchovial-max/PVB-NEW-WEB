@@ -416,7 +416,7 @@
 
     // ── INIT ──
     async function init() {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await sb.auth.getSession();
         if (!session && !isAdmin) {
             document.getElementById('boardContent').innerHTML =
                 `<div class="empty-board"><div class="empty-icon">🔒</div><h3>Acceso requerido</h3><p>Debes iniciar sesión para ver tu moodboard.</p><a href="login.html" style="color:var(--text)">Iniciar sesión →</a></div>`;
@@ -431,7 +431,7 @@
     }
 
     async function loadBoards() {
-        let query = supabase.from('moodboards').select('*').order('created_at');
+        let query = sb.from('moodboards').select('*').order('created_at');
         if (projectId) query = query.eq('project_id', projectId);
         else if (currentUser) query = query.eq('client_id', currentUser.id);
 
@@ -569,7 +569,7 @@
 
     // ── STATUS ──
     async function setStatus(itemId, status) {
-        await supabase.from('moodboard_items').update({
+        await sb.from('moodboard_items').update({
             status,
             approved_by: currentUser?.id || null,
             approved_at: status === 'approved' ? new Date().toISOString() : null
@@ -581,7 +581,7 @@
 
     async function deleteItem(itemId) {
         if (!confirm('¿Eliminar esta referencia?')) return;
-        await supabase.from('moodboard_items').delete().eq('id', itemId);
+        await sb.from('moodboard_items').delete().eq('id', itemId);
         allItems = allItems.filter(i => i.id !== itemId);
         renderItems();
     }
@@ -598,7 +598,7 @@
         const body = input?.value.trim();
         if (!body) return;
         const name = isAdmin ? 'Francisco' : (currentUser?.user_metadata?.full_name || currentUser?.email || 'Cliente');
-        await supabase.from('moodboard_comments').insert({
+        await sb.from('moodboard_comments').insert({
             item_id: itemId, user_id: currentUser?.id, body,
             user_name: name, user_role: isAdmin ? 'admin' : 'client'
         });
@@ -709,15 +709,15 @@
                 if (!uploadFile) throw new Error('Selecciona una imagen.');
                 const ext = uploadFile.name.split('.').pop();
                 storagePath = `${currentBoard.id}/${Date.now()}.${ext}`;
-                const { error: upErr } = await supabase.storage
+                const { error: upErr } = await sb.storage
                     .from('moodboard-assets').upload(storagePath, uploadFile, { upsert: true });
                 if (upErr) throw upErr;
-                const { data: urlData } = supabase.storage.from('moodboard-assets').getPublicUrl(storagePath);
+                const { data: urlData } = sb.storage.from('moodboard-assets').getPublicUrl(storagePath);
                 thumbnailUrl = urlData.publicUrl;
                 source = 'upload';
             }
 
-            const { error } = await supabase.from('moodboard_items').insert({
+            const { error } = await sb.from('moodboard_items').insert({
                 moodboard_id: currentBoard.id,
                 source, original_url: originalUrl,
                 thumbnail_url: thumbnailUrl, storage_path: storagePath,
@@ -761,7 +761,7 @@
         errEl.style.display = 'none';
         if (!title) { errEl.textContent = 'El nombre es requerido.'; errEl.style.display = 'block'; return; }
 
-        const { data, error } = await supabase.from('moodboards').insert({
+        const { data, error } = await sb.from('moodboards').insert({
             title, category: selectedCatNew,
             project_id: projectId || null,
             client_id: isAdmin ? null : (currentUser?.id || null),

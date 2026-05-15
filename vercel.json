@@ -23,7 +23,9 @@
     { "source": "/api/og-fetch", "destination": "/api/og-fetch.js" },
     { "source": "/api/uf-value", "destination": "/api/uf-value.js" },
     { "source": "/api/send-notification", "destination": "/api/send-notification.js" },
-    { "source": "/api/provider-match", "destination": "/api/provider-match.js" }
+    { "source": "/api/provider-match", "destination": "/api/provider-match.js" },
+    { "source": "/api/notion-sync",    "destination": "/api/notion-sync.js" },
+    { "source": "/api/notion-webhook", "destination": "/api/notion-webhook.js" }
   ],
   "headers": [
     {

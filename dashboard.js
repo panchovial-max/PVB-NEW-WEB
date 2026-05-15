@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Get active Supabase session — JWT used as Bearer for Netlify functions
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { session }, error } = await sb.auth.getSession();
 
     if (error || !session) {
         console.warn('No active session, redirecting to login');
@@ -433,7 +433,7 @@ async function handleLogout() {
     try {
         // Sign out from Supabase if available
         if (supabase) {
-            await supabase.auth.signOut();
+            await sb.auth.signOut();
         }
 
         // Clear local storage

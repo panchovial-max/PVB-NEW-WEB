@@ -647,7 +647,7 @@
 
     async function updateStatus(id, status) {
         if (!status) return;
-        await supabase.from('providers').update({ status }).eq('id', id);
+        await sb.from('providers').update({ status }).eq('id', id);
         const p = allProviders.find(x => x.id === id);
         if (p) p.status = status;
         updateCounts();
@@ -767,7 +767,7 @@
         const errEl = document.getElementById('projError');
         if (!title) { errEl.textContent = 'El título es requerido.'; errEl.style.display = 'block'; return; }
 
-        const { data, error } = await supabase.from('projects').insert({
+        const { data, error } = await sb.from('projects').insert({
             title,
             description: document.getElementById('projDesc').value.trim() || null,
             shoot_date: document.getElementById('projDate').value || null,
@@ -808,8 +808,8 @@
             notified_at: new Date().toISOString()
         }));
 
-        await supabase.from('project_matches').upsert(records, { onConflict: 'project_id,provider_id' });
-        await supabase.from('projects').update({ status: 'matching' }).eq('id', projectId);
+        await sb.from('project_matches').upsert(records, { onConflict: 'project_id,provider_id' });
+        await sb.from('projects').update({ status: 'matching' }).eq('id', projectId);
 
         // Generar links WhatsApp
         const links = matched.map(p => {
