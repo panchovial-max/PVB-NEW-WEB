@@ -260,7 +260,7 @@
                 user.user_metadata?.full_name?.split(' ')[0] || user.email;
 
             // Cargar perfil
-            const { data: provider } = await supabase
+            const { data: provider } = await sb
                 .from('providers')
                 .select('*, provider_assets(*)')
                 .eq('user_id', user.id)
@@ -273,7 +273,7 @@
             }
 
             // Cargar matches
-            const { data: matches } = await supabase
+            const { data: matches } = await sb
                 .from('project_matches')
                 .select('*, projects(*)')
                 .eq('provider_id', provider.id)
