@@ -3277,3 +3277,4 @@ input[type="password"].form-control::placeholder {
     margin-bottom: 1rem;
     line-height: 1.6;
 }
+.nav-logo-img { height: 32px; }

@@ -432,7 +432,7 @@ function setupEventListeners(userData) {
 async function handleLogout() {
     try {
         // Sign out from Supabase if available
-        if (supabase) {
+        if (sb) {
             await sb.auth.signOut();
         }
 
