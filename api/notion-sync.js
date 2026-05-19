@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const NOTION_KEY   = process.env.NOTION_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const NOTION_VER   = '2022-06-28';
 
 export const DB_IDS = {

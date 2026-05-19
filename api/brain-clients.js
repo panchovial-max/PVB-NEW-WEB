@@ -67,7 +67,7 @@ async function fetchFacebookStats(accessToken, pageId) {
 }
 
 export default async function handler(req, res) {
-  const secret = process.env.SUPABASE_SERVICE_KEY;
+  const secret = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabase = createClient(process.env.SUPABASE_URL, secret);
 
   res.setHeader('Access-Control-Allow-Origin', process.env.BASE_URL || '*');

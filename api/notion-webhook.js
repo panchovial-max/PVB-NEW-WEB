@@ -7,7 +7,7 @@ import { fetchPage, upsertPage, detectDbName } from './notion-sync.js';
 
 const WEBHOOK_SECRET = process.env.NOTION_WEBHOOK_SECRET;
 const SUPABASE_URL   = process.env.SUPABASE_URL;
-const SUPABASE_KEY   = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_KEY   = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 function verifySignature(rawBody, signature) {
   if (!WEBHOOK_SECRET) return true; // skip en dev si no está configurado

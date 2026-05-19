@@ -20,8 +20,8 @@ function escapeMarkdown(text) {
 
 export default async function handler(req, res) {
   const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
-  const HMAC_SECRET = process.env.SUPABASE_SERVICE_KEY;
-  const OWNER_CHAT_ID = process.env.TELEGRAM_OWNER_CHAT_ID;
+  const HMAC_SECRET = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || process.env.TELEGRAM_OWNER_CHAT_ID;
 
   res.setHeader('Access-Control-Allow-Origin', process.env.BASE_URL || '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');

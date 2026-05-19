@@ -20,7 +20,7 @@ function init() {
   NOTION_KEY = process.env.NOTION_API_KEY;
   supabaseAdmin = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY
+    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 }
 

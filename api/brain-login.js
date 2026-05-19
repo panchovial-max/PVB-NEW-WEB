@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     const expectedPin = process.env.STUDIO_PIN || '1404';
     if (pin !== expectedPin) return res.status(401).json({ error: 'PIN incorrecto' });
 
-    const secret = process.env.SUPABASE_SERVICE_KEY;
+    const secret = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
     const token = createBrainToken(secret);
     return res.status(200).json({ ok: true, token });
   } catch {
