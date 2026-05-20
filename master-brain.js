@@ -71,6 +71,17 @@ const AGENTS_DATA = [
   { id: 'marketing-reddit-community-builder', name: 'Reddit Community Builder', title: 'Engagement autentico en Reddit', dept: 'marketing', model: 'haiku',
     capabilities: 'community-engagement, reddit-culture, authentic-marketing', skills: '' },
 
+  // PAID MEDIA (3)
+  { id: 'paid-media-meta-ads', name: 'Valentina — Meta Ads', title: 'Meta Ads specialist: fatiga creativa, audiencias, pacing y saturacion para Kaya, Aboga y Compliance', dept: 'marketing', model: 'sonnet',
+    capabilities: 'custom-audiences, lookalikes, creative-fatigue-detection, audience-saturation, budget-pacing, crm-upload',
+    skills: 'meta-audience-builder, meta-creative-fatigue-analyzer, meta-fatigue-monitor, meta-spend-tracker' },
+  { id: 'paid-media-google-ads', name: 'Rodrigo — Google Ads', title: 'Google Ads specialist: Quality Score, keyword gaps, search term mining y performance period-over-period', dept: 'marketing', model: 'sonnet',
+    capabilities: 'quality-score-audit, keyword-gap-analysis, search-term-mining, negative-keyword-lists, period-comparison, impression-share',
+    skills: 'google-keyword-analyzer, google-negative-keywords, google-performance-auditor, google-search-terms' },
+  { id: 'paid-media-linkedin-ads', name: 'Isidora — LinkedIn Ads', title: 'LinkedIn Ads specialist B2B: ABM audiences, bid optimization, bulk edits y copy Feel First para Compliance', dept: 'marketing', model: 'sonnet',
+    capabilities: 'abm-audiences, firmographic-targeting, bid-optimization, bulk-campaign-editing, b2b-copy, feel-first-framework',
+    skills: 'linkedin-audience-builder, linkedin-bid-optimizer, linkedin-bulk-editor, linkedin-creative-builder' },
+
   // ENGINEERING (10)
   { id: 'engineering-frontend-developer', name: 'Frontend Developer', title: 'React/Vue/Angular, responsive, Core Web Vitals', dept: 'engineering', model: 'sonnet',
     capabilities: 'modern-web-apps, responsive-design, performance-optimization, pwa, accessibility', skills: 'landing-page, page-cro' },
@@ -192,6 +203,11 @@ const AGENTS_DATA = [
     capabilities: 'signal-based-outreach, icp-definition, cold-email, sequence-design, pipeline-building', skills: '' },
   { id: 'sales-discovery-coach', name: 'Discovery Coach', title: 'Discovery calls, SPIN selling, gap mapping, manejo de objeciones', dept: 'sales', model: 'sonnet',
     capabilities: 'spin-selling, gap-selling, sandler-pain-funnel, call-structure, objection-handling', skills: '' },
+
+  // CEO PERSONAL PERFORMANCE (1)
+  { id: 'pvb-5am-coach', name: '5AM Coach — Robin Sharma', title: 'Coach de alto rendimiento basado en El Club de las 5 AM. Victory Hour, 4 Imperios Interiores, 66 dias de instalacion de habitos', dept: 'ceo', model: 'opus',
+    capabilities: '20-20-20-formula, mindset-heartset-healthset-soulset, habit-installation-66-days, twin-cycles-elite-performance, four-focuses-history-makers, victory-hour-design',
+    skills: 'pvb-5am-coach' },
 ];
 
 // ─── Routines ───

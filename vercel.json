@@ -24,15 +24,13 @@
     { "source": "/api/uf-value", "destination": "/api/uf-value.js" },
     { "source": "/api/send-notification", "destination": "/api/send-notification.js" },
     { "source": "/api/provider-match", "destination": "/api/provider-match.js" },
-    { "source": "/api/notify-new-provider", "destination": "/api/notify-new-provider.js" },
-    { "source": "/api/send-provider-message", "destination": "/api/send-provider-message.js" },
+    { "source": "/api/providers", "destination": "/api/providers.js" },
     { "source": "/api/notion-sync",      "destination": "/api/notion-sync.js" },
     { "source": "/api/notion-webhook",   "destination": "/api/notion-webhook.js" },
     { "source": "/api/brain-login",      "destination": "/api/brain-login.js" },
     { "source": "/api/brain-clients",    "destination": "/api/brain-clients.js" },
     { "source": "/api/telegram-bot",     "destination": "/api/telegram-bot.js" },
     { "source": "/api/telegram-notify",  "destination": "/api/telegram-notify.js" },
-    { "source": "/api/telegram-provee",  "destination": "/api/telegram-provee.js" }
   ],
   "headers": [
     {
