@@ -25,6 +25,7 @@
     { "source": "/api/send-notification", "destination": "/api/send-notification.js" },
     { "source": "/api/provider-match", "destination": "/api/provider-match.js" },
     { "source": "/api/notify-new-provider", "destination": "/api/notify-new-provider.js" },
+    { "source": "/api/send-provider-message", "destination": "/api/send-provider-message.js" },
     { "source": "/api/notion-sync",      "destination": "/api/notion-sync.js" },
     { "source": "/api/notion-webhook",   "destination": "/api/notion-webhook.js" },
     { "source": "/api/brain-login",      "destination": "/api/brain-login.js" },
