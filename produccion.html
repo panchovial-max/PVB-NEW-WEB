@@ -637,9 +637,51 @@
                 ${p.phone ? `<button class="btn btn-whatsapp" onclick="openWhatsApp('${p.phone}','${p.full_name}')">💬 WhatsApp</button>` : ''}
                 ${p.email ? `<button class="btn btn-ghost" onclick="window.open('mailto:${p.email}')">✉ Email</button>` : ''}
                 ${p.instagram ? `<button class="btn btn-ghost" onclick="window.open('https://instagram.com/${p.instagram.replace('@','')}','_blank')">📸 Instagram</button>` : ''}
+            </div>
+
+            <div class="modal-section" style="margin-top:20px;">
+                <p class="modal-section-title">💬 Mensajes internos</p>
+                <div id="crmMsgList" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+                    <div style="color:var(--muted);font-size:12px;">Cargando...</div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <textarea id="crmMsgInput" rows="2" style="flex:1;padding:9px 13px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:none;" placeholder="Escribir mensaje al proveedor..."></textarea>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="sendCrmMessage('${p.id}')">Enviar</button>
+                </div>
             </div>`;
 
         document.getElementById('modalOverlay').classList.add('open');
+        loadCrmMessages('${p.id}');
+    }
+
+    async function loadCrmMessages(providerId) {
+        const { data: msgs } = await supabase.from('provider_messages')
+            .select('*').eq('provider_id', providerId)
+            .order('created_at', { ascending: true });
+
+        const list = document.getElementById('crmMsgList');
+        if (!list) return;
+        if (!msgs?.length) { list.innerHTML = '<div style="color:var(--muted);font-size:12px;">Sin mensajes todavía.</div>'; return; }
+
+        list.innerHTML = msgs.map(m => `
+            <div style="padding:8px 12px;border-radius:2px;max-width:85%;align-self:${m.from_role==='admin'?'flex-end':'flex-start'};background:${m.from_role==='admin'?'#0d1f0d':'#111'};border:1px solid ${m.from_role==='admin'?'#1a3a1a':'#2a2a2a'};font-size:13px;">
+                <div>${m.body}</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:4px;">${m.from_name} · ${new Date(m.created_at).toLocaleString('es-CL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+            </div>`).join('');
+        list.scrollTop = list.scrollHeight;
+    }
+
+    async function sendCrmMessage(providerId) {
+        const input = document.getElementById('crmMsgInput');
+        const body = input?.value.trim();
+        if (!body) return;
+
+        await supabase.from('provider_messages').insert({
+            provider_id: providerId, from_role: 'admin',
+            from_name: 'Francisco — PVB Estudio Creativo', body
+        });
+        input.value = '';
+        await loadCrmMessages(providerId);
     }
 
     function closeModal(e) {

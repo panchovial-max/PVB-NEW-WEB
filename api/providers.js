@@ -36,6 +36,21 @@ export default async function handler(req, res) {
         return res.json({ ok: true });
     }
 
+    // ── Webhook: proveedor respondió → notificar a Francisco ──
+    if (action === 'provider-replied') {
+        const { record } = req.body || {};
+        if (!record || record.from_role !== 'provider') return res.json({ ok: true });
+
+        // Buscar nombre del proveedor
+        const { data: prov } = await sb.from('providers')
+            .select('full_name, phone, category')
+            .eq('id', record.provider_id).single();
+
+        const msg = `💬 *Mensaje de proveedor*\n\n👤 *${prov?.full_name || record.from_name}*\n📁 ${CAT[prov?.category] || ''}\n\n"${record.body}"\n\n[Responder en el portal](https://panchovial.com/produccion)`;
+        await sendTelegram(msg);
+        return res.json({ ok: true });
+    }
+
     // ── Enviar mensaje interno (individual o broadcast) ──
     if (action === 'message' || action === 'broadcast') {
         const { provider_id, broadcast, body } = req.body || {};
