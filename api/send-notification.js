@@ -59,5 +59,18 @@ export default async function handler(req, res) {
         }
     }
 
+    // Notificar a Pancho por Telegram (@pvb_provee)
+    if (process.env.TELEGRAM_PROVEE_TOKEN && process.env.TELEGRAM_CHAT_ID) {
+        const icons = { payment_created: '💰', payment_confirmed: '✅', payment_rejected: '⚠️', stage_started: '▶️', stage_completed: '✓', stage_blocked: '⚠️', proof_uploaded: '📎', moodboard_comment: '💬', feed_item: '📌' };
+        const icon = icons[type] || '🔔';
+        const nombre = user_name || user_email || 'Cliente';
+        const msg = `${icon} *${title}*\n👤 ${nombre}${body ? '\n' + body : ''}${link ? '\n🔗 ' + link : ''}`;
+        await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_PROVEE_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, text: msg, parse_mode: 'Markdown' })
+        });
+    }
+
     return res.json(results);
 }
