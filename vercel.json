@@ -30,7 +30,7 @@
     { "source": "/api/brain-login",      "destination": "/api/brain-login.js" },
     { "source": "/api/brain-clients",    "destination": "/api/brain-clients.js" },
     { "source": "/api/telegram-bot",     "destination": "/api/telegram-bot.js" },
-    { "source": "/api/telegram-notify",  "destination": "/api/telegram-notify.js" },
+    { "source": "/api/telegram-notify",  "destination": "/api/telegram-notify.js" }
   ],
   "headers": [
     {
