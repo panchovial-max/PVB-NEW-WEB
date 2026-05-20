@@ -173,6 +173,7 @@
         .cat-utileria   { background: #1a1a0d; color: #cccc44; border: 1px solid #3a3a1a; }
         .cat-vestuario  { background: #200d15; color: #ff88aa; border: 1px solid #601a30; }
         .cat-catering   { background: #0d1a10; color: #66cc88; border: 1px solid #1a4025; }
+        .cat-mascotas   { background: #1a0d1a; color: #cc88ff; border: 1px solid #3a1a3a; }
         .cat-otro       { background: #181818; color: #aaa;    border: 1px solid var(--border2); }
 
         /* ── MODAL ── */
@@ -357,6 +358,9 @@
                 <button type="button" class="sidebar-item" onclick="filterCat('catering', this)">
                     🍱 Catering <span class="sidebar-count" id="cnt-catering">0</span>
                 </button>
+                <button type="button" class="sidebar-item" onclick="filterCat('mascotas', this)">
+                    🐾 Mascotas <span class="sidebar-count" id="cnt-mascotas">0</span>
+                </button>
                 <button type="button" class="sidebar-item" onclick="filterCat('otro', this)">
                     ✨ Otro <span class="sidebar-count" id="cnt-otro">0</span>
                 </button>
@@ -401,7 +405,7 @@
 
     const CAT_LABELS = {
         vehiculos: '🚗 Vehículos', locaciones: '🏠 Locaciones', modelos: '🧍 Talento',
-        utileria: '🪑 Utilería', vestuario: '👗 Vestuario', catering: '🍱 Catering', otro: '✨ Otro'
+        utileria: '🪑 Utilería', vestuario: '👗 Vestuario', catering: '🍱 Catering', mascotas: '🐾 Mascotas', otro: '✨ Otro'
     };
     const STATUS_LABELS = { pending: 'En revisión', active: 'Activo', contacted: 'Contactado', paused: 'Pausado' };
 
@@ -453,7 +457,7 @@
     async function refreshData() { await loadData(); }
 
     function updateCounts() {
-        const cats = ['all','locaciones','vehiculos','modelos','utileria','vestuario','catering','otro'];
+        const cats = ['all','locaciones','vehiculos','modelos','utileria','vestuario','catering','mascotas','otro'];
         cats.forEach(cat => {
             const el = document.getElementById('cnt-' + cat);
             if (el) el.textContent = cat === 'all'
@@ -532,7 +536,7 @@
     function providerCard(p) {
         const assets = p.provider_assets || [];
         const cover = assets.find(a => a.photos?.[0])?.photos?.[0];
-        const icon = { vehiculos:'🚗', locaciones:'🏠', modelos:'🧍', utileria:'🪑', vestuario:'👗', catering:'🍱', otro:'✨' }[p.category] || '📦';
+        const icon = { vehiculos:'🚗', locaciones:'🏠', modelos:'🧍', utileria:'🪑', vestuario:'👗', catering:'🍱', mascotas:'🐾', otro:'✨' }[p.category] || '📦';
 
         return `<div class="provider-card" onclick="openProvider('${p.id}')">
             <div class="provider-card-photo">
