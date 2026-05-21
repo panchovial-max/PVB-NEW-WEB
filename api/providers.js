@@ -58,7 +58,7 @@ export default async function handler(req, res) {
             .select('full_name, phone, category')
             .eq('id', record.provider_id).single();
 
-        const msg = `💬 *Mensaje de proveedor*\n\n👤 *${prov?.full_name || record.from_name}*\n📁 ${CAT[prov?.category] || ''}\n\n"${record.body}"\n\n[Responder en el portal](https://panchovial.com/produccion)`;
+        const msg = `💬 *Mensaje de proveedor*\n\n👤 *${prov?.full_name || record.from_name}*\n📁 ${CAT[prov?.category] || ''}\n\n"${record.body}"\n\nprovider_id:${record.provider_id}\n_Responde a este mensaje para contestar directo al portal_`;
         await sendTelegram(msg);
         return res.json({ ok: true });
     }

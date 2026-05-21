@@ -355,6 +355,24 @@ export default async function handler(req, res) {
     const chatId = message.chat.id;
     const text = message.text.trim();
 
+    // ── Reply a mensaje de proveedor → guardar en portal ──
+    const replyTo = message.reply_to_message;
+    if (replyTo?.text && replyTo.text.includes('Mensaje de proveedor')) {
+      // Extraer provider_id del texto del mensaje original
+      const match = replyTo.text.match(/provider_id:([a-f0-9-]{36})/);
+      if (match) {
+        const providerId = match[1];
+        await supabaseAdmin.from('provider_messages').insert({
+          provider_id: providerId,
+          from_role: 'admin',
+          from_name: 'Francisco — PVB Estudio Creativo',
+          body: text
+        });
+        await sendMessage(chatId, '✓ Mensaje enviado al proveedor en el portal.');
+        return res.status(200).send('ok');
+      }
+    }
+
     if (text.startsWith('/')) {
       const parts = text.split(' ');
       const command = parts[0].split('@')[0];
