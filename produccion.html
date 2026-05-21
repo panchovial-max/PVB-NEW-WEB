@@ -299,6 +299,7 @@
         }
         .match-banner p { font-size: 13px; color: #aaa; }
         .match-banner strong { color: var(--green); }
+        #sidebarProviders, #sidebarStatus { display: none; }
 
         /* ── INBOX ── */
         .inbox-badge { display:none; background:#e55; color:#fff; font-size:9px; padding:1px 6px; border-radius:8px; margin-left:4px; }
@@ -372,7 +373,7 @@
                 </button>
             </div>
 
-            <div class="sidebar-section">
+            <div class="sidebar-section" id="sidebarProviders">
                 <p class="sidebar-label">Categoría</p>
                 <button type="button" class="sidebar-item active" onclick="filterCat('all', this)">
                     Todos <span class="sidebar-count" id="cnt-all">0</span>
@@ -402,7 +403,7 @@
                     ✨ Otro <span class="sidebar-count" id="cnt-otro">0</span>
                 </button>
             </div>
-            <div class="sidebar-section">
+            <div class="sidebar-section" id="sidebarStatus">
                 <p class="sidebar-label">Estado</p>
                 <button type="button" class="sidebar-item" onclick="filterStatus('active', this)">
                     <span class="status-dot dot-active"></span> Activos
@@ -510,7 +511,9 @@
         document.querySelectorAll('.nav-tab').forEach((t, i) => {
             t.classList.toggle('active', ['providers','projects','inbox','new-project'][i] === view);
         });
-        document.getElementById('sidebar').style.display = ['providers','inbox'].includes(view) ? 'block' : 'none';
+        document.getElementById('sidebar').style.display = 'block';
+        document.getElementById('sidebarProviders').style.display = view === 'providers' ? 'block' : 'none';
+        document.getElementById('sidebarStatus').style.display = view === 'providers' ? 'block' : 'none';
         renderView();
     }
 
