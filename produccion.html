@@ -353,7 +353,6 @@
             <div class="nav-tabs">
                 <button type="button" class="nav-tab active" onclick="showView('providers')">Proveedores</button>
                 <button type="button" class="nav-tab" onclick="showView('projects')">Proyectos</button>
-                <button type="button" class="nav-tab" onclick="showView('inbox')">Inbox <span id="inboxBadge" class="inbox-badge">0</span></button>
                 <button type="button" class="nav-tab" onclick="showView('new-project')">+ Nuevo Proyecto</button>
             </div>
         </div>
@@ -366,6 +365,13 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <p class="sidebar-label">Mensajes</p>
+                <button type="button" class="sidebar-item" onclick="showView('inbox')">
+                    💬 Inbox <span class="sidebar-count inbox-badge" id="inboxBadge">0</span>
+                </button>
+            </div>
+
             <div class="sidebar-section">
                 <p class="sidebar-label">Categoría</p>
                 <button type="button" class="sidebar-item active" onclick="filterCat('all', this)">
@@ -504,7 +510,7 @@
         document.querySelectorAll('.nav-tab').forEach((t, i) => {
             t.classList.toggle('active', ['providers','projects','inbox','new-project'][i] === view);
         });
-        document.getElementById('sidebar').style.display = view === 'providers' ? 'block' : 'none';
+        document.getElementById('sidebar').style.display = ['providers','inbox'].includes(view) ? 'block' : 'none';
         renderView();
     }
 
