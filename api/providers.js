@@ -36,6 +36,18 @@ export default async function handler(req, res) {
         return res.json({ ok: true });
     }
 
+    // ── Setup webhook Telegram (llamar una vez) ──
+    if (action === 'setup-webhook') {
+        const BOT = process.env.TELEGRAM_BOT_TOKEN;
+        if (!BOT) return res.json({ error: 'no token' });
+        const r = await fetch(`https://api.telegram.org/bot${BOT}/setWebhook`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: 'https://panchovial.com/api/telegram-bot' })
+        });
+        return res.json(await r.json());
+    }
+
     // ── Webhook: proveedor respondió → notificar a Francisco ──
     if (action === 'provider-replied') {
         const { record } = req.body || {};
