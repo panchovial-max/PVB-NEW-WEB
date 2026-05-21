@@ -1,6 +1,7 @@
 {
   "version": 2,
   "outputDirectory": ".",
+  "toolbar": false,
   "redirects": [
     { "source": "/dashboard", "destination": "/dashboard.html", "permanent": false },
     { "source": "/login", "destination": "/login.html", "permanent": false },
