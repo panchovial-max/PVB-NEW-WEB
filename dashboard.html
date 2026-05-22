@@ -557,13 +557,35 @@
                 <span class="section-badge" id="viralPostsBadge"></span>
             </div>
             <div class="competitor-intro hidden" id="competitorIntro">
-                <p>PVB está monitoreando a tus competidores en Instagram. Te notificamos cuando publican algo viral.</p>
+                <p>PVB está monitoreando <strong id="trackerCount">0</strong> cuenta(s) en Instagram. Te avisamos cuando publican algo viral.</p>
             </div>
-            <div class="viral-posts-grid" id="viralPostsGrid">
-                <div class="competitor-empty" id="competitorEmpty">
-                    <span class="empty-icon">📡</span>
-                    <p>Escaneando competidores...</p>
-                    <p class="empty-sub">Recibirás una notificación cuando detectemos un post viral.</p>
+            <!-- Tabs -->
+            <div class="competitor-tabs" id="competitorTabs">
+                <button type="button" class="competitor-tab active" data-tab="viral" onclick="switchCompetitorTab('viral')">
+                    Virales <span class="tab-count" id="tabCountViral"></span>
+                </button>
+                <button type="button" class="competitor-tab" data-tab="references" onclick="switchCompetitorTab('references')">
+                    Referencias <span class="tab-count" id="tabCountRef"></span>
+                </button>
+            </div>
+            <!-- Tab: Virales -->
+            <div class="competitor-tab-panel" id="tabViral">
+                <div class="viral-posts-grid" id="viralPostsGrid">
+                    <div class="competitor-empty" id="competitorEmpty">
+                        <span class="empty-icon">📡</span>
+                        <p>Escaneando competidores...</p>
+                        <p class="empty-sub">Recibirás una notificación cuando detectemos un post viral.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Tab: Referencias -->
+            <div class="competitor-tab-panel hidden" id="tabReferences">
+                <div class="references-grid" id="referencesGrid">
+                    <div class="competitor-empty">
+                        <span class="empty-icon">🔍</span>
+                        <p>Sin cuentas de referencia configuradas.</p>
+                        <p class="empty-sub">Contacta a PVB para agregar competidores a monitorear.</p>
+                    </div>
                 </div>
             </div>
         </section>

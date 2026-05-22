@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Get active Supabase session — JWT used as Bearer for Netlify functions
-    const { data: { session }, error } = await sb.auth.getSession();
+    const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error || !session) {
         console.warn('No active session, redirecting to login');
@@ -853,6 +853,14 @@ function escapeHtml(str) {
 // ============================================
 // INTELIGENCIA COMPETITIVA
 // ============================================
+function switchCompetitorTab(tab) {
+    document.querySelectorAll('.competitor-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    document.getElementById('tabViral').classList.toggle('hidden', tab !== 'viral');
+    document.getElementById('tabReferences').classList.toggle('hidden', tab !== 'references');
+}
+
 async function loadViralPosts(userData) {
     const grid = document.getElementById('viralPostsGrid');
     const badge = document.getElementById('viralPostsBadge');
@@ -860,34 +868,50 @@ async function loadViralPosts(userData) {
     if (!grid || !supabase) return;
 
     try {
-        const { data: posts, error } = await supabase
-            .from('viral_posts')
-            .select('*')
-            .eq('client_id', userData.user_id)
-            .order('detected_at', { ascending: false })
-            .limit(12);
+        const [postsRes, trackersRes] = await Promise.all([
+            supabase.from('viral_posts').select('*')
+                .eq('client_id', userData.user_id)
+                .order('detected_at', { ascending: false })
+                .limit(20),
+            supabase.from('competitor_trackers').select('*')
+                .eq('client_id', userData.user_id)
+                .eq('is_active', true)
+        ]);
 
-        if (error) throw error;
+        const posts = postsRes.data || [];
+        const trackers = trackersRes.data || [];
 
-        // Verificar si tiene trackers activos
-        const { data: trackers } = await supabase
-            .from('competitor_trackers')
-            .select('id')
-            .eq('client_id', userData.user_id)
-            .eq('is_active', true);
-
-        if (trackers?.length) {
+        if (trackers.length) {
             intro.classList.remove('hidden');
+            document.getElementById('trackerCount').textContent = trackers.length;
+            renderReferences(trackers);
+            document.getElementById('tabCountRef').textContent = trackers.length;
+            document.getElementById('competitorTabs')?.classList.remove('hidden');
         }
 
-        if (!posts?.length) return;
+        if (!posts.length) return;
 
         badge.textContent = `${posts.length} viral`;
+        document.getElementById('tabCountViral').textContent = posts.length;
         grid.innerHTML = posts.map(post => renderViralCard(post)).join('');
 
     } catch (err) {
         console.error('loadViralPosts error:', err);
     }
+}
+
+function renderReferences(trackers) {
+    const grid = document.getElementById('referencesGrid');
+    if (!grid) return;
+    grid.innerHTML = trackers.map(t => `
+        <div class="reference-card">
+            <div class="reference-handle">
+                <a href="https://www.instagram.com/${escapeHtml(t.instagram_handle.replace('@',''))}" target="_blank" rel="noopener noreferrer">@${escapeHtml(t.instagram_handle)}</a>
+            </div>
+            ${t.display_name ? `<div class="reference-display-name">${escapeHtml(t.display_name)}</div>` : ''}
+            <div class="reference-status">Monitoreando</div>
+            <div class="reference-threshold">Umbral viral: ${(t.viral_threshold || 100000).toLocaleString('es-CL')} views</div>
+        </div>`).join('');
 }
 
 function renderViralCard(post) {

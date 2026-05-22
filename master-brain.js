@@ -1610,7 +1610,7 @@ async function triggerScan() {
   btn.textContent = 'Escaneando...';
   try {
     const token = localStorage.getItem('brain_token');
-    const res = await fetch('/.netlify/functions/competitor-scan', {
+    const res = await fetch('/api/competitor-scan', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
