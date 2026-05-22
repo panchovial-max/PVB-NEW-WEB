@@ -10,6 +10,7 @@ import {
   addNotaProyecto
 } from './notion-query.js';
 import { askClaude } from './telegram-ai.js';
+import { handleEsperanza, handleEsperanzaCommand, handleEsperanzaCallback } from './esperanza-bot.js';
 
 let TELEGRAM_API;
 let supabaseAdmin;
@@ -373,15 +374,36 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── Callback queries (botones inline de Esperanza) ──
+    if (update.callback_query) {
+      const cb = update.callback_query;
+      const cbChatId = cb.message.chat.id;
+      if (cb.data?.startsWith('esp_')) {
+        await handleEsperanzaCallback(cbChatId, cb.data, cb.from, TELEGRAM_API);
+      }
+      await fetch(`${TELEGRAM_API}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callback_query_id: cb.id })
+      });
+      return res.status(200).send('ok');
+    }
+
     if (text.startsWith('/')) {
       const parts = text.split(' ');
       const command = parts[0].split('@')[0];
       const args = parts.slice(1);
-      await handleCommand(chatId, command, args);
+      // Comandos de Esperanza
+      const handled = await handleEsperanzaCommand(chatId, command, TELEGRAM_API);
+      if (!handled) await handleCommand(chatId, command, args);
     } else {
-      await sendMessage(chatId, '🧠 _Procesando..._');
-      const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY);
-      await sendMessage(chatId, reply);
+      // Flujo Esperanza primero — si no aplica, Claude responde
+      const handled = await handleEsperanza(chatId, text, message.from, TELEGRAM_API);
+      if (!handled) {
+        await sendMessage(chatId, '🧠 _Procesando..._');
+        const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY);
+        await sendMessage(chatId, reply);
+      }
     }
 
     return res.status(200).send('ok');
