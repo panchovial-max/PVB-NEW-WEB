@@ -12,6 +12,8 @@ import {
 import { askClaude } from './telegram-ai.js';
 import { handleEsperanza, handleEsperanzaCommand, handleEsperanzaCallback } from './esperanza-bot.js';
 
+const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || process.env.TELEGRAM_OWNER_CHAT_ID;
+
 let TELEGRAM_API;
 let supabaseAdmin;
 let NOTION_KEY;
@@ -389,15 +391,22 @@ export default async function handler(req, res) {
       return res.status(200).send('ok');
     }
 
+    const isOwner = String(chatId) === String(OWNER_CHAT_ID);
+
     if (text.startsWith('/')) {
       const parts = text.split(' ');
       const command = parts[0].split('@')[0];
       const args = parts.slice(1);
-      // Comandos de Esperanza
+      // Esperanza solo responde /esperanza, el resto van a Master Brain
       const handled = await handleEsperanzaCommand(chatId, command, TELEGRAM_API);
       if (!handled) await handleCommand(chatId, command, args);
+    } else if (isOwner) {
+      // Chat de Pancho → siempre Claude (Master Brain), nunca Esperanza
+      await sendMessage(chatId, '🧠 _Procesando..._');
+      const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY);
+      await sendMessage(chatId, reply);
     } else {
-      // Flujo Esperanza primero — si no aplica, Claude responde
+      // Chat externo → Esperanza maneja primero; si no aplica, Claude como fallback
       const handled = await handleEsperanza(chatId, text, message.from, TELEGRAM_API);
       if (!handled) {
         await sendMessage(chatId, '🧠 _Procesando..._');
