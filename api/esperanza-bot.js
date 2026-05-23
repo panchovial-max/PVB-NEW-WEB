@@ -5,6 +5,7 @@
 const ONBOARDING_URL = 'https://panchovial.com/client-onboarding';
 const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || process.env.TELEGRAM_OWNER_CHAT_ID;
 const NOTION_KEY = process.env.NOTION_API_KEY;
+const TRIGGER_SECRET = process.env.TRIGGER_SECRET_KEY;
 
 // Notion DB de Proyectos (usada para registrar leads con estado "Lead")
 const NOTION_PROYECTOS_DB = '3337ab7f-975e-81b4-8045-d33fe1515aca';
@@ -51,6 +52,27 @@ async function send(chatId, text, telegramApi, keyboard = null) {
     body: JSON.stringify(body)
   });
   return res.json();
+}
+
+// ─── Trigger.dev — agendar follow-up 3 días después ─────────────────────────
+async function scheduleFollowup(prospect) {
+  if (!TRIGGER_SECRET) return;
+  try {
+    const delay = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+    await fetch('https://api.trigger.dev/v1/tasks/pvb-lead-followup/trigger', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${TRIGGER_SECRET}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        payload: { ...prospect, capturedAt: new Date().toISOString() },
+        options: { delay }
+      })
+    });
+  } catch (err) {
+    console.error('Trigger.dev schedule error:', err.message);
+  }
 }
 
 // ─── Guardar lead en Notion ──────────────────────────────────────────────────
@@ -243,7 +265,7 @@ export async function handleEsperanzaCallback(chatId, data, from, telegramApi) {
       telegramApi
     );
     await notifyOwner(telegramApi, { ...prospect, interest: state.interest || 'Proyecto inmediato' });
-    await saveLeadToNotion(prospect);
+    await Promise.all([saveLeadToNotion(prospect), scheduleFollowup(prospect)]);
     return true;
   }
 
