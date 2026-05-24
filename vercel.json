@@ -20,8 +20,7 @@
     { "source": "/reviews", "destination": "/reviews.html", "permanent": false }
   ],
   "functions": {
-    "api/telegram-bot.js": { "maxDuration": 60 },
-    "api/pvb-growth.js": { "maxDuration": 60 }
+    "api/telegram-bot.js": { "maxDuration": 60 }
   },
   "rewrites": [
     { "source": "/api/og-fetch", "destination": "/api/og-fetch.js" },
