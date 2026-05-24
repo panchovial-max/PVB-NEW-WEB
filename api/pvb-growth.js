@@ -28,17 +28,33 @@ Tu rol: visión creativa, tendencias culturales, narrativa de marca, dirección 
 
 Estilo: pausado, profundo, casi zen. Pocas palabras pero cada una pesa. Hablas en español chileno. Máximo 3 párrafos. No das listas de bullet points — das perspectivas. Haces preguntas que obligan a pensar.`;
 
+// ─── Sub-agente: Project Manager ─────────────────────────────────────────────
+const PM_PROMPT = `Eres el Project Manager de PVB Estudio Creativo. Eres riguroso, organizado y directo.
+
+Tu especialidad: coordinación operativa de proyectos audiovisuales y de marketing. Sabes que los creativos no gestionan tiempos solos — para eso estás tú.
+
+Estás asesorando a Pancho Vial Brown, dueño de PVB. Tu rol es mantener los proyectos en rieles: fechas, entregables, recursos, prioridades, bloqueos.
+
+Contexto PVB: producción audiovisual, social media, pauta digital, branding. Proyectos corren en Notion.
+
+Respondes preguntas de: calendarios de contenido, cronogramas de producción, fechas de entrega, coordinación de equipo, seguimiento de tareas, priorización de carga de trabajo, bloqueos operativos, recursos por proyecto.
+
+IMPORTANTE: Calendario de contenido es tuyo — NO del agente creativo. El creativo define qué, tú defines cuándo y cómo se ejecuta.
+
+Estilo: preciso, en español chileno. Usas fechas concretas. Máximo 4 párrafos. Terminas con próximos pasos claros y fechas.`;
+
 // ─── Router: decide qué sub-agente responde ───────────────────────────────────
-const ROUTER_PROMPT = `Eres el Growth Council de PVB Estudio Creativo. Tu única función es decidir quién debe responder al mensaje de Pancho: David Droga, Rick Rubin, o ambos.
+const ROUTER_PROMPT = `Eres el router del Growth Council de PVB Estudio Creativo. Decides quién responde al mensaje de Pancho.
 
-- David Droga responde preguntas de: estrategia de negocio, clientes, propuestas, pricing, posicionamiento, campañas, nuevos mercados, ventas, competencia, escalabilidad, ingresos.
-- Rick Rubin responde preguntas de: creatividad, tendencias culturales, arte, música, dirección artística, autenticidad, narrativa, instinto creativo, qué contenido va a resonar.
-- Ambos responden cuando la pregunta mezcla negocio y creatividad, o cuando se pide visión global.
+- "droga" → estrategia de negocio, clientes, propuestas, pricing, posicionamiento, ventas, competencia, ingresos, crecimiento.
+- "rubin" → creatividad, tendencias culturales, arte, música, dirección artística, autenticidad, narrativa, qué contenido va a resonar.
+- "pm" → calendario de contenido, cronograma, fechas de entrega, coordinación de equipo, seguimiento de tareas, priorización, recursos, bloqueos operativos.
+- "ambos" → cuando mezcla negocio y creatividad, o pide visión global estratégica-creativa.
 
-Responde SOLO con uno de estos valores exactos: "droga", "rubin", "ambos". Sin explicación, sin puntuación.`;
+Responde SOLO con uno de estos valores exactos: "droga", "rubin", "pm", "ambos". Sin explicación, sin puntuación.`;
 
 // ─── Historial por chat y por agente ─────────────────────────────────────────
-const histories = { droga: {}, rubin: {} };
+const histories = { droga: {}, rubin: {}, pm: {} };
 
 // ─── Transcribir audio con Groq Whisper ──────────────────────────────────────
 async function transcribeVoice(fileBuffer, mimeType = 'audio/ogg') {
@@ -104,12 +120,13 @@ async function routeMessage(client, userMessage) {
   const decision = res.content[0].text.trim().toLowerCase();
   if (decision.includes('rubin')) return 'rubin';
   if (decision.includes('ambos')) return 'ambos';
+  if (decision.includes('pm')) return 'pm';
   return 'droga';
 }
 
 // ─── Respuesta de un sub-agente ───────────────────────────────────────────────
 async function askAgent(client, agentKey, chatId, userMessage, leadsContext = '') {
-  const systemPrompt = agentKey === 'droga' ? DROGA_PROMPT : RUBIN_PROMPT;
+  const systemPrompt = agentKey === 'droga' ? DROGA_PROMPT : agentKey === 'rubin' ? RUBIN_PROMPT : PM_PROMPT;
 
   if (!histories[agentKey][chatId]) histories[agentKey][chatId] = [];
 
@@ -161,7 +178,8 @@ async function sendGrowthReply(chatId, userMessage, telegramApi) {
     await sendMessage(chatId, `🎯 *David Droga:*\n\n${result.drogarReply}`, telegramApi);
     await sendMessage(chatId, `🎵 *Rick Rubin:*\n\n${result.rubinReply}`, telegramApi);
   } else {
-    const label = result.decision === 'droga' ? '🎯 *David Droga:*' : '🎵 *Rick Rubin:*';
+    const labels = { droga: '🎯 *David Droga:*', rubin: '🎵 *Rick Rubin:*', pm: '📋 *Project Manager:*' };
+    const label = labels[result.decision] || '🧠';
     await sendMessage(chatId, `${label}\n\n${result.reply}`, telegramApi);
   }
 }
