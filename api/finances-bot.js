@@ -3,12 +3,37 @@
 // Personal Finance + Corporate Finance para PVB
 
 import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@supabase/supabase-js';
 import { GoogleAuth } from 'google-auth-library';
 import { google } from 'googleapis';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// ─── Supabase (estado persistente entre requests) ─────────────────────────────
+function getSupabase() {
+  return createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
+
+async function getPending(chatId) {
+  const sb = getSupabase();
+  const { data } = await sb.from('ocr_pending').select('*').eq('chat_id', chatId).single();
+  return data || null;
+}
+
+async function setPending(chatId, payload) {
+  const sb = getSupabase();
+  await sb.from('ocr_pending').upsert({ chat_id: chatId, ...payload });
+}
+
+async function deletePending(chatId) {
+  const sb = getSupabase();
+  await sb.from('ocr_pending').delete().eq('chat_id', chatId);
+}
 
 // ─── Google Drive (Service Account) ──────────────────────────────────────────
 const SA_KEY_PATH = join(__dirname, 'pvb-finances-sa.json');
@@ -238,16 +263,15 @@ async function saveBoletaToNotion(data, proyectoId = null) {
 }
 
 // ─── Estado pendiente por chat ────────────────────────────────────────────────
-// pendingOCR[chatId] = { boletaData, proyectos, buffer, mimeType, filename }
-const pendingOCR = {};
+// Persistido en Supabase tabla ocr_pending (stateless entre requests Vercel)
 
 // ─── Procesar mensaje de texto ────────────────────────────────────────────────
 async function processTextMessage(chatId, text) {
   // Si hay una boleta pendiente de asignar proyecto
-  if (pendingOCR[chatId]) {
-    const { boletaData, proyectos, buffer, mimeType, filename } = pendingOCR[chatId];
+  const pending = await getPending(chatId);
+  if (pending) {
+    const { boleta_data: boletaData, proyectos, filename, mime_type: mimeType, file_id: fileId } = pending;
 
-    // El usuario eligió un número o escribió "general"
     const num = parseInt(text);
     let proyectoId = null;
     let proyectoNombre = 'Sin proyecto';
@@ -262,13 +286,21 @@ async function processTextMessage(chatId, text) {
       return '❓ Escribe el número del proyecto o "0" para gasto general.';
     }
 
-    // Subir a Drive y guardar en Notion en paralelo
-    const [driveLink, notionUrl] = await Promise.all([
-      buffer ? uploadBoletaToDrive(buffer, mimeType, filename, proyectoNombre) : Promise.resolve(null),
-      saveBoletaToNotion(boletaData, proyectoId)
-    ]);
+    // Re-descargar el archivo desde Telegram para subir a Drive
+    let driveLink = null;
+    if (fileId) {
+      try {
+        const { buffer, mimeType: mt } = await downloadTelegramFile(fileId);
+        driveLink = await uploadBoletaToDrive(buffer, mt || mimeType, filename, proyectoNombre);
+      } catch (e) {
+        console.error('Re-download error:', e.message);
+      }
+    }
 
-    delete pendingOCR[chatId];
+    const [notionUrl] = await Promise.all([
+      saveBoletaToNotion(boletaData, proyectoId),
+      deletePending(chatId)
+    ]);
 
     const montoFormato = boletaData.monto_clp
       ? `$${boletaData.monto_clp.toLocaleString('es-CL')}`
@@ -338,7 +370,14 @@ async function processDocument(chatId, fileId, isPhoto = false) {
   const ext = filePath?.split('.').pop() || (mimeType === 'application/pdf' ? 'pdf' : 'jpg');
   const filename = `${fecha}_${(boletaData.razon_social || 'boleta').replace(/[^a-zA-Z0-9]/g, '_')}.${ext}`;
 
-  pendingOCR[chatId] = { boletaData, proyectos, buffer, mimeType, filename };
+  // Guardar estado en Supabase (persistente entre requests)
+  await setPending(chatId, {
+    boleta_data: boletaData,
+    proyectos,
+    filename,
+    mime_type: mimeType,
+    file_id: fileId
+  });
 
   await sendMessage(chatId, preview, true);
   await sendMessage(chatId, proyectosMsg, true);
