@@ -12,7 +12,7 @@ import {
 import { askClaude } from './telegram-ai.js';
 import { handleEsperanza, handleEsperanzaCommand, handleEsperanzaCallback } from './esperanza-bot.js';
 import { handleGrowthMessage, handleGrowthVoice } from './pvb-growth.js';
-
+import { handleFinancesMessage } from './finances-bot.js';
 const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || process.env.TELEGRAM_OWNER_CHAT_ID;
 
 let TELEGRAM_API;
@@ -369,6 +369,11 @@ export default async function handler(req, res) {
     if (message.voice) {
       await handleGrowthVoice(chatId, message.voice.file_id, TELEGRAM_API);
       return res.status(200).send('ok');
+    }
+
+    // ── Fotos y documentos → Finances Bot (OCR boletas) ──
+    if (message.photo || (message.document && (message.document.mime_type?.startsWith('image/') || message.document.mime_type === 'application/pdf'))) {
+      return handleFinancesMessage(req, res);
     }
 
     if (!message.text) return res.status(200).send('ok');
