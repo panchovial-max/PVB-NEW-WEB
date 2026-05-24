@@ -167,9 +167,18 @@ export async function handleGrowthVoice(chatId, voiceFileId, telegramApi) {
 }
 
 async function sendMessage(chatId, text, telegramApi) {
-  await fetch(`${telegramApi}/sendMessage`, {
+  // Try Markdown first, fall back to plain text if Telegram rejects formatting
+  const res = await fetch(`${telegramApi}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
   });
+  const data = await res.json();
+  if (!data.ok) {
+    await fetch(`${telegramApi}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text })
+    });
+  }
 }
