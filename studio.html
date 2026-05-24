@@ -265,7 +265,7 @@ const pinInput = document.getElementById('pin-input');
 pinInput.addEventListener('input', async () => {
   if (pinInput.value.length === 4) {
     try {
-      const res = await fetch('/.netlify/functions/studio-login', {
+      const res = await fetch('/api/brain-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: pinInput.value })
