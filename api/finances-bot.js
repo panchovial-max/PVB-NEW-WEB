@@ -64,7 +64,6 @@ async function uploadBoletaToDrive(buffer, mimeType, filename, proyectoNombre) {
     const drive = await getDriveClient();
     const { Readable } = await import('stream');
 
-    // Estructura: PVB Finanzas / Proyectos / NombreProyecto  (o Gastos Generales / Personal)
     const rootId = DRIVE_ROOT_FOLDER_ID;
     let folderId;
     if (!proyectoNombre || proyectoNombre === 'Gasto general') {
@@ -85,8 +84,8 @@ async function uploadBoletaToDrive(buffer, mimeType, filename, proyectoNombre) {
 
     return file.data.webViewLink;
   } catch (err) {
-    console.error('Drive upload error:', err.message);
-    return null;
+    console.error('Drive upload error:', err.message, err.stack);
+    return `ERROR_DRIVE: ${err.message}`;
   }
 }
 
@@ -277,7 +276,11 @@ async function processTextMessage(chatId, text) {
 
     let msg = `✅ *Boleta guardada*\n\n📋 ${boletaData.descripcion}\n💰 ${montoFormato}\n📁 Proyecto: ${proyectoNombre}\n🏷️ ${boletaData.categoria_sugerida}`;
     if (notionUrl) msg += `\n\n[Ver en Notion](${notionUrl})`;
-    if (driveLink) msg += `\n[Ver en Drive](${driveLink})`;
+    if (driveLink && !driveLink.startsWith('ERROR_DRIVE')) {
+      msg += `\n[Ver en Drive](${driveLink})`;
+    } else if (driveLink?.startsWith('ERROR_DRIVE')) {
+      msg += `\n⚠️ Drive: ${driveLink}`;
+    }
 
     return msg;
   }
