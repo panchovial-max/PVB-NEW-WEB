@@ -1,30 +1,44 @@
-// pvb-growth.js — Director de Nuevos Negocios PVB
-// Maneja mensajes de voz (transcripción via Groq) y texto estratégico
+// pvb-growth.js — Growth Council PVB
+// Router principal + sub-agentes David Droga y Rick Rubin
 // Solo accesible por Pancho (OWNER_CHAT_ID)
 
 import Anthropic from '@anthropic-ai/sdk';
 
-const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || process.env.TELEGRAM_OWNER_CHAT_ID;
 const NOTION_PROYECTOS_DB = '3337ab7f-975e-81b4-8045-d33fe1515aca';
 
-const GROWTH_SYSTEM_PROMPT = `Eres el Director de Nuevos Negocios de PVB Estudio Creativo, el socio estratégico de Pancho (Francisco Vial Brown) para crecer la agencia.
+// ─── Sub-agente: David Droga ──────────────────────────────────────────────────
+const DROGA_PROMPT = `Eres David Droga — fundador de Droga5, la agencia creativa más premiada de la última década. Ahora lideras Accenture Song. Forbes, AdAge y Cannes te reconocen como el estratega creativo más influyente del mundo.
 
-PVB es una productora audiovisual y agencia de marketing en Santiago. Servicios: video/foto, social media, pauta digital (Meta/Google), web/marketing, branding.
+Tu visión: las mejores ideas de negocio nacen de la cultura, no de los datos. Una campaña que mueve cultura vale más que mil impresiones.
 
-Posicionamiento: "Contenido que convierte — no solo que se ve bonito."
-Canal principal actual: referidos. Oportunidad: sistematizarlo + outbound selectivo + inbound orgánico.
+Estás asesorando a Pancho Vial Brown, dueño de PVB Estudio Creativo — productora audiovisual y agencia de marketing en Santiago, Chile. PVB hace video, foto, social media, pauta digital y branding. Su posicionamiento: "Contenido que convierte."
 
-Sistema de ventas actual:
-- Esperanza Bot (Telegram) — captura leads inbound
-- Trigger.dev — follow-up automático 3 días post-lead
-- Notion — CRM (proyectos con estado "Brief" = leads nuevos)
-- panchovial.com/client-onboarding — formulario de entrada
+Tu rol: estrategia de negocio, posicionamiento de marca, desarrollo de clientes, propuestas creativas ganadoras, pricing premium, diferenciación competitiva.
 
-Tu rol: sparring partner estratégico. Diagnostica primero, recomienda específico, cierra con un primer paso esta semana.
+Estilo: directo, provocador, sin miedo a decir lo que otros no dicen. Hablas en español chileno informal. Máximo 3-4 párrafos. Cierras siempre con una acción concreta esta semana. Usas números cuando refuerzan el argumento.`;
 
-Estilo: español chileno directo, respuestas cortas para Telegram (3-4 párrafos máx), números concretos, sin jerga corporativa.
+// ─── Sub-agente: Rick Rubin ───────────────────────────────────────────────────
+const RUBIN_PROMPT = `Eres Rick Rubin — productor legendario, co-fundador de Def Jam Records, ex-presidente de Columbia Records. Forbes, Rolling Stone y Time te han llamado el productor más importante de todos los tiempos. Trabajaste con Johnny Cash, Jay-Z, Kanye, Red Hot Chili Peppers, Adele, Kendrick Lamar.
 
-Frameworks: ICE Score para canales, Hook×Meat×CTA para mensajes (Hormozi), BANT para calificar leads.`;
+Tu filosofía: la autenticidad es el único camino. El ruido del mercado es irrelevante — lo que importa es si la obra es verdadera. Las tendencias no se siguen, se anticipan estando profundamente conectado al arte y la cultura.
+
+Estás asesorando a Pancho Vial Brown, dueño de PVB Estudio Creativo — productora audiovisual y agencia de marketing en Santiago, Chile. PVB hace video, foto, social media, pauta digital y branding.
+
+Tu rol: visión creativa, tendencias culturales, narrativa de marca, dirección artística, música como herramienta de branding, autenticidad en el contenido, instinto sobre qué va a resonar antes que el mercado lo sepa.
+
+Estilo: pausado, profundo, casi zen. Pocas palabras pero cada una pesa. Hablas en español chileno. Máximo 3 párrafos. No das listas de bullet points — das perspectivas. Haces preguntas que obligan a pensar.`;
+
+// ─── Router: decide qué sub-agente responde ───────────────────────────────────
+const ROUTER_PROMPT = `Eres el Growth Council de PVB Estudio Creativo. Tu única función es decidir quién debe responder al mensaje de Pancho: David Droga, Rick Rubin, o ambos.
+
+- David Droga responde preguntas de: estrategia de negocio, clientes, propuestas, pricing, posicionamiento, campañas, nuevos mercados, ventas, competencia, escalabilidad, ingresos.
+- Rick Rubin responde preguntas de: creatividad, tendencias culturales, arte, música, dirección artística, autenticidad, narrativa, instinto creativo, qué contenido va a resonar.
+- Ambos responden cuando la pregunta mezcla negocio y creatividad, o cuando se pide visión global.
+
+Responde SOLO con uno de estos valores exactos: "droga", "rubin", "ambos". Sin explicación, sin puntuación.`;
+
+// ─── Historial por chat y por agente ─────────────────────────────────────────
+const histories = { droga: {}, rubin: {} };
 
 // ─── Transcribir audio con Groq Whisper ──────────────────────────────────────
 async function transcribeVoice(fileBuffer, mimeType = 'audio/ogg') {
@@ -44,10 +58,7 @@ async function transcribeVoice(fileBuffer, mimeType = 'audio/ogg') {
     body: formData
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Groq error: ${err}`);
-  }
+  if (!res.ok) throw new Error(`Groq error: ${await res.text()}`);
   return res.text();
 }
 
@@ -82,51 +93,87 @@ async function getLeadsFromNotion() {
   }
 }
 
-// ─── Historial de conversación por chat ──────────────────────────────────────
-const conversationHistory = {};
+// ─── Router: decide quién responde ───────────────────────────────────────────
+async function routeMessage(client, userMessage) {
+  const res = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 10,
+    system: ROUTER_PROMPT,
+    messages: [{ role: 'user', content: userMessage }]
+  });
+  const decision = res.content[0].text.trim().toLowerCase();
+  if (decision.includes('rubin')) return 'rubin';
+  if (decision.includes('ambos')) return 'ambos';
+  return 'droga';
+}
 
-// ─── Responder con Claude (Growth Director) ──────────────────────────────────
-async function askGrowthDirector(chatId, userMessage) {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// ─── Respuesta de un sub-agente ───────────────────────────────────────────────
+async function askAgent(client, agentKey, chatId, userMessage, leadsContext = '') {
+  const systemPrompt = agentKey === 'droga' ? DROGA_PROMPT : RUBIN_PROMPT;
 
-  if (!conversationHistory[chatId]) conversationHistory[chatId] = [];
+  if (!histories[agentKey][chatId]) histories[agentKey][chatId] = [];
 
-  // Inyectar contexto de pipeline solo en el primer mensaje o cada 10 turnos
-  const turnCount = conversationHistory[chatId].length;
-  let contextualMessage = userMessage;
-  if (turnCount === 0 || turnCount % 10 === 0) {
-    const leadsContext = await getLeadsFromNotion();
-    if (leadsContext) contextualMessage = userMessage + `\n\n[Contexto actual del pipeline]${leadsContext}`;
+  const content = leadsContext ? `${userMessage}\n\n[Pipeline actual]${leadsContext}` : userMessage;
+  histories[agentKey][chatId].push({ role: 'user', content });
+
+  if (histories[agentKey][chatId].length > 20) {
+    histories[agentKey][chatId] = histories[agentKey][chatId].slice(-20);
   }
 
-  conversationHistory[chatId].push({ role: 'user', content: contextualMessage });
-
-  // Mantener últimos 20 mensajes para no exceder contexto
-  if (conversationHistory[chatId].length > 20) {
-    conversationHistory[chatId] = conversationHistory[chatId].slice(-20);
-  }
-
-  const response = await client.messages.create({
+  const res = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
-    system: GROWTH_SYSTEM_PROMPT,
-    messages: conversationHistory[chatId]
+    system: systemPrompt,
+    messages: histories[agentKey][chatId]
   });
 
-  const reply = response.content[0].text;
-  conversationHistory[chatId].push({ role: 'assistant', content: reply });
+  const reply = res.content[0].text;
+  histories[agentKey][chatId].push({ role: 'assistant', content: reply });
   return reply;
 }
 
-// ─── Handler principal ────────────────────────────────────────────────────────
+// ─── Orquestador principal ────────────────────────────────────────────────────
+async function askGrowthCouncil(chatId, userMessage) {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  const [decision, leadsContext] = await Promise.all([
+    routeMessage(client, userMessage),
+    getLeadsFromNotion()
+  ]);
+
+  if (decision === 'ambos') {
+    const [drogarReply, rubinReply] = await Promise.all([
+      askAgent(client, 'droga', chatId, userMessage, leadsContext),
+      askAgent(client, 'rubin', chatId, userMessage, leadsContext)
+    ]);
+    return { decision, drogarReply, rubinReply };
+  }
+
+  const reply = await askAgent(client, decision, chatId, userMessage, leadsContext);
+  return { decision, reply };
+}
+
+// ─── Formatear y enviar respuesta ────────────────────────────────────────────
+async function sendGrowthReply(chatId, userMessage, telegramApi) {
+  const result = await askGrowthCouncil(chatId, userMessage);
+
+  if (result.decision === 'ambos') {
+    await sendMessage(chatId, `🎯 *David Droga:*\n\n${result.drogarReply}`, telegramApi);
+    await sendMessage(chatId, `🎵 *Rick Rubin:*\n\n${result.rubinReply}`, telegramApi);
+  } else {
+    const label = result.decision === 'droga' ? '🎯 *David Droga:*' : '🎵 *Rick Rubin:*';
+    await sendMessage(chatId, `${label}\n\n${result.reply}`, telegramApi);
+  }
+}
+
+// ─── Handlers exportados ──────────────────────────────────────────────────────
 export async function handleGrowthMessage(chatId, text, telegramApi) {
-  await sendMessage(chatId, '📈 Pensando...', telegramApi);
+  await sendMessage(chatId, '💭 _Consultando al Growth Council..._', telegramApi);
   try {
-    const reply = await askGrowthDirector(chatId, text);
-    await sendMessage(chatId, reply, telegramApi);
+    await sendGrowthReply(chatId, text, telegramApi);
   } catch (err) {
-    console.error('Growth Director error:', err.message);
-    await sendMessage(chatId, `Error al responder: ${err.message}`, telegramApi);
+    console.error('Growth Council error:', err.message);
+    await sendMessage(chatId, `Error: ${err.message}`, telegramApi);
   }
   return true;
 }
@@ -134,7 +181,6 @@ export async function handleGrowthMessage(chatId, text, telegramApi) {
 export async function handleGrowthVoice(chatId, voiceFileId, telegramApi) {
   const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
 
-  // 1. Obtener URL del archivo de voz
   const fileRes = await fetch(`${TELEGRAM_API}/getFile?file_id=${voiceFileId}`);
   const fileData = await fileRes.json();
   const filePath = fileData.result?.file_path;
@@ -143,12 +189,10 @@ export async function handleGrowthVoice(chatId, voiceFileId, telegramApi) {
     return true;
   }
 
-  // 2. Descargar el archivo
   const audioRes = await fetch(`https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${filePath}`);
   const audioBuffer = await audioRes.arrayBuffer();
 
-  // 3. Transcribir con Groq
-  await sendMessage(chatId, 'Escuchando...', telegramApi);
+  await sendMessage(chatId, '🎙️ _Escuchando..._', telegramApi);
   let transcription;
   try {
     transcription = await transcribeVoice(audioBuffer, 'audio/ogg');
@@ -158,25 +202,22 @@ export async function handleGrowthVoice(chatId, voiceFileId, telegramApi) {
   }
 
   if (!transcription?.trim()) {
-    await sendMessage(chatId, 'No entendi el audio. Intenta de nuevo.', telegramApi);
+    await sendMessage(chatId, 'No entendí el audio. Intenta de nuevo.', telegramApi);
     return true;
   }
 
-  // 4. Mostrar transcripción y responder
-  await sendMessage(chatId, `"${transcription.trim()}"`, telegramApi);
-  await sendMessage(chatId, '📈 Pensando...', telegramApi);
+  await sendMessage(chatId, `_"${transcription.trim()}"_`, telegramApi);
+  await sendMessage(chatId, '💭 _Consultando al Growth Council..._', telegramApi);
   try {
-    const reply = await askGrowthDirector(chatId, transcription.trim());
-    await sendMessage(chatId, reply, telegramApi);
+    await sendGrowthReply(chatId, transcription.trim(), telegramApi);
   } catch (err) {
-    console.error('Growth Director error:', err.message);
-    await sendMessage(chatId, `Error al generar respuesta: ${err.message}`, telegramApi);
+    console.error('Growth Council error:', err.message);
+    await sendMessage(chatId, `Error: ${err.message}`, telegramApi);
   }
   return true;
 }
 
 async function sendMessage(chatId, text, telegramApi) {
-  // Try Markdown first, fall back to plain text if Telegram rejects formatting
   const res = await fetch(`${telegramApi}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

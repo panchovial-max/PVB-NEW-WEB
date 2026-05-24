@@ -76,7 +76,7 @@ async function handleCommand(chatId, command, args) {
       break;
 
     case '/growth':
-      await sendMessage(chatId, '📈 _Modo Growth Director activado. Cuéntame qué tienes en mente — o mándame un audio._');
+      await sendMessage(chatId, '🎯🎵 _Growth Council activado — David Droga y Rick Rubin listos. Cuéntame qué tienes en mente o mándame un audio._');
       break;
 
     case '/proyectos':
