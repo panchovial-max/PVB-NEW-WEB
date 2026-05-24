@@ -121,8 +121,14 @@ async function askGrowthDirector(chatId, userMessage) {
 // ─── Handler principal ────────────────────────────────────────────────────────
 export async function handleGrowthMessage(chatId, text, telegramApi) {
   if (String(chatId) !== String(OWNER_CHAT_ID)) return false;
-  const reply = await askGrowthDirector(chatId, text);
-  await sendMessage(chatId, reply, telegramApi);
+  await sendMessage(chatId, '📈 Pensando...', telegramApi);
+  try {
+    const reply = await askGrowthDirector(chatId, text);
+    await sendMessage(chatId, reply, telegramApi);
+  } catch (err) {
+    console.error('Growth Director error:', err.message);
+    await sendMessage(chatId, `Error al responder: ${err.message}`, telegramApi);
+  }
   return true;
 }
 
@@ -136,7 +142,7 @@ export async function handleGrowthVoice(chatId, voiceFileId, telegramApi) {
   const fileData = await fileRes.json();
   const filePath = fileData.result?.file_path;
   if (!filePath) {
-    await sendMessage(chatId, '❌ No pude obtener el archivo de voz.', telegramApi);
+    await sendMessage(chatId, 'No pude obtener el archivo de voz.', telegramApi);
     return true;
   }
 
@@ -145,24 +151,30 @@ export async function handleGrowthVoice(chatId, voiceFileId, telegramApi) {
   const audioBuffer = await audioRes.arrayBuffer();
 
   // 3. Transcribir con Groq
-  await sendMessage(chatId, '🎙️ _Escuchando..._', telegramApi);
+  await sendMessage(chatId, 'Escuchando...', telegramApi);
   let transcription;
   try {
     transcription = await transcribeVoice(audioBuffer, 'audio/ogg');
   } catch (err) {
-    await sendMessage(chatId, `❌ Error de transcripción: ${err.message}`, telegramApi);
+    await sendMessage(chatId, `Error de transcripcion: ${err.message}`, telegramApi);
     return true;
   }
 
   if (!transcription?.trim()) {
-    await sendMessage(chatId, '❌ No entendí el audio. Intenta de nuevo.', telegramApi);
+    await sendMessage(chatId, 'No entendi el audio. Intenta de nuevo.', telegramApi);
     return true;
   }
 
   // 4. Mostrar transcripción y responder
-  await sendMessage(chatId, `🎙️ _"${transcription.trim()}"_`, telegramApi);
-  const reply = await askGrowthDirector(chatId, transcription.trim());
-  await sendMessage(chatId, reply, telegramApi);
+  await sendMessage(chatId, `"${transcription.trim()}"`, telegramApi);
+  await sendMessage(chatId, '📈 Pensando...', telegramApi);
+  try {
+    const reply = await askGrowthDirector(chatId, transcription.trim());
+    await sendMessage(chatId, reply, telegramApi);
+  } catch (err) {
+    console.error('Growth Director error:', err.message);
+    await sendMessage(chatId, `Error al generar respuesta: ${err.message}`, telegramApi);
+  }
   return true;
 }
 
