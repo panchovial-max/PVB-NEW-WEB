@@ -11,6 +11,7 @@ import {
 } from './notion-query.js';
 import { askClaude } from './telegram-ai.js';
 import { handleEsperanza, handleEsperanzaCommand, handleEsperanzaCallback } from './esperanza-bot.js';
+import { handleGrowthMessage, handleGrowthVoice } from './pvb-growth.js';
 
 const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || process.env.TELEGRAM_OWNER_CHAT_ID;
 
@@ -63,12 +64,19 @@ async function handleCommand(chatId, command, args) {
         `/clientes — Clientes con redes conectadas\n\n` +
         `*Agentes*\n` +
         `/agentes — Estado del equipo\n` +
-        `/ping — Test de conexión`
+        `/ping — Test de conexión\n\n` +
+        `*📈 Nuevos Negocios*\n` +
+        `/growth — Activar Growth Director\n` +
+        `_O manda un audio para conversar estrategia_`
       );
       break;
 
     case '/ping':
       await sendMessage(chatId, '✅ Bot activo y respondiendo.');
+      break;
+
+    case '/growth':
+      await sendMessage(chatId, '📈 _Modo Growth Director activado. Cuéntame qué tienes en mente — o mándame un audio._');
       break;
 
     case '/proyectos':
@@ -353,9 +361,17 @@ export default async function handler(req, res) {
   try {
     const update = req.body;
     const message = update.message || update.edited_message;
-    if (!message?.text) return res.status(200).send('ok');
+    if (!message) return res.status(200).send('ok');
 
     const chatId = message.chat.id;
+
+    // ── Mensajes de voz → Growth Director (solo Pancho) ──
+    if (message.voice && String(chatId) === String(OWNER_CHAT_ID)) {
+      await handleGrowthVoice(chatId, message.voice.file_id, TELEGRAM_API);
+      return res.status(200).send('ok');
+    }
+
+    if (!message.text) return res.status(200).send('ok');
     const text = message.text.trim();
 
     // ── Reply a mensaje de proveedor → guardar en portal ──
@@ -401,10 +417,19 @@ export default async function handler(req, res) {
       const handled = await handleEsperanzaCommand(chatId, command, TELEGRAM_API);
       if (!handled) await handleCommand(chatId, command, args);
     } else if (isOwner) {
-      // Chat de Pancho → siempre Claude (Master Brain), nunca Esperanza
-      await sendMessage(chatId, '🧠 _Procesando..._');
-      const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY);
-      await sendMessage(chatId, reply);
+      // Palabras clave de nuevos negocios → Growth Director
+      const GROWTH_KEYWORDS = ['lead', 'cliente nuevo', 'prospecto', 'pipeline', 'venta', 'crecer', 'nuevos negocios', 'growth', 'outbound', 'estrategia', 'referido', 'campaña de captación'];
+      const isGrowthQuery = GROWTH_KEYWORDS.some(k => text.toLowerCase().includes(k));
+
+      if (isGrowthQuery) {
+        await sendMessage(chatId, '📈 _Pensando..._');
+        await handleGrowthMessage(chatId, text, TELEGRAM_API);
+      } else {
+        // Resto → Master Brain (Claude con Notion)
+        await sendMessage(chatId, '🧠 _Procesando..._');
+        const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY);
+        await sendMessage(chatId, reply);
+      }
     } else {
       // Chat externo → Esperanza maneja primero; si no aplica, Claude como fallback
       const handled = await handleEsperanza(chatId, text, message.from, TELEGRAM_API);
