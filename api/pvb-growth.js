@@ -120,7 +120,6 @@ async function askGrowthDirector(chatId, userMessage) {
 
 // ─── Handler principal ────────────────────────────────────────────────────────
 export async function handleGrowthMessage(chatId, text, telegramApi) {
-  if (String(chatId) !== String(OWNER_CHAT_ID)) return false;
   await sendMessage(chatId, '📈 Pensando...', telegramApi);
   try {
     const reply = await askGrowthDirector(chatId, text);
@@ -133,8 +132,6 @@ export async function handleGrowthMessage(chatId, text, telegramApi) {
 }
 
 export async function handleGrowthVoice(chatId, voiceFileId, telegramApi) {
-  if (String(chatId) !== String(OWNER_CHAT_ID)) return false;
-
   const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
 
   // 1. Obtener URL del archivo de voz

@@ -365,8 +365,8 @@ export default async function handler(req, res) {
 
     const chatId = message.chat.id;
 
-    // ── Mensajes de voz → Growth Director (solo Pancho) ──
-    if (message.voice && String(chatId) === String(OWNER_CHAT_ID)) {
+    // ── Mensajes de voz → Growth Director ──
+    if (message.voice) {
       await handleGrowthVoice(chatId, message.voice.file_id, TELEGRAM_API);
       return res.status(200).send('ok');
     }
@@ -418,7 +418,7 @@ export default async function handler(req, res) {
       if (!handled) await handleCommand(chatId, command, args);
     } else if (isOwner) {
       // Palabras clave de nuevos negocios → Growth Director
-      const GROWTH_KEYWORDS = ['lead', 'cliente nuevo', 'prospecto', 'pipeline', 'venta', 'crecer', 'nuevos negocios', 'growth', 'outbound', 'estrategia', 'referido', 'campaña de captación'];
+      const GROWTH_KEYWORDS = ['lead', 'cliente nuevo', 'prospecto', 'pipeline', 'venta', 'crecer', 'nuevos negocios', 'growth', 'outbound', 'estrategia', 'referido', 'campaña de captación', 'escalar', 'escala', 'expandir', 'ingresos', 'facturación', 'propuesta', 'precio', 'tarifa', 'competencia', 'posicionamiento', 'mercado', 'canal', 'adquisición', 'captar', 'ideas de negocio', 'oportunidad', 'ticket', 'upsell', 'retención'];
       const isGrowthQuery = GROWTH_KEYWORDS.some(k => text.toLowerCase().includes(k));
 
       if (isGrowthQuery) {
