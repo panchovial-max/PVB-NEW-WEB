@@ -8,10 +8,86 @@ const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '5999159507';
 
 let TELEGRAM_API;
 let NOTION_KEY;
+let GROQ_API_KEY;
 
 function init() {
   TELEGRAM_API = `https://api.telegram.org/bot${process.env.TASKS_BOT_TOKEN}`;
   NOTION_KEY = process.env.NOTION_API_KEY;
+  GROQ_API_KEY = process.env.GROQ_API_KEY;
+}
+
+// ─── Transcripción de audio con Groq Whisper ──────────────
+async function transcribeAudio(fileId) {
+  // 1. Obtener URL del archivo desde Telegram
+  const fileRes = await fetch(`${TELEGRAM_API}/getFile?file_id=${fileId}`);
+  const fileData = await fileRes.json();
+  if (!fileData.ok) throw new Error('No se pudo obtener el archivo de Telegram');
+
+  const filePath = fileData.result.file_path;
+  const fileUrl = `https://api.telegram.org/file/bot${process.env.TASKS_BOT_TOKEN}/${filePath}`;
+
+  // 2. Descargar el audio
+  const audioRes = await fetch(fileUrl);
+  const audioBuffer = await audioRes.arrayBuffer();
+  const audioBlob = new Blob([audioBuffer], { type: 'audio/ogg' });
+
+  // 3. Enviar a Groq Whisper para transcripción
+  const formData = new FormData();
+  formData.append('file', audioBlob, 'audio.ogg');
+  formData.append('model', 'whisper-large-v3');
+  formData.append('language', 'es');
+  formData.append('response_format', 'json');
+
+  const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}` },
+    body: formData
+  });
+
+  const groqData = await groqRes.json();
+  if (!groqData.text) throw new Error('Transcripción vacía');
+  return groqData.text.trim();
+}
+
+// ─── Parsear texto libre en tarea con Claude ─────────────
+async function parsearTareaConClaude(texto) {
+  const hoy = new Date().toISOString().split('T')[0];
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: 200,
+      messages: [{
+        role: 'user',
+        content: `Extrae la información de esta tarea personal en JSON. Hoy es ${hoy}.
+
+Texto: "${texto}"
+
+Responde SOLO con JSON válido, sin markdown:
+{
+  "nombre": "nombre de la tarea",
+  "contexto": "Familia|Personal|Salud|Casa|Finanzas|Trabajo|null",
+  "prioridad": "Alta|Media|Baja",
+  "fecha": "YYYY-MM-DD o null"
+}
+
+Si no puedes determinar un campo, usa null para contexto/fecha y "Media" para prioridad.`
+      }]
+    })
+  });
+
+  const data = await res.json();
+  const content = data.content?.[0]?.text || '{}';
+  try {
+    return JSON.parse(content);
+  } catch {
+    return { nombre: texto, prioridad: 'Media', contexto: null, fecha: null };
+  }
 }
 
 function escapeMarkdown(text) {
@@ -370,6 +446,43 @@ export default async function handler(req, res) {
       return res.status(200).send('ok');
     }
 
+    // ── Audio/voz → transcribir y crear tarea ──
+    if (message.voice || message.audio) {
+      const fileId = (message.voice || message.audio).file_id;
+      await sendMessage(chatId, '🎙️ _Transcribiendo audio..._');
+      try {
+        const transcripcion = await transcribeAudio(fileId);
+        await sendMessage(chatId, `📝 _"${escapeMarkdown(transcripcion)}"_\n\n🧠 _Procesando tarea..._`);
+
+        const tarea = await parsearTareaConClaude(transcripcion);
+
+        const props = {
+          Tarea: { title: [{ text: { content: tarea.nombre } }] },
+          Estado: { select: { name: 'Pendiente' } }
+        };
+        if (tarea.contexto) props.Contexto = { select: { name: tarea.contexto } };
+        if (tarea.prioridad) props.Prioridad = { select: { name: tarea.prioridad } };
+        if (tarea.fecha) props.Fecha = { date: { start: tarea.fecha } };
+
+        const page = await notionCreate(props);
+        if (page.id) {
+          const icon = CONTEXTO_ICON[tarea.contexto] || '✅';
+          await sendMessage(chatId,
+            `${icon} *Tarea creada desde audio*\n\n*${escapeMarkdown(tarea.nombre)}*` +
+            (tarea.contexto ? `\nContexto: ${escapeMarkdown(tarea.contexto)}` : '') +
+            (tarea.prioridad ? `\nPrioridad: ${tarea.prioridad}` : '') +
+            (tarea.fecha ? `\nFecha: ${tarea.fecha}` : '')
+          );
+        } else {
+          await sendMessage(chatId, `❌ Error creando tarea: ${escapeMarkdown(page.message || 'Error desconocido')}`);
+        }
+      } catch (err) {
+        await sendMessage(chatId, `❌ Error procesando audio: ${escapeMarkdown(err.message)}`);
+      }
+      return res.status(200).send('ok');
+    }
+
+    if (!message.text) return res.status(200).send('ok');
     const text = message.text.trim();
 
     if (text.startsWith('/')) {
