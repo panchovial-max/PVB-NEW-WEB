@@ -309,7 +309,7 @@ async function loadProyectos() {
   const hint = document.getElementById('proyecto-none-hint');
   const select = document.getElementById('proyecto-activo');
   try {
-    const res = await fetch('/.netlify/functions/notion-proxy', {
+    const res = await fetch('/api/notion-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STUDIO_TOKEN}` },
       body: JSON.stringify({
@@ -439,7 +439,7 @@ function resetForm(formId) {
 async function notionCreate(dbId, properties) {
   showStatus('Enviando...', 'loading');
   try {
-    const res = await fetch('/.netlify/functions/notion-proxy', {
+    const res = await fetch('/api/notion-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STUDIO_TOKEN}` },
       body: JSON.stringify({ endpoint: '/v1/pages', payload: { parent: { database_id: dbId }, properties } })
@@ -472,7 +472,7 @@ document.getElementById('btn-boleta').addEventListener('click', async () => {
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
-        const res = await fetch('/.netlify/functions/boleta-upload', {
+        const res = await fetch('/api/boleta-upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STUDIO_TOKEN}` },
           body: JSON.stringify({
@@ -577,7 +577,7 @@ document.getElementById('btn-brief-ia').addEventListener('click', async () => {
   document.getElementById('btn-brief-ia').disabled = true;
 
   try {
-    const res = await fetch('/.netlify/functions/brief-parse', {
+    const res = await fetch('/api/brief-parse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STUDIO_TOKEN}` },
       body: JSON.stringify({ brief })
