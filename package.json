@@ -5,6 +5,9 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@supabase/supabase-js": "^2.39.3",
-    "@trigger.dev/sdk": "^4.4.6"
+    "@trigger.dev/sdk": "^4.4.6",
+    "google-auth-library": "^10.6.2",
+    "googleapis": "^172.0.0",
+    "openai": "^6.39.0"
   }
 }

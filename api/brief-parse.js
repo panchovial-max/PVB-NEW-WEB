@@ -1,7 +1,7 @@
 // brief-parse.js — Parsea un brief libre con IA y extrae datos estructurados de proyecto
-// Usado por studio.html tab "Crear con IA"
+// Usado por studio.html tab "Crear con IA" — OpenAI gpt-5.5 Responses API
 
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { createHmac } from 'crypto';
 
 function verifyToken(token) {
@@ -24,22 +24,18 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Verificar token
   const token = (req.headers['authorization'] || '').replace('Bearer ', '').trim();
   if (!token || !verifyToken(token)) return res.status(401).json({ error: 'No autorizado' });
 
   const { brief } = req.body || {};
-  if (!brief || !brief.trim()) return res.status(400).json({ error: 'Falta el brief' });
+  if (!brief?.trim()) return res.status(400).json({ error: 'Falta el brief' });
 
   try {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    const res2 = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 512,
-      messages: [{
-        role: 'user',
-        content: `Eres el asistente de proyectos de PVB Estudio Creativo, una agencia audiovisual en Chile.
+    const response = await client.responses.create({
+      model: 'gpt-5.5',
+      input: `Eres el asistente de proyectos de PVB Estudio Creativo, una agencia audiovisual en Chile.
 
 El usuario escribió este brief de proyecto:
 "${brief}"
@@ -59,10 +55,9 @@ Reglas:
 - presupuesto: número en CLP (sin puntos ni comas), 0 si no se menciona
 - estado: siempre "Brief" si no se especifica otra etapa
 - notas: máx 200 chars, resumen útil del scope`
-      }]
     });
 
-    const text = res2.content[0].text.trim();
+    const text = response.output_text.trim();
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return res.status(500).json({ ok: false, error: 'No pude parsear el brief' });
 

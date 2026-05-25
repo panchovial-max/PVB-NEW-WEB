@@ -1,7 +1,7 @@
 // boleta-upload.js — OCR + Google Drive + Notion desde studio.html
-// Recibe imagen en base64, analiza con Claude Vision, sube a Drive y guarda en Notion
+// Recibe imagen en base64, analiza con OpenAI gpt-5.5 Vision, sube a Drive y guarda en Notion
 
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { GoogleAuth } from 'google-auth-library';
 import { google } from 'googleapis';
 import { createHmac } from 'crypto';
@@ -83,31 +83,29 @@ async function uploadToDrive(base64Data, mimeType, filename, proyectoNombre) {
   }
 }
 
-// ─── OCR con Claude Vision ────────────────────────────────────────────────────
+// ─── OCR con OpenAI gpt-5.5 Vision ───────────────────────────────────────────
 
 async function extractBoletaData(base64Data, mimeType) {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-  // Limpiar el data URI prefix si viene
   const rawBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
-  // Normalizar mimeType para Claude (solo acepta image/jpeg, image/png, image/gif, image/webp, application/pdf)
   const supportedMime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mimeType)
     ? mimeType
     : 'image/jpeg';
 
-  const res = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 512,
-    messages: [{
-      role: 'user',
-      content: [
-        {
-          type: 'image',
-          source: { type: 'base64', media_type: supportedMime, data: rawBase64 }
-        },
-        {
-          type: 'text',
-          text: `Analiza este documento financiero chileno (boleta, factura, nota de crédito, ticket, comprobante).
+  const response = await client.responses.create({
+    model: 'gpt-5.5',
+    input: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'input_image',
+            image_url: `data:${supportedMime};base64,${rawBase64}`
+          },
+          {
+            type: 'input_text',
+            text: `Analiza este documento financiero chileno (boleta, factura, nota de crédito, ticket, comprobante).
 
 Extrae exactamente estos campos y responde SOLO en JSON válido, sin texto extra:
 {
@@ -122,12 +120,13 @@ Extrae exactamente estos campos y responde SOLO en JSON válido, sin texto extra
 }
 
 Si el monto incluye IVA, incluye el total con IVA. Si es ticket, suma todos los items. Si no puedes leer algo, usa null.`
-        }
-      ]
-    }]
+          }
+        ]
+      }
+    ]
   });
 
-  const text = res.content[0].text.trim();
+  const text = response.output_text.trim();
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error('No pude interpretar el documento');
   return JSON.parse(jsonMatch[0]);
