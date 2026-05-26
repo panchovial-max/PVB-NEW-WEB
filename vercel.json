@@ -26,7 +26,6 @@
     "api/bot-router.js":   { "maxDuration": 60 },
     "api/brain.js":        { "maxDuration": 30 },
     "api/agent-run.js":    { "maxDuration": 60 },
-    "api/drive-upload.js": { "maxDuration": 30 }
   },
   "rewrites": [
     { "source": "/api/og-fetch",          "destination": "/api/og-fetch.js" },
@@ -46,7 +45,7 @@
     { "source": "/api/brain-login",       "destination": "/api/brain.js" },
     { "source": "/api/brain-clients",     "destination": "/api/brain.js" },
     { "source": "/api/pvb-chat",          "destination": "/api/brain.js" },
-    { "source": "/api/drive-upload",      "destination": "/api/drive-upload.js" }
+    { "source": "/api/drive-upload",      "destination": "/api/brain.js" }
   ],
   "headers": [
     {

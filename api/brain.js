@@ -422,6 +422,25 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que p
       return res.status(200).json({ ok: true, reply, actionsPerformed });
     }
 
+    // ── Drive upload ──────────────────────────────────────────
+    if (action === 'drive-upload') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const { uploadFile, uploadFromUrl } = await import('../lib/google-drive.js');
+      const { Readable } = await import('stream');
+      const { url, base64, filename, mimeType, project, subfolder } = req.body || {};
+      if (!filename || !mimeType) return res.status(400).json({ error: 'filename and mimeType required' });
+      let file;
+      if (url) {
+        file = await uploadFromUrl({ url, filename, mimeType, project, subfolder });
+      } else if (base64) {
+        const content = Readable.from(Buffer.from(base64, 'base64'));
+        file = await uploadFile({ content, filename, mimeType, project, subfolder });
+      } else {
+        return res.status(400).json({ error: 'Provide url or base64' });
+      }
+      return res.status(200).json({ id: file.id, name: file.name, viewUrl: file.webViewLink, downloadUrl: file.webContentLink });
+    }
+
     return res.status(400).json({ error: 'Unknown action' });
   } catch (err) {
     console.error('brain error:', err);
