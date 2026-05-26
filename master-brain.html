@@ -88,6 +88,7 @@
             <button type="button" class="brain-tab" data-tab="accounts">Cuentas PVB 🔐</button>
             <button type="button" class="brain-tab" data-tab="esperanza">Esperanza 🌟</button>
             <button type="button" class="brain-tab" data-tab="proposals">Proposals <span class="tab-badge tab-badge--hidden" id="proposalBadge">0</span></button>
+            <button type="button" class="brain-tab" data-tab="proyectos">Proyectos 🎬</button>
             <button type="button" class="brain-tab" data-tab="campaigns">Campaigns</button>
             <button type="button" class="brain-tab" data-tab="departments">Departments</button>
             <button type="button" class="brain-tab" data-tab="agents">All Agents</button>
@@ -497,6 +498,172 @@
                 </div>
             </div>
         </div>
+
+        <!-- TAB: Proyectos -->
+        <section class="brain-tab-content" id="tab-proyectos">
+
+          <!-- Projects List View -->
+          <div id="pvbProjectsList">
+            <div class="projects-header">
+              <div>
+                <h2 class="section-title">Proyectos de Campaña</h2>
+                <p class="section-sub">Gestión completa desde brief hasta métricas</p>
+              </div>
+              <button type="button" class="btn-new-project" id="openNewProjectBtn">+ Nueva Campaña</button>
+            </div>
+            <div class="projects-grid" id="projectsGrid">
+              <div class="projects-empty" id="projectsEmpty">
+                <div class="projects-empty-icon">🎬</div>
+                <p>Sin proyectos activos.<br>Crea tu primera campaña.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Detail View (hidden by default) -->
+          <div id="pvbProjectDetail" class="project-detail hidden">
+            <div class="project-detail-topbar">
+              <button type="button" class="btn-back-projects" id="backToProjectsBtn">← Proyectos</button>
+              <div class="project-detail-identity">
+                <span class="project-detail-client" id="detailClient"></span>
+                <h2 class="project-detail-name" id="detailName"></h2>
+              </div>
+              <span class="project-status-badge" id="detailStatus"></span>
+            </div>
+
+            <div class="project-sub-tabs">
+              <button type="button" class="project-sub-tab active" data-subtab="brief">Brief</button>
+              <button type="button" class="project-sub-tab" data-subtab="creative">Sesión Creativa</button>
+              <button type="button" class="project-sub-tab" data-subtab="gantt">Gantt</button>
+            </div>
+
+            <!-- SUB-TAB: Brief -->
+            <div class="project-sub-content active" id="subtab-brief">
+              <div class="brief-display" id="briefDisplay"></div>
+            </div>
+
+            <!-- SUB-TAB: Creative Session (David + Ruby) -->
+            <div class="project-sub-content" id="subtab-creative">
+              <div class="creative-session-header">
+                <div class="agent-badge david">David <span>Estrategia</span></div>
+                <div class="creative-vs">×</div>
+                <div class="agent-badge ruby">Ruby <span>Creativo</span></div>
+              </div>
+              <div class="creative-session-messages" id="creativeMessages">
+                <div class="creative-session-empty">
+                  <p>Inicia la sesión creativa para que David y Ruby analicen el brief y desarrollen el concepto de campaña.</p>
+                  <button type="button" class="btn-start-session" id="startCreativeSessionBtn">Iniciar Sesión Creativa</button>
+                </div>
+              </div>
+              <div class="creative-session-iterate hidden" id="creativeIterate">
+                <textarea id="iterateInput" placeholder="Pide una iteración, dirección específica, o pregunta algo al equipo creativo..." rows="2"></textarea>
+                <button type="button" id="iterateBtn">Enviar →</button>
+              </div>
+              <div class="concept-output hidden" id="conceptOutput"></div>
+            </div>
+
+            <!-- SUB-TAB: Gantt -->
+            <div class="project-sub-content" id="subtab-gantt">
+              <div class="gantt-header">
+                <h3>Cronograma de Campaña</h3>
+                <span class="gantt-meta" id="ganttMeta"></span>
+              </div>
+              <div class="gantt-container" id="ganttContainer"></div>
+            </div>
+          </div>
+
+          <!-- New Project Modal -->
+          <div id="newProjectModal" class="pvb-modal hidden">
+            <div class="pvb-modal-backdrop" id="closeModalBackdrop"></div>
+            <div class="pvb-modal-content">
+              <div class="pvb-modal-header">
+                <h3>Nueva Campaña</h3>
+                <button type="button" class="pvb-modal-close" id="closeModalBtn">✕</button>
+              </div>
+              <form id="briefForm" class="brief-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Nombre de la campaña *</label>
+                    <input type="text" name="campaignName" placeholder="Ej: Campaña Verano 2026" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Cliente / Marca *</label>
+                    <input type="text" name="client" placeholder="Ej: Kaya" required>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Contacto (nombre)</label>
+                    <input type="text" name="contactName" placeholder="Gerente de Marketing">
+                  </div>
+                  <div class="form-group">
+                    <label>Cargo</label>
+                    <input type="text" name="contactRole" placeholder="Gerente de Marketing">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Email del contacto</label>
+                    <input type="email" name="contactEmail" placeholder="contacto@marca.cl">
+                  </div>
+                  <div class="form-group">
+                    <label>Presupuesto estimado</label>
+                    <input type="text" name="budget" placeholder="Ej: $5.000.000 CLP">
+                  </div>
+                </div>
+                <div class="form-group full">
+                  <label>Objetivo de campaña *</label>
+                  <textarea name="objective" rows="2" placeholder="¿Qué quiere lograr el cliente con esta campaña?" required></textarea>
+                </div>
+                <div class="form-group full">
+                  <label>KPIs / Métricas de éxito</label>
+                  <textarea name="kpis" rows="2" placeholder="¿Cómo se medirá el éxito? (views, ventas, brand awareness, etc.)"></textarea>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="briefStartDate">Fecha de inicio</label>
+                    <input type="date" name="startDate" id="briefStartDate" title="Fecha de inicio del proyecto">
+                  </div>
+                  <div class="form-group">
+                    <label for="briefLaunchDate">Fecha de lanzamiento objetivo</label>
+                    <input type="date" name="launchDate" id="briefLaunchDate" title="Fecha de lanzamiento objetivo">
+                  </div>
+                </div>
+                <div class="form-group full">
+                  <label>Formatos</label>
+                  <div class="formats-check">
+                    <label><input type="checkbox" name="formats" value="video"> Video</label>
+                    <label><input type="checkbox" name="formats" value="foto"> Fotografía</label>
+                    <label><input type="checkbox" name="formats" value="social"> Social Media</label>
+                    <label><input type="checkbox" name="formats" value="ooh"> OOH</label>
+                    <label><input type="checkbox" name="formats" value="digital"> Digital / Pauta</label>
+                    <label><input type="checkbox" name="formats" value="ia"> IA Generativa</label>
+                  </div>
+                </div>
+                <div class="form-group full">
+                  <label>Path de producción</label>
+                  <div class="path-select">
+                    <label><input type="radio" name="path" value="film-crew" checked> Film Crew (orgánico)</label>
+                    <label><input type="radio" name="path" value="ia"> IA Generativa</label>
+                    <label><input type="radio" name="path" value="ambos"> Ambos</label>
+                  </div>
+                </div>
+                <div class="form-group full">
+                  <label>Referencias / Inspiración</label>
+                  <textarea name="references" rows="2" placeholder="Links, marcas, campañas de referencia..."></textarea>
+                </div>
+                <div class="form-group full">
+                  <label>Notas adicionales de la primera reunión</label>
+                  <textarea name="notes" rows="3" placeholder="Cualquier detalle relevante de la reunión inicial..."></textarea>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn-cancel" id="cancelBriefBtn">Cancelar</button>
+                  <button type="submit" class="btn-submit-brief">Crear Proyecto →</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        </section>
 
     </main>
 

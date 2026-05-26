@@ -342,6 +342,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderProposals();
   renderCampaigns();
   updateKPIs();
+  initProyectosTab();
   setupEventListeners();
 });
 
@@ -2342,6 +2343,364 @@ async function updateLeadStatus(id, status) {
   } catch (err) {
     showNotification(`Error: ${err.message}`, 'error');
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROYECTOS — Creative Production OS
+// ═══════════════════════════════════════════════════════════
+
+const GANTT_PHASES = [
+  { id: 'descubrimiento', name: 'Descubrimiento',       days: 3,  owner: 'PVB + Cliente',  color: '#6366f1', deliverables: ['Brief validado', 'Objetivos definidos', 'KPIs acordados'] },
+  { id: 'estrategia',     name: 'Estrategia Creativa',  days: 5,  owner: 'David + Ruby',   color: '#E91E63', deliverables: ['Concepto creativo', 'Mensaje núcleo', 'Tono de comunicación'] },
+  { id: 'presentacion',   name: 'Presentación Cliente', days: 3,  owner: 'PVB + Cliente',  color: '#FF9800', deliverables: ['Aprobación concepto', 'Ajustes incorporados', 'Presupuesto firmado'] },
+  { id: 'preprod',        name: 'Pre-Producción',       days: 10, owner: 'Art Director',   color: '#2196F3', deliverables: ['Script', 'Storyboard', 'Plan de arte', 'Casting', 'Locaciones', 'Wardrobe', 'Call sheet'] },
+  { id: 'produccion',     name: 'Producción',           days: 2,  owner: 'Film Crew / IA', color: '#4CAF50', deliverables: ['Footage rodado', 'Assets generados', 'BTS'] },
+  { id: 'postprod',       name: 'Post-Producción',      days: 7,  owner: 'Editor',         color: '#00BCD4', deliverables: ['Cut final', 'Color grade', 'Audio mix', 'Motion graphics'] },
+  { id: 'revisiones',     name: 'Revisiones',           days: 5,  owner: 'PVB + Cliente',  color: '#9C27B0', deliverables: ['V1 entregada', 'Feedback cliente', 'Correcciones', 'V2 aprobada'] },
+  { id: 'aprobacion',     name: 'Aprobación Final',     days: 2,  owner: 'Cliente',        color: '#FF5722', deliverables: ['Sign-off formal', 'Assets finales entregados'] },
+  { id: 'lanzamiento',    name: 'Lanzamiento',          days: 1,  owner: 'PVB',            color: '#F59E0B', deliverables: ['Publicación en canales', 'UTMs configurados', 'Boosting activo'] },
+  { id: 'medicion',       name: 'Medición & Reporte',   days: 30, owner: 'PVB Analytics',  color: '#607D8B', deliverables: ['Reporte 30 días', 'Reporte 60 días', 'Reporte 90 días', 'Cierre de campaña'] },
+];
+
+const STATUS_LABELS = { pending: 'Pendiente', active: 'En curso', done: 'Completado', review: 'En revisión', risk: 'En riesgo' };
+const PROJECT_STATUS = { briefing: 'Brief', creative: 'Creativo', preproduction: 'Pre-Prod', production: 'Producción', postproduction: 'Post-Prod', delivery: 'Entrega', live: 'Live', measuring: 'Métricas' };
+
+let pvbProjects = [];
+let currentProject = null;
+
+function loadProjects() {
+  const saved = localStorage.getItem('pvb_projects');
+  pvbProjects = saved ? JSON.parse(saved) : [];
+}
+
+function saveProjects() {
+  localStorage.setItem('pvb_projects', JSON.stringify(pvbProjects));
+}
+
+function createProject(data) {
+  const start = data.startDate || new Date().toISOString().split('T')[0];
+  let d = new Date(start + 'T12:00:00');
+  const gantt = GANTT_PHASES.map((phase, i) => {
+    const phaseStart = d.toISOString().split('T')[0];
+    d.setDate(d.getDate() + phase.days);
+    const phaseEnd = d.toISOString().split('T')[0];
+    d.setDate(d.getDate() + 1);
+    return { phaseId: phase.id, startDate: phaseStart, endDate: phaseEnd, status: i === 0 ? 'active' : 'pending', notes: '' };
+  });
+  const project = {
+    id: 'proj_' + Date.now(),
+    name: data.campaignName,
+    client: data.client,
+    contact: { name: data.contactName, role: data.contactRole, email: data.contactEmail },
+    objective: data.objective,
+    kpis: data.kpis,
+    budget: data.budget,
+    startDate: start,
+    launchDate: data.launchDate,
+    formats: data.formats || [],
+    path: data.path,
+    references: data.references,
+    notes: data.notes,
+    status: 'briefing',
+    createdAt: new Date().toISOString(),
+    concept: null,
+    creativeSession: [],
+    gantt,
+  };
+  pvbProjects.unshift(project);
+  saveProjects();
+  return project;
+}
+
+function renderProjects() {
+  const grid = document.getElementById('projectsGrid');
+  const empty = document.getElementById('projectsEmpty');
+  if (!grid) return;
+  if (!pvbProjects.length) { empty.classList.remove('hidden'); grid.querySelectorAll('.project-card').forEach(c => c.remove()); return; }
+  empty.classList.add('hidden');
+  grid.querySelectorAll('.project-card').forEach(c => c.remove());
+  pvbProjects.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.dataset.id = p.id;
+    const activePhase = p.gantt?.find(g => g.status === 'active');
+    const phaseName = activePhase ? GANTT_PHASES.find(ph => ph.id === activePhase.phaseId)?.name : '—';
+    const progress = p.gantt ? Math.round((p.gantt.filter(g => g.status === 'done').length / GANTT_PHASES.length) * 100) : 0;
+    card.innerHTML = `
+      <div class="project-card-header">
+        <span class="project-card-client">${p.client}</span>
+        <span class="project-card-status-badge">${PROJECT_STATUS[p.status] || p.status}</span>
+      </div>
+      <h3 class="project-card-name">${p.name}</h3>
+      <p class="project-card-contact">${p.contact?.name || ''} ${p.contact?.role ? '· ' + p.contact.role : ''}</p>
+      <div class="project-card-phase">Fase activa: <strong>${phaseName}</strong></div>
+      <div class="project-progress-bar"><div class="project-progress-fill" style="width:${progress}%"></div></div>
+      <div class="project-progress-label">${progress}% completado · Lanzamiento: ${p.launchDate || '—'}</div>
+    `;
+    card.addEventListener('click', () => openProjectDetail(p.id));
+    grid.appendChild(card);
+  });
+}
+
+function openProjectDetail(id) {
+  currentProject = pvbProjects.find(p => p.id === id);
+  if (!currentProject) return;
+  document.getElementById('pvbProjectsList').classList.add('hidden');
+  document.getElementById('pvbProjectDetail').classList.remove('hidden');
+  document.getElementById('detailClient').textContent = currentProject.client;
+  document.getElementById('detailName').textContent = currentProject.name;
+  document.getElementById('detailStatus').textContent = PROJECT_STATUS[currentProject.status] || currentProject.status;
+  renderBriefDisplay();
+  renderGantt();
+  if (currentProject.creativeSession.length > 0) renderCreativeSession();
+  switchSubTab('brief');
+}
+
+function renderBriefDisplay() {
+  if (!currentProject) return;
+  const p = currentProject;
+  const formats = Array.isArray(p.formats) ? p.formats.join(', ') : p.formats;
+  const pathLabels = { 'film-crew': 'Film Crew (orgánico)', 'ia': 'IA Generativa', 'ambos': 'Ambos' };
+  document.getElementById('briefDisplay').innerHTML = `
+    <div class="brief-grid">
+      <div class="brief-section">
+        <h4>Cliente</h4>
+        <p class="brief-value">${p.client}</p>
+      </div>
+      <div class="brief-section">
+        <h4>Contacto</h4>
+        <p class="brief-value">${p.contact?.name || '—'}<br><span class="brief-sub">${p.contact?.role || ''} ${p.contact?.email ? '· ' + p.contact.email : ''}</span></p>
+      </div>
+      <div class="brief-section full">
+        <h4>Objetivo de campaña</h4>
+        <p class="brief-value">${p.objective || '—'}</p>
+      </div>
+      <div class="brief-section full">
+        <h4>KPIs / Métricas de éxito</h4>
+        <p class="brief-value">${p.kpis || '—'}</p>
+      </div>
+      <div class="brief-section">
+        <h4>Presupuesto</h4>
+        <p class="brief-value">${p.budget || '—'}</p>
+      </div>
+      <div class="brief-section">
+        <h4>Lanzamiento objetivo</h4>
+        <p class="brief-value">${p.launchDate || '—'}</p>
+      </div>
+      <div class="brief-section">
+        <h4>Formatos</h4>
+        <p class="brief-value">${formats || '—'}</p>
+      </div>
+      <div class="brief-section">
+        <h4>Path de producción</h4>
+        <p class="brief-value">${pathLabels[p.path] || p.path || '—'}</p>
+      </div>
+      ${p.references ? `<div class="brief-section full"><h4>Referencias</h4><p class="brief-value">${p.references}</p></div>` : ''}
+      ${p.notes ? `<div class="brief-section full"><h4>Notas de la reunión</h4><p class="brief-value">${p.notes}</p></div>` : ''}
+    </div>
+  `;
+}
+
+function renderCreativeSession() {
+  if (!currentProject) return;
+  const msgs = document.getElementById('creativeMessages');
+  const iterate = document.getElementById('creativeIterate');
+  const concept = document.getElementById('conceptOutput');
+  msgs.innerHTML = '';
+  currentProject.creativeSession.forEach(msg => {
+    const div = document.createElement('div');
+    div.className = `creative-msg creative-msg--${msg.role}`;
+    div.innerHTML = `<div class="creative-msg-author">${msg.role === 'david' ? '👔 David — Estrategia' : msg.role === 'ruby' ? '🎨 Ruby — Creativo' : '💡 Concepto'}</div><div class="creative-msg-body">${msg.content.replace(/\n/g, '<br>')}</div>`;
+    msgs.appendChild(div);
+  });
+  msgs.scrollTop = msgs.scrollHeight;
+  iterate.classList.remove('hidden');
+  if (currentProject.concept) {
+    concept.classList.remove('hidden');
+    concept.innerHTML = `<div class="concept-card"><div class="concept-card-label">Concepto Final</div><div class="concept-card-body">${currentProject.concept.replace(/\n/g, '<br>')}</div></div>`;
+  }
+}
+
+async function startCreativeSession() {
+  if (!currentProject) return;
+  const btn = document.getElementById('startCreativeSessionBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generando sesión creativa...'; }
+  const msgs = document.getElementById('creativeMessages');
+  msgs.innerHTML = '<div class="creative-loading"><div class="creative-loading-dots"><span></span><span></span><span></span></div><p>David y Ruby están analizando el brief...</p></div>';
+  const token = localStorage.getItem('brain_token');
+  try {
+    const res = await fetch('/api/brain?action=creative-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ brief: currentProject }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error en sesión creativa');
+    currentProject.creativeSession = data.session;
+    currentProject.concept = data.concept;
+    currentProject.status = 'creative';
+    saveProjects();
+    renderCreativeSession();
+    renderProjects();
+  } catch (err) {
+    msgs.innerHTML = `<div class="creative-error">Error: ${err.message}</div>`;
+    if (btn) { btn.disabled = false; btn.textContent = 'Reintentar'; }
+  }
+}
+
+async function iterateCreativeSession() {
+  if (!currentProject) return;
+  const input = document.getElementById('iterateInput');
+  const prompt = input.value.trim();
+  if (!prompt) return;
+  input.value = '';
+  const iterateBtn = document.getElementById('iterateBtn');
+  iterateBtn.disabled = true;
+  const token = localStorage.getItem('brain_token');
+  try {
+    const res = await fetch('/api/brain?action=creative-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ brief: currentProject, iterate: prompt }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error');
+    currentProject.creativeSession = data.session;
+    currentProject.concept = data.concept;
+    saveProjects();
+    renderCreativeSession();
+  } catch (err) {
+    showNotification(`Error: ${err.message}`, 'error');
+  } finally {
+    iterateBtn.disabled = false;
+  }
+}
+
+function renderGantt() {
+  if (!currentProject) return;
+  const container = document.getElementById('ganttContainer');
+  const meta = document.getElementById('ganttMeta');
+  if (!container) return;
+  const start = new Date(currentProject.startDate + 'T12:00:00');
+  const totalDays = GANTT_PHASES.reduce((s, p) => s + p.days + 1, 0);
+  meta.textContent = `${currentProject.startDate} → ${currentProject.launchDate || 'TBD'} · ${totalDays} días estimados`;
+  let html = `<div class="gantt-table">
+    <div class="gantt-row gantt-row--header">
+      <div class="gantt-col-phase">Fase</div>
+      <div class="gantt-col-owner">Responsable</div>
+      <div class="gantt-col-dates">Fechas</div>
+      <div class="gantt-col-bar">Línea de tiempo</div>
+      <div class="gantt-col-status">Estado</div>
+    </div>`;
+  GANTT_PHASES.forEach(phase => {
+    const g = currentProject.gantt?.find(gg => gg.phaseId === phase.id) || { startDate: '—', endDate: '—', status: 'pending', notes: '' };
+    const statusClass = `gantt-status--${g.status}`;
+    const barWidth = Math.round((phase.days / totalDays) * 100);
+    const barOffset = g.startDate !== '—' ? Math.round(((new Date(g.startDate + 'T12:00:00') - start) / (1000 * 60 * 60 * 24)) / totalDays * 100) : 0;
+    const dlList = phase.deliverables.map(d => `<span class="gantt-deliverable">${d}</span>`).join('');
+    html += `
+    <div class="gantt-row" data-phase="${phase.id}">
+      <div class="gantt-col-phase">
+        <span class="gantt-phase-dot" style="background:${phase.color}"></span>
+        <div>
+          <strong>${phase.name}</strong>
+          <div class="gantt-deliverables">${dlList}</div>
+        </div>
+      </div>
+      <div class="gantt-col-owner">${phase.owner}</div>
+      <div class="gantt-col-dates">${g.startDate}<br><span class="gantt-date-end">${g.endDate}</span></div>
+      <div class="gantt-col-bar">
+        <div class="gantt-bar-track">
+          <div class="gantt-bar-fill" style="left:${barOffset}%;width:${barWidth}%;background:${phase.color}"></div>
+        </div>
+      </div>
+      <div class="gantt-col-status">
+        <select class="gantt-status-select ${statusClass}" data-phase="${phase.id}" title="Estado de la fase">
+          <option value="pending" ${g.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+          <option value="active" ${g.status === 'active' ? 'selected' : ''}>En curso</option>
+          <option value="review" ${g.status === 'review' ? 'selected' : ''}>En revisión</option>
+          <option value="done" ${g.status === 'done' ? 'selected' : ''}>Completado</option>
+          <option value="risk" ${g.status === 'risk' ? 'selected' : ''}>En riesgo</option>
+        </select>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+  container.querySelectorAll('.gantt-status-select').forEach(sel => {
+    sel.addEventListener('change', e => {
+      const phaseId = e.target.dataset.phase;
+      const g = currentProject.gantt.find(gg => gg.phaseId === phaseId);
+      if (g) {
+        g.status = e.target.value;
+        e.target.className = `gantt-status-select gantt-status--${g.status}`;
+        if (g.status === 'done') {
+          const idx = GANTT_PHASES.findIndex(p => p.id === phaseId);
+          const next = currentProject.gantt[idx + 1];
+          if (next && next.status === 'pending') next.status = 'active';
+        }
+        const activePhase = currentProject.gantt.find(gg => gg.status === 'active');
+        const statusMap = { briefing: 'descubrimiento', creative: 'estrategia', preproduction: 'preprod', production: 'produccion', postproduction: 'postprod', delivery: 'revisiones', live: 'lanzamiento', measuring: 'medicion' };
+        if (activePhase) {
+          const projStatus = Object.entries(statusMap).find(([, ph]) => ph === activePhase.phaseId)?.[0];
+          if (projStatus) currentProject.status = projStatus;
+        }
+        saveProjects();
+        document.getElementById('detailStatus').textContent = PROJECT_STATUS[currentProject.status] || currentProject.status;
+        renderProjects();
+      }
+    });
+  });
+}
+
+function switchSubTab(name) {
+  document.querySelectorAll('.project-sub-tab').forEach(b => b.classList.toggle('active', b.dataset.subtab === name));
+  document.querySelectorAll('.project-sub-content').forEach(s => s.classList.toggle('active', s.id === `subtab-${name}`));
+}
+
+function initProyectosTab() {
+  loadProjects();
+  renderProjects();
+
+  document.getElementById('openNewProjectBtn')?.addEventListener('click', () => {
+    document.getElementById('newProjectModal').classList.remove('hidden');
+    document.getElementById('briefStartDate').valueAsDate = new Date();
+  });
+  document.getElementById('closeModalBtn')?.addEventListener('click', () => document.getElementById('newProjectModal').classList.add('hidden'));
+  document.getElementById('closeModalBackdrop')?.addEventListener('click', () => document.getElementById('newProjectModal').classList.add('hidden'));
+  document.getElementById('cancelBriefBtn')?.addEventListener('click', () => document.getElementById('newProjectModal').classList.add('hidden'));
+
+  document.getElementById('briefForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = Object.fromEntries(fd.entries());
+    data.formats = fd.getAll('formats');
+    createProject(data);
+    e.target.reset();
+    document.getElementById('newProjectModal').classList.add('hidden');
+    renderProjects();
+    showNotification('Proyecto creado', 'success');
+  });
+
+  document.getElementById('backToProjectsBtn')?.addEventListener('click', () => {
+    currentProject = null;
+    document.getElementById('pvbProjectDetail').classList.add('hidden');
+    document.getElementById('pvbProjectsList').classList.remove('hidden');
+    renderProjects();
+  });
+
+  document.querySelectorAll('.project-sub-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchSubTab(btn.dataset.subtab);
+      if (btn.dataset.subtab === 'gantt') renderGantt();
+    });
+  });
+
+  document.getElementById('startCreativeSessionBtn')?.addEventListener('click', startCreativeSession);
+  document.getElementById('iterateBtn')?.addEventListener('click', iterateCreativeSession);
+  document.getElementById('iterateInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); iterateCreativeSession(); }
+  });
 }
 
 function initEsperanzaTab() {

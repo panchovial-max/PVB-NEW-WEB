@@ -500,6 +500,78 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que p
       return res.status(200).json({ id: file.id, name: file.name, viewUrl: file.webViewLink, downloadUrl: file.webContentLink });
     }
 
+    if (action === 'creative-session') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const { brief, iterate } = req.body || {};
+      if (!brief) return res.status(400).json({ error: 'brief required' });
+
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
+      const ant = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+      const briefSummary = `
+Cliente: ${brief.client}
+Contacto: ${brief.contact?.name} (${brief.contact?.role})
+Objetivo: ${brief.objective}
+KPIs: ${brief.kpis}
+Presupuesto: ${brief.budget}
+Lanzamiento: ${brief.launchDate}
+Formatos: ${Array.isArray(brief.formats) ? brief.formats.join(', ') : brief.formats}
+Path: ${brief.path}
+Referencias: ${brief.references || '—'}
+Notas de reunión: ${brief.notes || '—'}`.trim();
+
+      const existingSession = brief.creativeSession || [];
+      const historyContext = existingSession.length > 0
+        ? '\n\nSesión previa:\n' + existingSession.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')
+        : '';
+      const iterateContext = iterate ? `\n\nDirectriz adicional del equipo: ${iterate}` : '';
+
+      const davidRes = await ant.messages.create({
+        model: 'claude-opus-4-7-20251101',
+        max_tokens: 800,
+        system: `Eres David, estratega creativo senior de PVB Estudio Creativo. Tienes el estilo de David Droga: directo, exigente con la estrategia, brillante con los insights de consumidor. Analizas briefs y entregas perspectiva estratégica clara. Tu output debe incluir:
+1. **Insight clave** — la verdad humana que conecta con la audiencia
+2. **Territorio de marca** — el espacio emocional donde vive esta campaña
+3. **Mensaje núcleo** — una frase que resume la campaña (no tagline, sino el "qué queremos que piensen/sientan")
+4. **Dirección para Ruby** — instrucción clara sobre el territorio creativo que debe explorar
+Sé conciso y poderoso. No hagas preguntas. Toma posición.`,
+        messages: [{ role: 'user', content: `Brief:\n${briefSummary}${historyContext}${iterateContext}` }],
+      });
+      const davidContent = davidRes.content[0].text;
+
+      const rubyRes = await ant.messages.create({
+        model: 'claude-opus-4-7-20251101',
+        max_tokens: 800,
+        system: `Eres Ruby, Directora Creativa de PVB Estudio Creativo. Eres visual, audaz, y siempre piensas en cómo las ideas se verán en pantalla. Recibes el brief del cliente y la dirección estratégica de David y las conviertes en una idea creativa ejecutable. Tu output debe incluir:
+1. **Concepto** — nombre de la campaña + idea en 1 frase poderosa
+2. **Ejecución** — cómo se ve esto en cada formato (video, foto, social, etc.)
+3. **Tono visual** — paleta emocional, referencias de estilo, textura visual
+4. **Necesidades de pre-producción** — lo que necesitas del Art Director, wardrobe, casting, locaciones
+Sé específica y visionaria. Sin ambigüedades.`,
+        messages: [{ role: 'user', content: `Brief:\n${briefSummary}\n\nDirección estratégica de David:\n${davidContent}${historyContext}${iterateContext}` }],
+      });
+      const rubyContent = rubyRes.content[0].text;
+
+      const session = [
+        ...existingSession,
+        { role: 'david', content: davidContent },
+        { role: 'ruby', content: rubyContent },
+      ];
+
+      const conceptRes = await ant.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 400,
+        system: 'Eres un sintetizador creativo. A partir de la sesión entre David (estrategia) y Ruby (creativo), genera un CONCEPTO FINAL de campaña en formato ejecutivo: 1 párrafo conciso que un Gerente de Marketing puede leer, entender y aprobar en 30 segundos. Incluye: nombre de la campaña, idea central, y por qué va a funcionar.',
+        messages: [{ role: 'user', content: `Sesión creativa:\nDavid: ${davidContent}\n\nRuby: ${rubyContent}` }],
+      });
+
+      return res.status(200).json({
+        ok: true,
+        session,
+        concept: conceptRes.content[0].text,
+      });
+    }
+
     return res.status(400).json({ error: 'Unknown action' });
   } catch (err) {
     console.error('brain error:', err);
