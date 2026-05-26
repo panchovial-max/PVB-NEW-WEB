@@ -1155,6 +1155,7 @@ function setupEventListeners() {
       if (tab.dataset.tab === 'clients') loadClients();
       if (tab.dataset.tab === 'hub') loadHub();
       if (tab.dataset.tab === 'accounts' && !accountsLoaded) { initAccountsTab(); loadAccounts(); }
+      if (tab.dataset.tab === 'esperanza' && !esperanzaLoaded) { initEsperanzaTab(); loadEsperanza(); }
       if (tab.dataset.tab === 'competitor-config' && !competitorTabInitialized) {
         competitorTabInitialized = true;
         initCompetitorConfigTab();
@@ -1359,7 +1360,7 @@ function renderProposals(categoryFilter = 'all', statusFilter = 'pending') {
   const badge = document.getElementById('proposalBadge');
   if (badge) {
     badge.textContent = pendingCount;
-    badge.style.display = pendingCount > 0 ? 'inline-flex' : 'none';
+    badge.classList.toggle('tab-badge--hidden', pendingCount === 0);
   }
 
   if (!proposals.length) {
@@ -1570,11 +1571,30 @@ async function sbFetch(path, options = {}) {
 }
 
 async function initCompetitorConfigTab() {
-  await loadClientsForSelect();
+  await Promise.all([loadClientsForSelect(), loadNotionProjectsForSelect()]);
   await loadTrackersList();
 
   document.getElementById('cfgAddBtn').addEventListener('click', addTracker);
   document.getElementById('scanAllBtn').addEventListener('click', triggerScan);
+}
+
+async function loadNotionProjectsForSelect() {
+  const token = localStorage.getItem('brain_token');
+  try {
+    const res = await fetch('/api/brain?action=hub', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const select = document.getElementById('cfgNotionProject');
+    (data.proyectos || []).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `${p.nombre}${p.cliente ? ` — ${p.cliente}` : ''}`;
+      select.appendChild(opt);
+    });
+  } catch (err) {
+    console.error('loadNotionProjectsForSelect:', err);
+  }
 }
 
 async function loadClientsForSelect() {
@@ -1610,6 +1630,7 @@ async function loadTrackersList() {
         <span class="tracker-handle">@${escapeHtmlMB(t.instagram_handle)}</span>
         ${t.display_name ? `<span class="tracker-name">${escapeHtmlMB(t.display_name)}</span>` : ''}
         <span class="tracker-threshold">${t.viral_threshold.toLocaleString('es-CL')} views</span>
+        ${t.notion_project_id ? `<a class="tracker-notion-link" href="https://notion.so/${t.notion_project_id.replace(/-/g,'')}" target="_blank" title="Ver proyecto en Notion">Notion ↗</a>` : ''}
         <span class="tracker-status ${t.is_active ? 'active' : 'inactive'}">${t.is_active ? 'Activo' : 'Pausado'}</span>
         <button type="button" class="tracker-toggle-btn" onclick="toggleTracker('${t.id}', ${t.is_active})">${t.is_active ? 'Pausar' : 'Activar'}</button>
         <button type="button" class="tracker-delete-btn" onclick="deleteTracker('${t.id}')">✕</button>
@@ -1622,6 +1643,7 @@ async function loadTrackersList() {
 
 async function addTracker() {
   const clientId = document.getElementById('cfgClientSelect').value;
+  const notionProjectId = document.getElementById('cfgNotionProject').value || null;
   const handle = document.getElementById('cfgHandle').value.trim().replace(/^@/, '');
   const displayName = document.getElementById('cfgDisplayName').value.trim();
   const threshold = parseInt(document.getElementById('cfgThreshold').value, 10) || 100000;
@@ -1634,7 +1656,7 @@ async function addTracker() {
   try {
     await sbFetch('competitor_trackers', {
       method: 'POST',
-      body: JSON.stringify({ client_id: clientId, instagram_handle: handle, display_name: displayName || null, viral_threshold: threshold })
+      body: JSON.stringify({ client_id: clientId, instagram_handle: handle, display_name: displayName || null, viral_threshold: threshold, notion_project_id: notionProjectId })
     });
     document.getElementById('cfgHandle').value = '';
     document.getElementById('cfgDisplayName').value = '';
@@ -1893,9 +1915,10 @@ function initHubChat(proyectos = []) {
   if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = 'es-CL';
+    recognition.lang = 'es-ES'; // es-CL not broadly supported; es-ES gives best Spanish coverage
     recognition.continuous = false;
     recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
     let recording = false;
 
@@ -2171,4 +2194,185 @@ async function offboardAccount(id, name) {
 
 function editAccount(id) {
   showNotification('Editor de integrations coming soon — usa el Hub chat por ahora.', 'info');
+}
+
+// ── Esperanza — pipeline de leads ────────────────────────────────
+let esperanzaLoaded = false;
+let currentLeadId   = null;
+
+const ESP_STATUS = {
+  new:       { label: 'New',        color: '#60A5FA' },
+  warm:      { label: 'Warm',       color: '#FBBF24' },
+  hot:       { label: 'Hot 🔥',     color: '#F97316' },
+  converted: { label: 'Convertido', color: '#34D399' },
+  lost:      { label: 'Perdido',    color: '#6B7280' },
+};
+
+const SVC_ICON = { video:'🎬', social:'📱', ads:'📣', web:'🌐', brand:'🎨' };
+
+async function loadEsperanza(force = false) {
+  if (esperanzaLoaded && !force) return;
+  esperanzaLoaded = true;
+  const list   = document.getElementById('espList');
+  const stats  = document.getElementById('espStats');
+  const filter = document.getElementById('espStatusFilter')?.value || 'all';
+  list.innerHTML = '<div class="hub-loading">Cargando leads…</div>';
+
+  try {
+    const token = localStorage.getItem('brain_token');
+    const url   = `/api/brain?action=esperanza${filter !== 'all' ? `&status=${filter}` : ''}`;
+    const res   = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const data  = await res.json();
+    if (!data.ok) throw new Error(data.error);
+
+    // Stats bar
+    const s = data.stats || {};
+    stats.innerHTML = Object.entries(ESP_STATUS).map(([k, v]) =>
+      `<div class="esp-stat-pill" style="border-color:${v.color}20;color:${v.color}">
+        <span class="esp-stat-n">${s[k] || 0}</span>
+        <span class="esp-stat-l">${v.label}</span>
+      </div>`
+    ).join('');
+
+    renderEsperanzaLeads(data.leads || []);
+  } catch (err) {
+    list.innerHTML = `<div class="hub-empty">Error: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderEsperanzaLeads(leads) {
+  const list = document.getElementById('espList');
+  if (!leads.length) {
+    list.innerHTML = '<div class="hub-empty">Sin leads aún — Esperanza está en espera.</div>';
+    return;
+  }
+
+  list.innerHTML = leads.map(l => {
+    const st      = ESP_STATUS[l.status] || ESP_STATUS.new;
+    const svcKey  = Object.keys(SVC_ICON).find(k => (l.service || '').toLowerCase().includes(k)) || '';
+    const icon    = SVC_ICON[svcKey] || '💬';
+    const msgs    = Array.isArray(l.conversation) ? l.conversation.length : 0;
+    const updated = l.updated_at ? new Date(l.updated_at).toLocaleDateString('es-CL') : '—';
+
+    return `
+      <div class="esp-lead-row" data-id="${l.id}" onclick="openEsperanzaDrawer('${l.id}')">
+        <div class="esp-lead-status-dot" style="background:${st.color}" title="${st.label}"></div>
+        <div class="esp-lead-icon">${icon}</div>
+        <div class="esp-lead-info">
+          <div class="esp-lead-name">${escapeHtml(l.name || 'Sin nombre')}</div>
+          <div class="esp-lead-meta">
+            ${l.username ? `@${escapeHtml(l.username)} · ` : ''}
+            ${escapeHtml(l.service || 'Sin servicio')}
+          </div>
+        </div>
+        <div class="esp-lead-right">
+          <span class="esp-status-badge" style="color:${st.color};border-color:${st.color}40">${st.label}</span>
+          <span class="esp-lead-date">${updated}</span>
+          <span class="esp-lead-msgs">${msgs} msgs</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+let allEsperanzaLeads = [];
+
+function openEsperanzaDrawer(id) {
+  // Reload full list from last fetch — re-fetch if needed
+  const token = localStorage.getItem('brain_token');
+  fetch(`/api/brain?action=esperanza`, { headers: { Authorization: `Bearer ${token}` } })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) return;
+      allEsperanzaLeads = data.leads || [];
+      const lead = allEsperanzaLeads.find(l => l.id === id);
+      if (!lead) return;
+      currentLeadId = id;
+      renderDrawer(lead);
+      document.getElementById('espDrawer').classList.add('open');
+    });
+}
+
+function renderDrawer(lead) {
+  const st = ESP_STATUS[lead.status] || ESP_STATUS.new;
+
+  document.getElementById('espDrawerTitle').textContent =
+    `${lead.name || 'Sin nombre'}${lead.username ? ` · @${lead.username}` : ''}`;
+
+  document.getElementById('espDrawerMeta').innerHTML =
+    `<span>${lead.service || '—'}</span>` +
+    (lead.interest ? `<span class="esp-drawer-interest">"${escapeHtml(lead.interest)}"</span>` : '') +
+    (lead.notion_page_id ? `<a class="esp-notion-link" href="https://notion.so/${lead.notion_page_id.replace(/-/g,'')}" target="_blank">Notion ↗</a>` : '');
+
+  // Status selector
+  document.getElementById('espDrawerStatusRow').innerHTML =
+    Object.entries(ESP_STATUS).map(([k, v]) =>
+      `<button type="button" class="esp-status-btn ${lead.status === k ? 'active' : ''}"
+        style="--st-color:${v.color}" onclick="updateLeadStatus('${lead.id}','${k}')">${v.label}</button>`
+    ).join('');
+
+  // Conversation thread
+  const conv = Array.isArray(lead.conversation) ? lead.conversation : [];
+  document.getElementById('espConversation').innerHTML = conv.length
+    ? conv.map(m => `
+        <div class="esp-msg esp-msg-${m.role}">
+          <span class="esp-msg-role">${m.role === 'bot' ? '🌟 Esperanza' : m.role === 'prospect' ? '👤 Prospect' : '🧠 PVB'}</span>
+          <span class="esp-msg-text">${escapeHtml(m.text)}</span>
+          ${m.ts ? `<span class="esp-msg-ts">${new Date(m.ts).toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'})}</span>` : ''}
+        </div>`)
+      .join('')
+    : '<div class="hub-empty">Sin mensajes registrados aún.</div>';
+
+  document.getElementById('espNoteInput').value = lead.notes || '';
+}
+
+async function updateLeadStatus(id, status) {
+  const token = localStorage.getItem('brain_token');
+  try {
+    await fetch('/api/brain?action=esperanza', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id, sub: 'status', status }),
+    });
+    showNotification(`Lead actualizado → ${ESP_STATUS[status]?.label}`, 'success');
+    esperanzaLoaded = false;
+    loadEsperanza(true);
+    // Refresh drawer status buttons
+    const lead = allEsperanzaLeads.find(l => l.id === id);
+    if (lead) { lead.status = status; renderDrawer(lead); }
+  } catch (err) {
+    showNotification(`Error: ${err.message}`, 'error');
+  }
+}
+
+function initEsperanzaTab() {
+  document.getElementById('espDrawerClose')?.addEventListener('click', () => {
+    document.getElementById('espDrawer').classList.remove('open');
+    currentLeadId = null;
+  });
+
+  document.getElementById('espRefreshBtn')?.addEventListener('click', () => {
+    esperanzaLoaded = false;
+    loadEsperanza(true);
+  });
+
+  document.getElementById('espStatusFilter')?.addEventListener('change', () => {
+    esperanzaLoaded = false;
+    loadEsperanza(true);
+  });
+
+  document.getElementById('espNoteSave')?.addEventListener('click', async () => {
+    if (!currentLeadId) return;
+    const notes = document.getElementById('espNoteInput').value.trim();
+    const token = localStorage.getItem('brain_token');
+    try {
+      await fetch('/api/brain?action=esperanza', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: currentLeadId, sub: 'note', notes }),
+      });
+      showNotification('Nota guardada', 'success');
+    } catch (err) {
+      showNotification(`Error: ${err.message}`, 'error');
+    }
+  });
 }

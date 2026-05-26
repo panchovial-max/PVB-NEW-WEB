@@ -2212,6 +2212,7 @@ body.theme-dark .nav-title {
 
 .hidden { display: none !important; }
 
+.tab-badge--hidden { display: none; }
 .tab-badge {
     display: inline-flex;
     align-items: center;
@@ -2867,3 +2868,43 @@ body.theme-dark .nav-title {
 .acct-contract { font-size: 11px; color: var(--brain-muted); white-space: nowrap; }
 .acct-actions { display: flex; gap: 6px; }
 .acct-offboarded { font-size: 11px; color: #6B7280; font-style: italic; }
+
+/* ── Esperanza Tab ──────────────────────────────────────────────── */
+.esp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.esp-filter-row { display: flex; gap: 8px; align-items: center; }
+.esp-stats { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.esp-stat-pill { display: flex; align-items: center; gap: 6px; border: 1px solid; border-radius: 8px; padding: 6px 12px; background: var(--brain-surface); }
+.esp-stat-n { font-size: 18px; font-weight: 800; line-height: 1; }
+.esp-stat-l { font-size: 11px; font-weight: 600; opacity: 0.8; }
+.esp-list { display: flex; flex-direction: column; gap: 6px; }
+.esp-lead-row { display: flex; align-items: center; gap: 12px; background: var(--brain-surface); border: 1px solid var(--brain-border); border-radius: 10px; padding: 12px 16px; cursor: pointer; transition: border-color 0.2s; }
+.esp-lead-row:hover { border-color: rgba(201,169,110,0.4); }
+.esp-lead-status-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
+.esp-lead-icon { font-size: 18px; flex-shrink: 0; }
+.esp-lead-info { flex: 1; min-width: 0; }
+.esp-lead-name { font-size: 14px; font-weight: 700; color: var(--brain-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.esp-lead-meta { font-size: 11px; color: var(--brain-muted); margin-top: 2px; }
+.esp-lead-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.esp-status-badge { font-size: 10px; font-weight: 700; border: 1px solid; border-radius: 5px; padding: 2px 7px; text-transform: uppercase; letter-spacing: 0.05em; }
+.esp-lead-date, .esp-lead-msgs { font-size: 11px; color: var(--brain-muted); }
+
+/* Drawer */
+.esp-drawer { position: fixed; top: 0; right: -480px; width: 460px; height: 100vh; background: var(--brain-surface); border-left: 1px solid var(--brain-border); box-shadow: -8px 0 40px rgba(0,0,0,0.4); z-index: 900; display: flex; flex-direction: column; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); padding: 24px; gap: 0; overflow-y: auto; }
+.esp-drawer.open { right: 0; }
+.esp-drawer-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.esp-drawer-title { font-size: 16px; font-weight: 700; color: var(--brain-text); margin: 0; }
+.esp-drawer-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--brain-muted); }
+.esp-drawer-interest { font-style: italic; color: var(--brain-text); }
+.esp-notion-link { color: var(--brain-gold); text-decoration: none; font-size: 11px; }
+.esp-drawer-status-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.esp-status-btn { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--brain-muted); cursor: pointer; transition: all 0.15s; }
+.esp-status-btn:hover, .esp-status-btn.active { background: color-mix(in srgb, var(--st-color) 15%, transparent); color: var(--st-color); border-color: var(--st-color); }
+.esp-conversation { flex: 1; display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 45vh; overflow-y: auto; }
+.esp-msg { display: flex; flex-direction: column; gap: 2px; }
+.esp-msg-bot { align-items: flex-start; }
+.esp-msg-prospect { align-items: flex-end; }
+.esp-msg-role { font-size: 10px; font-weight: 700; color: var(--brain-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.esp-msg-text { background: var(--brain-bg); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--brain-text); max-width: 90%; }
+.esp-msg-prospect .esp-msg-text { background: rgba(201,169,110,0.12); }
+.esp-msg-ts { font-size: 10px; color: var(--brain-muted); }
+.esp-note-row { display: flex; flex-direction: column; gap: 8px; }

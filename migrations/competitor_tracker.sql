@@ -71,6 +71,12 @@ CREATE POLICY "service_update_viral_posts" ON public.viral_posts
     FOR UPDATE USING (true);
 
 -- ============================================
+-- 3. NOCIÓN PROJECT LINK (migration — add if column missing)
+-- ============================================
+ALTER TABLE public.competitor_trackers
+    ADD COLUMN IF NOT EXISTS notion_project_id TEXT;
+
+-- ============================================
 -- Índices para performance
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_viral_posts_client ON public.viral_posts(client_id);

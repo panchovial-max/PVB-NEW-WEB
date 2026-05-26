@@ -2,6 +2,49 @@
 // Consolida: notify-new-provider + send-provider-message
 import { createClient } from '@supabase/supabase-js';
 
+const NOTION_DB_PROVIDERS = 'a555f623-bb66-43fa-a7d0-a608007142ea';
+
+const CAT_NOTION = {
+    modelos:   'Talent/Modelos',
+    locaciones:'Locaciones',
+    vehiculos: 'Equipamiento',
+    utileria:  'Equipamiento',
+    vestuario: 'Diseño',
+    catering:  null,
+    mascotas:  null,
+    otro:      null,
+};
+
+async function createNotionProvider(record) {
+    const key = process.env.NOTION_API_KEY;
+    if (!key) return;
+
+    const categoria = CAT_NOTION[record.category] ?? null;
+    const instagram = record.instagram
+        ? (record.instagram.startsWith('http') ? record.instagram : `https://instagram.com/${record.instagram.replace('@','')}`)
+        : undefined;
+
+    const properties = {
+        Proveedor: { title: [{ text: { content: record.full_name || '' } }] },
+        Estado:    { select: { name: 'En evaluación' } },
+        ...(record.email    && { Email:    { email: record.email } }),
+        ...(record.phone    && { WhatsApp: { phone_number: record.phone }, Contacto: { rich_text: [{ text: { content: record.phone } }] } }),
+        ...(instagram       && { Instagram: { url: instagram } }),
+        ...(categoria       && { Categoría: { select: { name: categoria } } }),
+        ...(record.referred_by && { Notas: { rich_text: [{ text: { content: `Referido por: ${record.referred_by}` } }] } }),
+    };
+
+    await fetch('https://api.notion.com/v1/pages', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${key}`,
+            'Notion-Version': '2022-06-28',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ parent: { database_id: NOTION_DB_PROVIDERS }, properties }),
+    });
+}
+
 function getSupabase() {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
@@ -42,7 +85,7 @@ export default async function handler(req, res) {
         const { record } = req.body || {};
         if (!record) return res.status(400).json({ error: 'No record' });
         const msg = `🆕 *Nuevo proveedor registrado*\n\n👤 *${record.full_name}*\n📁 ${CAT[record.category] || record.category}\n📱 ${record.phone || '—'}\n✉️ ${record.email || '—'}${record.instagram ? `\n📸 ${record.instagram}` : ''}${record.referred_by ? `\n🔗 Referido por: ${record.referred_by}` : ''}\n\n[Ver en Production CRM](https://panchovial.com/produccion)`;
-        await sendTelegram(msg);
+        await Promise.all([sendTelegram(msg), createNotionProvider(record)]);
         return res.json({ ok: true });
     }
 

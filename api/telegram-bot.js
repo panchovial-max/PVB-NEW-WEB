@@ -426,7 +426,7 @@ export default async function handler(req, res) {
       } else {
         // Resto → Master Brain (Claude con Notion)
         await sendMessage(chatId, '🧠 _Procesando..._');
-        const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY);
+        const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY, chatId);
         await sendMessage(chatId, reply);
       }
     } else {
@@ -434,7 +434,7 @@ export default async function handler(req, res) {
       const handled = await handleEsperanza(chatId, text, message.from, TELEGRAM_API);
       if (!handled) {
         await sendMessage(chatId, '🧠 _Procesando..._');
-        const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY);
+        const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY, chatId);
         await sendMessage(chatId, reply);
       }
     }
