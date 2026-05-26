@@ -234,6 +234,47 @@ export default async function handler(req, res) {
       return res.status(data.ok ? 200 : 500).json({ ok: data.ok, telegram: data });
     }
 
+    // ── Esperanza — leads del agente de ventas ───────────────
+    if (action === 'esperanza') {
+      const sb = getSupabase();
+
+      if (req.method === 'GET') {
+        const statusFilter = req.query.status;
+        let query = sb.from('esperanza_leads')
+          .select('id,chat_id,username,name,service,interest,step,decision,status,notion_page_id,notes,conversation,created_at,updated_at')
+          .order('updated_at', { ascending: false });
+        if (statusFilter && statusFilter !== 'all') query = query.eq('status', statusFilter);
+        const { data, error } = await query;
+        if (error) return res.status(500).json({ error: error.message });
+
+        const stats = { new: 0, warm: 0, hot: 0, converted: 0, lost: 0 };
+        (data || []).forEach(l => { if (stats[l.status] !== undefined) stats[l.status]++; });
+        return res.json({ ok: true, leads: data || [], stats });
+      }
+
+      if (req.method === 'POST') {
+        const { id, sub } = req.body || {};
+        if (!id) return res.status(400).json({ error: 'id required' });
+
+        if (sub === 'status') {
+          const { status } = req.body;
+          if (!status) return res.status(400).json({ error: 'status required' });
+          const { error } = await sb.from('esperanza_leads').update({ status }).eq('id', id);
+          if (error) return res.status(500).json({ error: error.message });
+          return res.json({ ok: true });
+        }
+
+        if (sub === 'note') {
+          const { notes } = req.body;
+          const { error } = await sb.from('esperanza_leads').update({ notes }).eq('id', id);
+          if (error) return res.status(500).json({ error: error.message });
+          return res.json({ ok: true });
+        }
+      }
+
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     // ── Client Accounts — PVB-owned infrastructure ──────────
     if (resolvedAction === 'accounts') {
       const sb = getSupabase();
@@ -339,6 +380,16 @@ export default async function handler(req, res) {
             estado:     { type: 'string', description: 'Ej: "En producción", "Entregado", "En pausa"' },
           }},
         },
+        {
+          name: 'drive_save_file',
+          description: 'Guarda un archivo o imagen en Google Drive PVB. Úsalo cuando generes o recibas un asset (imagen, PDF, video, diseño) que deba quedar registrado en el proyecto.',
+          input_schema: { type: 'object', required: ['url', 'filename', 'mimeType'], properties: {
+            url:      { type: 'string', description: 'URL pública del archivo' },
+            filename: { type: 'string', description: 'Nombre del archivo con extensión (ej: banner-kaya.png)' },
+            mimeType: { type: 'string', description: 'MIME type (ej: image/png, application/pdf, video/mp4)' },
+            project:  { type: 'string', description: 'Nombre del proyecto PVB (ej: Kaya, Refugio Chiloé). Omitir para General.' },
+          }},
+        },
       ];
 
       async function runTool(name, input) {
@@ -394,6 +445,11 @@ export default async function handler(req, res) {
             body: JSON.stringify({ properties: { Estado: { select: { name: input.estado } } } }),
           });
           return { ok: r.ok };
+        }
+        if (name === 'drive_save_file') {
+          const { uploadFromUrl } = await import('../lib/google-drive.js');
+          const file = await uploadFromUrl({ url: input.url, filename: input.filename, mimeType: input.mimeType, project: input.project || null });
+          return { ok: true, id: file.id, viewUrl: file.webViewLink, name: file.name };
         }
         return { error: 'Unknown tool' };
       }

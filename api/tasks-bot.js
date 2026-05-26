@@ -3,6 +3,8 @@
 // DB: ddaabf2319cd4ca09765f63976aa6c16
 // Propiedades: Tarea (title), Estado (select), Prioridad (select), Fecha (date), Contexto (select)
 
+import { uploadFromUrl } from '../lib/google-drive.js';
+
 const TASKS_DB_ID = 'ddaabf2319cd4ca09765f63976aa6c16';
 const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '5999159507';
 
@@ -478,6 +480,37 @@ export default async function handler(req, res) {
         }
       } catch (err) {
         await sendMessage(chatId, `❌ Error procesando audio: ${escapeMarkdown(err.message)}`);
+      }
+      return res.status(200).send('ok');
+    }
+
+    // ── Fotos → guardar en Drive ───────────────────────────────
+    if (message.photo) {
+      const photo = message.photo[message.photo.length - 1]; // mayor resolución
+      try {
+        const fileRes = await fetch(`${TELEGRAM_API}/getFile?file_id=${photo.file_id}`);
+        const fileData = await fileRes.json();
+        const fileUrl = `https://api.telegram.org/file/bot${process.env.TASKS_BOT_TOKEN}/${fileData.result.file_path}`;
+        const filename = `foto-${Date.now()}.jpg`;
+        const file = await uploadFromUrl({ url: fileUrl, filename, mimeType: 'image/jpeg', project: null });
+        await sendMessage(chatId, `📁 Foto guardada en Drive\n[Ver archivo](${file.webViewLink})`);
+      } catch (err) {
+        await sendMessage(chatId, `❌ Error guardando foto: ${err.message}`);
+      }
+      return res.status(200).send('ok');
+    }
+
+    // ── Documentos → guardar en Drive ─────────────────────────
+    if (message.document) {
+      const doc = message.document;
+      try {
+        const fileRes = await fetch(`${TELEGRAM_API}/getFile?file_id=${doc.file_id}`);
+        const fileData = await fileRes.json();
+        const fileUrl = `https://api.telegram.org/file/bot${process.env.TASKS_BOT_TOKEN}/${fileData.result.file_path}`;
+        const file = await uploadFromUrl({ url: fileUrl, filename: doc.file_name || `doc-${Date.now()}`, mimeType: doc.mime_type || 'application/octet-stream', project: null });
+        await sendMessage(chatId, `📁 Documento guardado en Drive\n[Ver archivo](${file.webViewLink})`);
+      } catch (err) {
+        await sendMessage(chatId, `❌ Error guardando documento: ${err.message}`);
       }
       return res.status(200).send('ok');
     }
