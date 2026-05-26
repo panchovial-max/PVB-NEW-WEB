@@ -354,6 +354,7 @@ function goToToday() {
 
 // Show event modal
 function showEventModal(event) {
+    _currentModalEvent = event;
     const modal = document.getElementById('eventModal');
 
     document.getElementById('modalEventTitle').textContent = event.event_title;
@@ -378,11 +379,22 @@ function showEventModal(event) {
         modalActions.innerHTML = '';
     }
 
+    const scheduleBtn = document.getElementById('scheduleEventBtn');
+    const scheduleStatus = document.getElementById('scheduleEventStatus');
+    if (scheduleBtn) {
+        scheduleBtn.disabled = false;
+        scheduleBtn.textContent = 'Agregar a Google Calendar →';
+    }
+    if (scheduleStatus) {
+        scheduleStatus.textContent = '';
+    }
+
     modal.classList.add('active');
 }
 
 // Close event modal
 function closeEventModal() {
+    _currentModalEvent = null;
     document.getElementById('eventModal').classList.remove('active');
 }
 
@@ -540,25 +552,6 @@ async function scheduleCurrentEvent() {
         btn.disabled = false;
         btn.textContent = 'Agregar a Google Calendar →';
     }
-}
-
-// Override showEventModal to store current event and reset schedule UI
-const _originalShowEventModal = showEventModal;
-function showEventModal(event) {
-    _currentModalEvent = event;
-    _originalShowEventModal(event);
-    // Reset schedule section UI
-    const btn = document.getElementById('scheduleEventBtn');
-    const status = document.getElementById('scheduleEventStatus');
-    if (btn) { btn.disabled = false; btn.textContent = 'Agregar a Google Calendar →'; }
-    if (status) { status.textContent = ''; }
-}
-
-// Override closeEventModal to reset state
-const _originalCloseModal = closeEventModal;
-function closeEventModal() {
-    _currentModalEvent = null;
-    _originalCloseModal();
 }
 
 // Export for use in dashboard

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVB Agent OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="agent-os.css">
+</head>
+<body>
+    <main class="agent-shell">
+        <aside class="agent-sidebar">
+            <a class="brand" href="index.html" aria-label="PVB home">
+                <img src="LOGO_PVB.png" alt="PVB" class="brand-logo">
+                <span>Agent OS</span>
+            </a>
+
+            <section class="sidebar-section">
+                <div class="section-kicker">Agentes</div>
+                <div id="agentList" class="agent-list"></div>
+            </section>
+
+            <section class="sidebar-section">
+                <div class="section-kicker">Stack</div>
+                <div id="stackList" class="stack-list"></div>
+            </section>
+        </aside>
+
+        <section class="agent-main">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">PVB Mission Control</p>
+                    <h1>Dashboard para agentes, memoria y ejecucion</h1>
+                </div>
+                <div class="topbar-actions">
+                    <button id="resetDemoBtn" class="ghost-button" type="button">Reset demo</button>
+                    <button id="saveSnapshotBtn" class="primary-button" type="button">Guardar snapshot</button>
+                </div>
+            </header>
+
+            <section class="metrics-row" aria-label="Resumen">
+                <div class="metric">
+                    <span class="metric-label">Agentes activos</span>
+                    <strong id="activeAgents">0</strong>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Sesiones guardadas</span>
+                    <strong id="sessionCount">0</strong>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Memorias</span>
+                    <strong id="memoryCount">0</strong>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Tareas abiertas</span>
+                    <strong id="openTaskCount">0</strong>
+                </div>
+            </section>
+
+            <section class="stack-live-surface">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Live Stack</p>
+                        <h2 id="selectedLayerName">Foundation</h2>
+                    </div>
+                    <span id="selectedLayerStatus" class="status-pill">online</span>
+                </div>
+                <div class="layer-grid">
+                    <div class="layer-map" id="layerMap"></div>
+                    <div class="layer-detail">
+                        <div id="layerDetail" class="layer-detail-card"></div>
+                        <div>
+                            <div class="section-kicker light">Señales recientes</div>
+                            <div id="layerSignals" class="signal-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="workspace-grid">
+                <div class="command-surface">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">Command Center</p>
+                            <h2 id="selectedAgentName">Selecciona un agente</h2>
+                        </div>
+                        <span id="selectedAgentStatus" class="status-pill">idle</span>
+                    </div>
+
+                    <div id="agentProfile" class="agent-profile"></div>
+
+                    <label class="input-label" for="commandInput">Nueva mision</label>
+                    <textarea id="commandInput" rows="5" placeholder="Ej: revisa oportunidades SEO para PVB y crea una lista de acciones con prioridad alta."></textarea>
+                    <div class="command-actions">
+                        <button id="runCommandBtn" class="primary-button" type="button">Enviar a agente</button>
+                        <button id="addMemoryBtn" class="ghost-button" type="button">Guardar como memoria</button>
+                    </div>
+                </div>
+
+                <div class="memory-surface">
+                    <div class="panel-heading compact">
+                        <div>
+                            <p class="eyebrow">Memory Layer</p>
+                            <h2>Busqueda persistente</h2>
+                        </div>
+                    </div>
+                    <input id="memorySearch" class="search-input" type="search" placeholder="Buscar objetivos, decisiones o outputs">
+                    <div id="memoryList" class="memory-list"></div>
+                </div>
+            </section>
+
+            <section class="tool-registry-surface">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Tool Registry</p>
+                        <h2>Herramientas conectables desde GitHub local</h2>
+                    </div>
+                    <div class="tool-filters" role="tablist" aria-label="Filtrar herramientas">
+                        <button class="tool-filter active" type="button" data-tool-filter="all">Todas</button>
+                        <button class="tool-filter" type="button" data-tool-filter="active">Activas</button>
+                        <button class="tool-filter" type="button" data-tool-filter="mcp">MCP</button>
+                        <button class="tool-filter" type="button" data-tool-filter="automation">Automation</button>
+                    </div>
+                </div>
+                <div id="toolRegistry" class="tool-registry"></div>
+            </section>
+
+            <section class="skill-matrix-surface">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Skill Matrix</p>
+                        <h2>Skills asignables por agente</h2>
+                    </div>
+                    <div class="tool-filters" role="tablist" aria-label="Filtrar skills">
+                        <button class="skill-filter active" type="button" data-skill-filter="all">Todas</button>
+                        <button class="skill-filter" type="button" data-skill-filter="assigned">Asignadas</button>
+                        <button class="skill-filter" type="button" data-skill-filter="marketing">Marketing</button>
+                        <button class="skill-filter" type="button" data-skill-filter="delivery">Delivery</button>
+                        <button class="skill-filter" type="button" data-skill-filter="engineering">Engineering</button>
+                    </div>
+                </div>
+                <div id="skillMatrix" class="skill-matrix"></div>
+            </section>
+
+            <section class="orchestrator-surface">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Executable Orchestrator</p>
+                        <h2>Imagenes, Drive, Telegram y scripts locales</h2>
+                    </div>
+                    <button id="checkConnectionsBtn" class="ghost-button" type="button">Chequear conexiones</button>
+                </div>
+
+                <div class="orchestrator-grid">
+                    <div class="orchestrator-panel">
+                        <div class="section-kicker light">Conexiones</div>
+                        <div id="connectionList" class="connection-list"></div>
+                    </div>
+
+                    <div class="orchestrator-panel">
+                        <div class="section-kicker light">Generar imagen + Drive + Telegram</div>
+                        <input id="imageProjectInput" class="search-input" type="text" placeholder="Proyecto Notion / carpeta Drive opcional">
+                        <textarea id="imagePromptInput" rows="4" placeholder="Prompt visual para el agente creativo"></textarea>
+                        <div class="command-actions">
+                            <button id="generateImageBtn" class="primary-button" type="button">Generar imagen</button>
+                            <button id="cancelImageRunBtn" class="ghost-button" type="button">Cancelar pendiente</button>
+                        </div>
+                    </div>
+
+                    <div class="orchestrator-panel">
+                        <div class="section-kicker light">Runner local allowlist</div>
+                        <select id="localScriptSelect" class="runner-select"></select>
+                        <button id="runLocalScriptBtn" class="primary-button full-button" type="button">Ejecutar ahora</button>
+                        <button id="queueScriptBtn" class="ghost-button full-button stacked-button" type="button">Encolar script</button>
+                        <button id="processQueueBtn" class="ghost-button full-button stacked-button" type="button">Procesar cola una vez</button>
+                        <p class="runner-note">Requiere `node local-agent-runner/server.js` activo en puerto 8787.</p>
+                    </div>
+                </div>
+
+                <div class="results-grid">
+                    <div>
+                        <div class="section-kicker light">Resultados visuales</div>
+                        <div id="imageResults" class="image-results"></div>
+                    </div>
+                    <div>
+                        <div class="section-kicker light">Logs de ejecucion</div>
+                        <div id="executionLogs" class="execution-logs"></div>
+                    </div>
+                </div>
+                <div class="run-queue-header">
+                    <div class="section-kicker light">Cola Supabase</div>
+                    <button id="refreshRunsBtn" class="ghost-button" type="button">Actualizar runs</button>
+                </div>
+                <div id="runQueue" class="run-queue"></div>
+            </section>
+
+            <section class="operations-grid">
+                <div class="surface">
+                    <div class="panel-heading compact">
+                        <div>
+                            <p class="eyebrow">Historial</p>
+                            <h2>Sesiones recientes</h2>
+                        </div>
+                    </div>
+                    <div id="sessionList" class="session-list"></div>
+                </div>
+
+                <div class="surface">
+                    <div class="panel-heading compact">
+                        <div>
+                            <p class="eyebrow">Production</p>
+                            <h2>Tareas por flujo</h2>
+                        </div>
+                    </div>
+                    <div id="taskBoard" class="task-board"></div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="agent-os.js"></script>
+</body>
+</html>

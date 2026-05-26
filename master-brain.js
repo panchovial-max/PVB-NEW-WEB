@@ -288,7 +288,7 @@ function showPinScreen() {
     pinSubmit.textContent = '...';
     pinSubmit.disabled = true;
     try {
-      const res = await fetch('/.netlify/functions/brain-login', {
+      const res = await fetch('/api/brain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin }),
@@ -889,7 +889,7 @@ async function loadClients() {
 
   const token = localStorage.getItem('brain_token');
   try {
-    const res = await fetch('/.netlify/functions/brain-clients?action=list', {
+    const res = await fetch('/api/brain?action=list', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const data = await res.json();
@@ -950,7 +950,7 @@ async function loadClientStats(clientId, platform) {
 
   const token = localStorage.getItem('brain_token');
   try {
-    const res = await fetch(`/.netlify/functions/brain-clients?action=stats&user_id=${clientId}&platform=${platform}`, {
+    const res = await fetch(`/api/brain?action=stats&user_id=${clientId}&platform=${platform}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const data = await res.json();
@@ -1075,7 +1075,68 @@ function openAgentModal(agentId) {
     if (removeBtn) removeLearning(removeBtn.dataset.lid, agentId);
   });
 
+  // Show run section only for creative agents
+  const CREATIVE_DEPTS = ['creative'];
+  const IMAGE_CAPABLE = ['ai-image-prompts', 'photography-direction', 'visual-concept-translation'];
+  const hasImageCap = (agent.capabilities || '').split(',').some(c => IMAGE_CAPABLE.includes(c.trim()));
+  const isCreative = CREATIVE_DEPTS.includes(agent.dept) && hasImageCap;
+  const runSection = document.getElementById('agentRunSection');
+  runSection.classList.toggle('agent-run-section-hidden', !isCreative);
+
+  // Reset run UI
+  document.getElementById('agentProjectInput').value = '';
+  document.getElementById('agentPromptInput').value = '';
+  document.getElementById('agentRunResult').classList.add('agent-run-result-hidden');
+  document.getElementById('agentRunError').classList.add('agent-run-error-hidden');
+  document.getElementById('agentRunPreview').classList.add('agent-run-preview-hidden');
+  document.getElementById('agentRunBtnText').textContent = '▶ Generar Imagen';
+  document.getElementById('agentRunBtn').disabled = false;
+
+  // Wire up run button (replace listener)
+  const runBtn = document.getElementById('agentRunBtn');
+  const newRunBtn = runBtn.cloneNode(true);
+  runBtn.parentNode.replaceChild(newRunBtn, runBtn);
+  newRunBtn.addEventListener('click', () => runAgentImageTask(agentId));
+
   document.getElementById('agentModal').classList.add('open');
+}
+
+async function runAgentImageTask(agentId) {
+  const prompt = document.getElementById('agentPromptInput').value.trim();
+  const projectName = document.getElementById('agentProjectInput').value.trim();
+  if (!prompt) { alert('Escribe un prompt primero'); return; }
+
+  const btn = document.getElementById('agentRunBtn');
+  btn.disabled = true;
+  document.getElementById('agentRunBtnText').textContent = '⏳ Generando...';
+  document.getElementById('agentRunResult').classList.add('agent-run-result-hidden');
+  document.getElementById('agentRunError').classList.add('agent-run-error-hidden');
+
+  try {
+    const token = localStorage.getItem('brain_token');
+    const res = await fetch('/api/agent-run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ agentId, prompt, action: 'generate-image', projectName: projectName || undefined }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Error desconocido');
+
+    document.getElementById('agentRunLink').href = data.result.driveLink;
+    const preview = document.getElementById('agentRunPreview');
+    if (data.result.previewUrl) {
+      preview.src = data.result.previewUrl;
+      preview.classList.remove('agent-run-preview-hidden');
+    }
+    document.getElementById('agentRunResult').classList.remove('agent-run-result-hidden');
+    document.getElementById('agentRunBtnText').textContent = '✓ Listo';
+  } catch (err) {
+    const errEl = document.getElementById('agentRunError');
+    errEl.textContent = `Error: ${err.message}`;
+    errEl.classList.remove('agent-run-error-hidden');
+    document.getElementById('agentRunBtnText').textContent = '▶ Generar Imagen';
+    btn.disabled = false;
+  }
 }
 
 function closeAgentModal() {
@@ -1092,6 +1153,8 @@ function setupEventListeners() {
       tab.classList.add('active');
       document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
       if (tab.dataset.tab === 'clients') loadClients();
+      if (tab.dataset.tab === 'hub') loadHub();
+      if (tab.dataset.tab === 'accounts' && !accountsLoaded) { initAccountsTab(); loadAccounts(); }
       if (tab.dataset.tab === 'competitor-config' && !competitorTabInitialized) {
         competitorTabInitialized = true;
         initCompetitorConfigTab();
@@ -1517,7 +1580,7 @@ async function initCompetitorConfigTab() {
 async function loadClientsForSelect() {
   const token = localStorage.getItem('brain_token');
   try {
-    const res = await fetch('/.netlify/functions/brain-clients?action=list', {
+    const res = await fetch('/api/brain?action=list', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const data = await res.json();
@@ -1634,3 +1697,478 @@ function escapeHtmlMB(str) {
 }
 
 let competitorTabInitialized = false;
+
+// ── Hub Tab: Notion + Telegram ────────────────────────────────────────────────
+let hubLoaded = false;
+
+async function loadHub(force = false) {
+  if (hubLoaded && !force) return;
+  hubLoaded = true;
+  const root = document.getElementById('hub-root');
+  if (!root) return;
+  root.innerHTML = '<div class="hub-loading">LOADING HUB…</div>';
+
+  const token = localStorage.getItem('brain_token');
+  try {
+    const res = await fetch('/api/brain?action=hub', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    root.innerHTML = renderHub(data);
+    initHubTelegram();
+    initHubChat(data.proyectos || []);
+  } catch (err) {
+    root.innerHTML = `<div class="hub-empty">Error cargando Hub: ${err.message}</div>`;
+  }
+}
+
+function prioClass(p) {
+  if (!p) return '';
+  const l = p.toLowerCase();
+  if (l === 'alta') return 'alta';
+  if (l === 'baja') return 'low';
+  return 'media';
+}
+
+function dotClass(p) {
+  if (!p) return '';
+  const l = p.toLowerCase();
+  if (l === 'alta') return 'high';
+  if (l === 'idea') return 'idea';
+  if (l === 'baja') return 'low';
+  return '';
+}
+
+function renderHub({ tareas = [], proyectos = [], boletas = [] }) {
+  const fmtMonto = (n) => n != null ? `$${Number(n).toLocaleString('es-CL')}` : '—';
+  const fmtFecha = (d) => d ? d.slice(0, 10) : '';
+
+  const tareasHTML = tareas.length
+    ? tareas.map(t => `
+      <div class="hub-item">
+        <div class="hub-item-dot ${dotClass(t.prioridad)}"></div>
+        <div class="hub-item-body">
+          <div class="hub-item-name">${escapeHtml(t.tarea)}</div>
+          <div class="hub-item-meta">
+            ${t.contexto ? `<span class="hub-badge">${t.contexto}</span>` : ''}
+            ${t.prioridad ? `<span class="hub-badge ${prioClass(t.prioridad)}">${t.prioridad}</span>` : ''}
+            ${t.fecha ? `<span>${fmtFecha(t.fecha)}</span>` : ''}
+          </div>
+        </div>
+        ${t.url ? `<a class="hub-item-link" href="${t.url}" target="_blank">↗</a>` : ''}
+      </div>`).join('')
+    : '<div class="hub-empty">Sin tareas pendientes ✓</div>';
+
+  const proyectosHTML = proyectos.length
+    ? proyectos.map(p => `
+      <div class="hub-item">
+        <div class="hub-item-dot"></div>
+        <div class="hub-item-body">
+          <div class="hub-item-name">${escapeHtml(p.nombre)}</div>
+          <div class="hub-item-meta">
+            ${p.estado ? `<span class="hub-badge active">${p.estado}</span>` : ''}
+            ${p.cliente ? `<span>${escapeHtml(p.cliente)}</span>` : ''}
+          </div>
+        </div>
+        ${p.url ? `<a class="hub-item-link" href="${p.url}" target="_blank">↗</a>` : ''}
+      </div>`).join('')
+    : '<div class="hub-empty">Sin proyectos activos</div>';
+
+  const boletasHTML = boletas.length
+    ? boletas.map(b => `
+      <div class="hub-finance-row">
+        <span>${escapeHtml(b.nombre)}${b.tipo ? ` <span class="hub-badge">${b.tipo}</span>` : ''}</span>
+        <span class="hub-finance-monto">${fmtMonto(b.monto)}</span>
+      </div>`).join('')
+    : '<div class="hub-empty">Sin registros recientes</div>';
+
+  return `
+    <div class="hub-grid">
+      <div class="hub-col-wide">
+        <div class="hub-widget">
+          <div class="hub-widget-title">
+            <span>✓</span> Tareas Pendientes
+            <button class="hub-refresh-btn" onclick="loadHub(true)">↺ refresh</button>
+          </div>
+          ${tareasHTML}
+        </div>
+        <div class="hub-widget">
+          <div class="hub-widget-title"><span>🎬</span> Proyectos Activos</div>
+          ${proyectosHTML}
+        </div>
+      </div>
+      <div class="hub-col-narrow">
+        <div class="hub-widget">
+          <div class="hub-widget-title"><span>💰</span> Boletas Recientes</div>
+          ${boletasHTML}
+        </div>
+        <div class="hub-widget">
+          <div class="hub-widget-title"><span>✈️</span> Telegram Quick Send</div>
+          <div class="hub-telegram-form">
+            <textarea class="hub-telegram-textarea" id="hubTgMsg" placeholder="Mensaje a tu Telegram personal…"></textarea>
+            <button class="hub-telegram-btn" id="hubTgBtn">SEND ↗</button>
+            <div class="hub-telegram-status" id="hubTgStatus"></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function initHubTelegram() {
+  const btn = document.getElementById('hubTgBtn');
+  const textarea = document.getElementById('hubTgMsg');
+  const status = document.getElementById('hubTgStatus');
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    const message = textarea.value.trim();
+    if (!message) return;
+    btn.disabled = true;
+    btn.textContent = '…';
+    status.textContent = '';
+    status.className = 'hub-telegram-status';
+
+    try {
+      const token = localStorage.getItem('brain_token');
+      const res = await fetch('/api/brain?action=telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        status.textContent = '✓ Enviado';
+        status.className = 'hub-telegram-status ok';
+        textarea.value = '';
+      } else {
+        throw new Error(data.error || 'Error');
+      }
+    } catch (err) {
+      status.textContent = `✗ ${err.message}`;
+      status.className = 'hub-telegram-status err';
+    }
+    btn.disabled = false;
+    btn.textContent = 'SEND ↗';
+  });
+}
+
+// ── Hub Chat + Voice ─────────────────────────────────────────────
+let hubChatHistory = [];
+
+function initHubChat(proyectos = []) {
+  const widget = document.getElementById('hub-chat-widget');
+  const input = document.getElementById('hubChatInput');
+  const sendBtn = document.getElementById('hubChatSend');
+  const micBtn = document.getElementById('hubMicBtn');
+  const messages = document.getElementById('hubChatMessages');
+  const projectSelect = document.getElementById('hubProjectSelect');
+  if (!widget || !input || !sendBtn) return;
+
+  // Populate project selector from live Notion data
+  if (projectSelect && proyectos.length) {
+    proyectos.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.nombre;
+      opt.textContent = p.nombre + (p.cliente ? ` — ${p.cliente}` : '');
+      projectSelect.appendChild(opt);
+    });
+  }
+
+  // Show the chat widget
+  widget.classList.remove('hub-chat-hidden');
+
+  // Send on button click
+  sendBtn.addEventListener('click', () => sendHubMessage());
+
+  // Send on Enter (Shift+Enter = newline)
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendHubMessage();
+    }
+  });
+
+  // Voice input via Web Speech API
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-CL';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    let recording = false;
+
+    micBtn.addEventListener('click', () => {
+      if (recording) {
+        recognition.stop();
+      } else {
+        recognition.start();
+        micBtn.classList.add('recording');
+        micBtn.title = 'Grabando… (clic para parar)';
+        recording = true;
+      }
+    });
+
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      input.value = (input.value ? input.value + ' ' : '') + transcript;
+      input.focus();
+    };
+
+    recognition.onend = () => {
+      recording = false;
+      micBtn.classList.remove('recording');
+      micBtn.title = 'Hablar';
+    };
+
+    recognition.onerror = () => {
+      recording = false;
+      micBtn.classList.remove('recording');
+      micBtn.title = 'Hablar';
+    };
+  } else {
+    micBtn.style.display = 'none';
+  }
+
+  function appendMessage(role, text) {
+    const empty = messages.querySelector('.hub-chat-empty');
+    if (empty) empty.remove();
+
+    const el = document.createElement('div');
+    el.className = `hub-msg hub-msg-${role}`;
+    el.innerHTML = `<div class="hub-msg-bubble">${escapeHtml(text)}</div>`;
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+    return el;
+  }
+
+  function appendThinking() {
+    const el = document.createElement('div');
+    el.className = 'hub-msg hub-msg-assistant hub-chat-thinking';
+    el.innerHTML = '<div class="hub-msg-bubble"><span></span><span></span><span></span></div>';
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+    return el;
+  }
+
+  async function sendHubMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    sendBtn.disabled = true;
+    appendMessage('user', text);
+    hubChatHistory.push({ role: 'user', content: text });
+
+    const thinking = appendThinking();
+
+    try {
+      const token = localStorage.getItem('brain_token');
+      const proyecto = document.getElementById('hubProjectSelect')?.value || '';
+      const res = await fetch('/api/brain?action=chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: text, history: hubChatHistory.slice(-10), proyecto }),
+      });
+      const data = await res.json();
+      thinking.remove();
+
+      if (!data.ok) throw new Error(data.error || 'Error del servidor');
+
+      appendMessage('assistant', data.reply);
+      hubChatHistory.push({ role: 'assistant', content: data.reply });
+
+      // If the AI created/completed tasks, refresh hub data
+      if (data.actionsPerformed && data.actionsPerformed.length > 0) {
+        setTimeout(() => loadHub(true), 800);
+      }
+    } catch (err) {
+      thinking.remove();
+      appendMessage('assistant', `Error: ${err.message}`);
+    }
+
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Cuentas PVB — Client infrastructure ──────────────────────────
+let accountsLoaded = false;
+
+async function loadAccounts(force = false) {
+  if (accountsLoaded && !force) return;
+  accountsLoaded = true;
+  const list = document.getElementById('accountsList');
+  if (!list) return;
+  list.innerHTML = '<div class="hub-loading">Cargando cuentas…</div>';
+
+  try {
+    const token = localStorage.getItem('brain_token');
+    const res = await fetch('/api/brain?action=accounts', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    renderAccounts(data.accounts || []);
+  } catch (err) {
+    list.innerHTML = `<div class="hub-empty">Error: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+const SERVICE_LABELS = { 'full-service': 'Full Service', social: 'Social', video: 'Video', foto: 'Foto' };
+const STATUS_COLORS  = { active: '#34D399', paused: '#FBBF24', offboarded: '#6B7280' };
+
+function renderAccounts(accounts) {
+  const list = document.getElementById('accountsList');
+  if (!accounts.length) {
+    list.innerHTML = '<div class="hub-empty">Sin cuentas registradas — crea la primera.</div>';
+    return;
+  }
+
+  list.innerHTML = accounts.map(a => {
+    const integrations = [
+      { key: 'ig',      label: 'IG',      active: !!a.ig_account_id },
+      { key: 'fb',      label: 'FB',      active: !!a.fb_access_token },
+      { key: 'tiktok',  label: 'TT',      active: !!a.tiktok_access_token },
+      { key: 'youtube', label: 'YT',      active: !!a.yt_refresh_token },
+      { key: 'notion',  label: 'Notion',  active: !!a.notion_page_id },
+      { key: 'tg',      label: 'TG',      active: !!a.telegram_chat_id },
+    ];
+
+    const dots = integrations.map(i => `
+      <span class="acct-integration ${i.active ? 'connected' : 'disconnected'}" title="${i.label}: ${i.active ? 'Conectado' : 'Sin conectar'}">
+        ${i.label}
+      </span>`).join('');
+
+    const budget = a.monthly_budget_clp
+      ? `$${Number(a.monthly_budget_clp).toLocaleString('es-CL')}/mes`
+      : '—';
+
+    const contractEnd = a.contract_end
+      ? new Date(a.contract_end) < new Date() ? '⚠ Vencido' : a.contract_end.slice(0,10)
+      : '—';
+
+    return `
+      <div class="acct-card" data-id="${a.id}">
+        <div class="acct-card-left">
+          <div class="acct-status-dot" style="background:${STATUS_COLORS[a.status] || '#6B7280'}" title="${a.status}"></div>
+          <div>
+            <div class="acct-name">${escapeHtml(a.client_name)}</div>
+            <div class="acct-meta">
+              ${a.email_alias ? `<span class="acct-email">${escapeHtml(a.email_alias)}</span>` : ''}
+              ${a.service_type ? `<span class="acct-badge">${SERVICE_LABELS[a.service_type] || a.service_type}</span>` : ''}
+              <span class="acct-budget">${budget}</span>
+            </div>
+            <div class="acct-integrations">${dots}</div>
+          </div>
+        </div>
+        <div class="acct-card-right">
+          <div class="acct-contract">Contrato hasta: <strong>${contractEnd}</strong></div>
+          <div class="acct-actions">
+            <button type="button" class="action-btn small" onclick="editAccount('${a.id}')">✎ Editar</button>
+            ${a.status !== 'offboarded'
+              ? `<button type="button" class="action-btn small danger" onclick="offboardAccount('${a.id}','${escapeHtml(a.client_name)}')">Offboard</button>`
+              : '<span class="acct-offboarded">Offboarded</span>'}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function initAccountsTab() {
+  const newBtn   = document.getElementById('accountsNewBtn');
+  const form     = document.getElementById('accountsForm');
+  const saveBtn  = document.getElementById('acfSave');
+  const cancelBtn= document.getElementById('acfCancel');
+  const slugInput= document.getElementById('acfSlug');
+  const nameInput= document.getElementById('acfName');
+
+  // Auto-generate slug from name
+  nameInput?.addEventListener('input', () => {
+    if (slugInput.dataset.manual) return;
+    slugInput.value = nameInput.value.toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g,'')
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  });
+  slugInput?.addEventListener('input', () => { slugInput.dataset.manual = '1'; });
+
+  newBtn?.addEventListener('click', () => {
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) nameInput?.focus();
+  });
+
+  cancelBtn?.addEventListener('click', () => {
+    form.classList.add('hidden');
+    form.reset?.();
+    delete slugInput.dataset.manual;
+  });
+
+  saveBtn?.addEventListener('click', async () => {
+    const client_name = document.getElementById('acfName').value.trim();
+    const client_slug = document.getElementById('acfSlug').value.trim();
+    if (!client_name || !client_slug) { showNotification('Nombre y slug son obligatorios', 'error'); return; }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Creando…';
+    try {
+      const token = localStorage.getItem('brain_token');
+      const res = await fetch('/api/brain?action=accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          sub: 'create',
+          client_name,
+          client_slug,
+          email_alias:        document.getElementById('acfEmail').value.trim() || null,
+          service_type:       document.getElementById('acfService').value || null,
+          monthly_budget_clp: parseInt(document.getElementById('acfBudget').value) || null,
+          contract_start:     document.getElementById('acfStart').value || null,
+          notes:              document.getElementById('acfNotes').value.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      showNotification(`Cliente "${client_name}" creado. PVB tiene el control.`, 'success');
+      form.classList.add('hidden');
+      accountsLoaded = false;
+      loadAccounts(true);
+    } catch (err) {
+      showNotification(`Error: ${err.message}`, 'error');
+    }
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Crear cuenta';
+  });
+}
+
+async function offboardAccount(id, name) {
+  if (!confirm(`¿Offboardear a ${name}? Se borrarán todos los tokens OAuth almacenados. Esta acción no se puede deshacer.`)) return;
+  const token = localStorage.getItem('brain_token');
+  try {
+    const res = await fetch('/api/brain?action=accounts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ sub: 'offboard', id }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    showNotification(`${name} offboardeado. Tokens eliminados.`, 'info');
+    accountsLoaded = false;
+    loadAccounts(true);
+  } catch (err) {
+    showNotification(`Error: ${err.message}`, 'error');
+  }
+}
+
+function editAccount(id) {
+  showNotification('Editor de integrations coming soon — usa el Hub chat por ahora.', 'info');
+}

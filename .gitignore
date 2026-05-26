@@ -57,3 +57,8 @@ public/plugins/
 # Local Netlify folder
 .netlify
 .vercel
+.env*.local
+
+# Service account credentials
+*-sa.json
+api/pvb-finances-sa.json

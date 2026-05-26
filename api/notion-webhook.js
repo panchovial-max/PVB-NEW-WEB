@@ -3,7 +3,7 @@
 
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { fetchPage, upsertPage, detectDbName } from './notion-sync.js';
+import { fetchPage, upsertPage, detectDbName } from './_notion-sync.js';
 
 const WEBHOOK_SECRET = process.env.NOTION_WEBHOOK_SECRET;
 const SUPABASE_URL   = process.env.SUPABASE_URL;

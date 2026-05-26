@@ -8,10 +8,10 @@ import {
   createProyecto,
   updateProyectoEstado,
   addNotaProyecto
-} from './notion-query.js';
-import { askClaude } from './telegram-ai.js';
-import { handleEsperanza, handleEsperanzaCommand, handleEsperanzaCallback } from './esperanza-bot.js';
-import { handleGrowthMessage, handleGrowthVoice } from './pvb-growth.js';
+} from '../lib/notion-query.js';
+import { askClaude } from '../lib/telegram-ai.js';
+import { handleEsperanza, handleEsperanzaCommand, handleEsperanzaCallback } from '../lib/esperanza-bot.js';
+import { handleGrowthMessage, handleGrowthVoice } from '../lib/pvb-growth.js';
 const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || process.env.TELEGRAM_OWNER_CHAT_ID;
 
 let TELEGRAM_API;

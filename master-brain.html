@@ -84,6 +84,8 @@
         <!-- Tab Navigation -->
         <div class="brain-tabs">
             <button class="brain-tab active" data-tab="neural-map">Office</button>
+            <button class="brain-tab" data-tab="hub">Hub ⚡</button>
+            <button class="brain-tab" data-tab="accounts">Cuentas PVB 🔐</button>
             <button class="brain-tab" data-tab="proposals">Proposals <span class="tab-badge" id="proposalBadge" style="display:none">0</span></button>
             <button class="brain-tab" data-tab="campaigns">Campaigns</button>
             <button class="brain-tab" data-tab="departments">Departments</button>
@@ -116,6 +118,90 @@
                 <div class="office-floor" id="officeFloor">
                     <!-- Rendered by JS -->
                 </div>
+            </div>
+        </section>
+
+        <!-- TAB: Hub — Notion + Telegram + Chat -->
+        <section class="brain-tab-content" id="tab-hub">
+            <div id="hub-root">
+                <div class="hub-loading">LOADING HUB…</div>
+            </div>
+            <div class="hub-widget hub-chat hub-chat-hidden" id="hub-chat-widget">
+                <div class="hub-widget-title"><span>🧠</span> Campaign Chat <span class="hub-chat-subtitle">— pregunta, crea tareas, actualiza proyectos</span></div>
+                <div class="hub-chat-messages" id="hubChatMessages">
+                    <div class="hub-chat-empty">Escribe o habla para orquestar tus campañas…</div>
+                </div>
+                <div class="hub-chat-project-row">
+                    <select class="hub-project-select" id="hubProjectSelect" title="Contexto de proyecto">
+                        <option value="">Sin proyecto específico</option>
+                    </select>
+                </div>
+                <div class="hub-chat-input-row">
+                    <textarea class="hub-chat-input" id="hubChatInput" placeholder="¿Cómo va la campaña Kaya? ¿Qué tengo pendiente hoy?…" rows="1"></textarea>
+                    <button type="button" class="hub-mic-btn" id="hubMicBtn" title="Hablar">🎙️</button>
+                    <button type="button" class="hub-chat-send" id="hubChatSend" title="Enviar">↑</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Cuentas PVB — Client infrastructure owned by PVB -->
+        <section class="brain-tab-content" id="tab-accounts">
+            <div class="accounts-header">
+                <div class="accounts-title-row">
+                    <h2 class="section-title">Cuentas PVB <span class="accounts-badge">PVB controla todo</span></h2>
+                    <button type="button" class="action-btn" id="accountsNewBtn">+ Nuevo cliente</button>
+                </div>
+                <p class="accounts-subtitle">Infraestructura creada y administrada por PVB. Los clientes acceden solo a través del portal.</p>
+            </div>
+
+            <!-- New client form (hidden by default) -->
+            <div class="accounts-form hidden" id="accountsForm">
+                <h3 class="accounts-form-title">Provisionar nuevo cliente</h3>
+                <div class="accounts-form-grid">
+                    <div class="accounts-field">
+                        <label class="accounts-label">Nombre cliente *</label>
+                        <input type="text" class="accounts-input" id="acfName" placeholder="Ej: Kaya Unite">
+                    </div>
+                    <div class="accounts-field">
+                        <label class="accounts-label">Slug (único) *</label>
+                        <input type="text" class="accounts-input" id="acfSlug" placeholder="kaya">
+                    </div>
+                    <div class="accounts-field">
+                        <label class="accounts-label">Email alias PVB</label>
+                        <input type="text" class="accounts-input" id="acfEmail" placeholder="kaya@pvb.cl">
+                    </div>
+                    <div class="accounts-field">
+                        <label class="accounts-label">Tipo de servicio</label>
+                        <select class="accounts-input" id="acfService" title="Tipo de servicio">
+                            <option value="">Seleccionar…</option>
+                            <option value="full-service">Full Service</option>
+                            <option value="social">Social Media</option>
+                            <option value="video">Video</option>
+                            <option value="foto">Fotografía</option>
+                        </select>
+                    </div>
+                    <div class="accounts-field">
+                        <label class="accounts-label">Budget mensual (CLP)</label>
+                        <input type="number" class="accounts-input" id="acfBudget" placeholder="1200000" step="50000">
+                    </div>
+                    <div class="accounts-field">
+                        <label class="accounts-label">Inicio contrato</label>
+                        <input type="date" class="accounts-input" id="acfStart" title="Fecha de inicio del contrato">
+                    </div>
+                    <div class="accounts-field accounts-field--full">
+                        <label class="accounts-label">Notas internas</label>
+                        <textarea class="accounts-input accounts-textarea" id="acfNotes" placeholder="Referido por…, sensibilidades, preferencias de comunicación…" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="accounts-form-actions">
+                    <button type="button" class="action-btn" id="acfSave">Crear cuenta</button>
+                    <button type="button" class="action-btn secondary" id="acfCancel">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Client accounts list -->
+            <div class="accounts-list" id="accountsList">
+                <div class="hub-loading">Cargando cuentas…</div>
             </div>
         </section>
 
@@ -163,7 +249,7 @@
         <section class="brain-tab-content" id="tab-agents">
             <div class="agents-toolbar">
                 <input type="text" class="agents-search" id="agentSearch" placeholder="Search agents...">
-                <select class="filter-select agents-filter" id="agentDeptFilter">
+                <select class="filter-select agents-filter" id="agentDeptFilter" title="Filter by department">
                     <option value="all">All Departments</option>
                 </select>
             </div>
@@ -184,7 +270,7 @@
             <div class="portfolio-header" id="portfolioHeader">
                 <div class="portfolio-connect" id="portfolioConnect">
                     <p class="portfolio-connect-text">Connect Google Drive to browse deliverables</p>
-                    <button type="button" class="pin-btn" id="connectDriveBtn" style="width: auto; padding: 0.7rem 2rem;">Connect Drive</button>
+                    <button type="button" class="pin-btn portfolio-connect-btn" id="connectDriveBtn">Connect Drive</button>
                 </div>
             </div>
             <div class="portfolio-folders" id="portfolioFolders">
@@ -274,7 +360,7 @@
         <!-- TAB: Audit Log -->
         <section class="brain-tab-content" id="tab-audit">
             <div class="audit-toolbar">
-                <select class="filter-select" id="auditFilter">
+                <select class="filter-select" id="auditFilter" title="Filter by action type">
                     <option value="all">All Actions</option>
                     <option value="execution">Executions</option>
                     <option value="budget">Budget</option>
@@ -290,7 +376,7 @@
         <!-- Agent Detail Modal -->
         <div class="agent-modal-overlay" id="agentModal">
             <div class="agent-modal">
-                <button class="modal-close" id="modalClose">&times;</button>
+                <button type="button" class="modal-close" id="modalClose">&times;</button>
                 <div class="modal-header">
                     <div class="modal-agent-icon" id="modalIcon"></div>
                     <div>
@@ -347,6 +433,26 @@
                             </select>
                             <button type="button" class="learning-add-btn" id="learningAddBtn">+</button>
                         </div>
+                    </div>
+
+                    <!-- Run Task Section -->
+                    <div class="modal-section agent-run-section-hidden" id="agentRunSection">
+                        <h3>Ejecutar Tarea</h3>
+                        <div class="agent-run-form">
+                            <input type="text" id="agentProjectInput" class="agent-prompt-textarea agent-project-input" placeholder="Nombre del proyecto en Notion (opcional)..."/>
+                            <textarea id="agentPromptInput" class="agent-prompt-textarea" rows="3" placeholder="Describe la imagen que quieres generar..."></textarea>
+                            <button type="button" class="agent-run-btn" id="agentRunBtn">
+                                <span id="agentRunBtnText">&#9654; Generar Imagen</span>
+                            </button>
+                        </div>
+                        <div class="agent-run-result agent-run-result-hidden" id="agentRunResult">
+                            <div class="agent-run-result-inner">
+                                <span class="agent-run-label">Resultado:</span>
+                                <a id="agentRunLink" href="#" target="_blank" class="agent-run-link">&#128279; Ver en Google Drive</a>
+                                <img id="agentRunPreview" src="" alt="Preview" class="agent-run-preview agent-run-preview-hidden"/>
+                            </div>
+                        </div>
+                        <div class="agent-run-error agent-run-error-hidden" id="agentRunError"></div>
                     </div>
                 </div>
             </div>

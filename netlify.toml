@@ -53,6 +53,16 @@
   status = 200
 
 [[redirects]]
+  from = "/agent-os"
+  to = "/agent-os.html"
+  status = 200
+
+[[redirects]]
+  from = "/agents"
+  to = "/agent-os.html"
+  status = 200
+
+[[redirects]]
   from = "/produccion"
   to = "/produccion.html"
   status = 200

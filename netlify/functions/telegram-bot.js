@@ -10,6 +10,7 @@ import {
   addNotaProyecto
 } from './notion-query.js';
 import { askClaude } from './telegram-ai.js';
+import { handleEsperanza, handleEsperanzaCommand } from './esperanza-bot.js';
 
 let TELEGRAM_API;
 let supabaseAdmin;
@@ -60,7 +61,11 @@ async function handleCommand(chatId, command, args) {
         `/clientes — Clientes con redes conectadas\n\n` +
         `*Agentes*\n` +
         `/agentes — Estado del equipo\n` +
-        `/ping — Test de conexión`
+        `/ping — Test de conexión\n\n` +
+        `*👩‍💼 Esperanza — Ventas*\n` +
+        `/esp pipeline — Pipeline de leads\n` +
+        `/esp followups — Seguimientos de hoy\n` +
+        `_O escríbeme sobre un lead y Esperanza lo gestiona_`
       );
       break;
 
@@ -99,6 +104,14 @@ async function handleCommand(chatId, command, args) {
     case '/nota':
       await handleAgregarNota(chatId, args);
       break;
+
+    // ─── Esperanza — Directora de Ventas ───
+    case '/esp':
+    case '/esperanza': {
+      const [subcommand, ...subargs] = args;
+      await handleEsperanzaCommand(chatId, subcommand || 'help', subargs, sendMessage);
+      break;
+    }
 
     default:
       await sendMessage(chatId, `Comando no reconocido. Usa /help para ver los disponibles.`);
@@ -361,10 +374,18 @@ export const handler = async (event) => {
       const args = parts.slice(1);
       await handleCommand(chatId, command, args);
     } else {
-      // Mensaje libre → Claude IA
-      const thinking = await sendMessage(chatId, '🧠 _Procesando..._');
-      const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY);
-      await sendMessage(chatId, reply);
+      // Detectar si el mensaje es sobre ventas → Esperanza lo maneja
+      const SALES_KEYWORDS = ['lead', 'cliente potencial', 'prospect', 'cotiz', 'presupuesto', 'propuesta', 'venta', 'interesado', 'seguimiento', 'follow'];
+      const isSalesMessage = SALES_KEYWORDS.some(k => text.toLowerCase().includes(k));
+
+      if (isSalesMessage) {
+        await handleEsperanza(chatId, text, sendMessage);
+      } else {
+        // Mensaje libre → Master Brain (Claude con herramientas Notion)
+        await sendMessage(chatId, '🧠 _Procesando..._');
+        const reply = await askClaude(text, NOTION_KEY, process.env.ANTHROPIC_API_KEY);
+        await sendMessage(chatId, reply);
+      }
     }
 
     return { statusCode: 200, body: 'ok' };

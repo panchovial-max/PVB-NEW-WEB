@@ -2,7 +2,12 @@
 // Consolida: notify-new-provider + send-provider-message
 import { createClient } from '@supabase/supabase-js';
 
-const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+function getSupabase() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+    if (!url || !key) throw new Error('Supabase env vars are required');
+    return createClient(url, key);
+}
 
 async function sendTelegram(msg) {
     const BOT = process.env.TELEGRAM_BOT_TOKEN;
@@ -23,9 +28,14 @@ const CAT = {
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-pvb-admin-key');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    if (req.method === 'OPTIONS') return res.status(204).end();
     if (req.method !== 'POST') return res.status(405).end();
 
     const action = req.query.action || req.body?.action;
+    const needsSupabase = ['provider-replied', 'message', 'broadcast', 'match'].includes(action);
+    const sb = needsSupabase ? getSupabase() : null;
 
     // ── Notificar nuevo proveedor (Supabase Webhook) ──
     if (action === 'notify') {
@@ -88,5 +98,31 @@ export default async function handler(req, res) {
         return res.json({ sent: providerIds.length });
     }
 
-    return res.status(400).json({ error: 'action required: notify|message|broadcast' });
+    // ── Matching proyecto → proveedores (merged from provider-match) ──
+    if (action === 'match') {
+        const apiKey = req.headers['x-pvb-admin-key'];
+        if (apiKey !== process.env.PVB_ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+        const { project_id } = req.body || {};
+        if (!project_id) return res.status(400).json({ error: 'project_id required' });
+        const { data: project } = await sb.from('projects').select('*').eq('id', project_id).single();
+        if (!project) return res.status(404).json({ error: 'Project not found' });
+        const { data: matched } = await sb.from('providers')
+            .select('id, full_name, phone, category, provider_assets(title)')
+            .eq('status', 'active')
+            .in('category', project.categories_needed || []);
+        if (!matched?.length) return res.json({ matched: 0, message: 'No active providers found' });
+        await sb.from('project_matches').upsert(
+            matched.map(p => ({ project_id, provider_id: p.id, status: 'notified', notified_at: new Date().toISOString() })),
+            { onConflict: 'project_id,provider_id' }
+        );
+        await sb.from('projects').update({ status: 'matching' }).eq('id', project_id);
+        const CAT_MAP = { modelos:'🧍 Modelos/Talent', locaciones:'🏠 Locaciones', vehiculos:'🚗 Vehículos', utileria:'🪑 Utilería', vestuario:'👗 Vestuario', catering:'🍱 Catering', mascotas:'🐾 Mascotas', otro:'✨ Otro' };
+        const links = matched.map(p => {
+            const msg = encodeURIComponent(`Hola ${p.full_name.split(' ')[0]}! 👋 Soy Francisco de PVB.\n\nTenemos el proyecto *${project.title}* y tu perfil hace match. ¿Puedes participar?\n\nhttps://panchovial.com/proveedor-dashboard`);
+            return { provider: p.full_name, phone: p.phone, category: CAT_MAP[p.category] || p.category, whatsapp: `https://wa.me/${p.phone.replace(/\D/g,'')}?text=${msg}` };
+        });
+        return res.json({ project: project.title, matched: matched.length, providers: links });
+    }
+
+    return res.status(400).json({ error: 'action required: notify|message|broadcast|match' });
 }

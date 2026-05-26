@@ -1,5 +1,22 @@
-// POST /api/send-notification
+// POST /api/send-notification — client notifications (email + Telegram + Slack)
+// POST /api/send-notification?_route=notify — internal agent → Telegram (merged from telegram-notify)
 import { createClient } from '@supabase/supabase-js';
+import { createHmac } from 'crypto';
+
+function verifyBrainToken(token, secret) {
+  if (!secret) return false;
+  try {
+    const decoded = JSON.parse(Buffer.from(token, 'base64').toString('utf8'));
+    if (decoded.scope !== 'brain') return false;
+    if (decoded.expires < Date.now()) return false;
+    const expectedSig = createHmac('sha256', secret).update(`brain:${decoded.expires}`).digest('hex');
+    return decoded.sig === expectedSig;
+  } catch { return false; }
+}
+
+function escapeMarkdown(text) {
+  return String(text).replace(/[_*`[]/g, '\\$&');
+}
 
 const PORTAL_URL = 'https://panchovial.com';
 const FROM_EMAIL = 'PVB Estudio Creativo <notificaciones@panchovial.com>';
@@ -28,8 +45,37 @@ const TEMPLATES = {
 };
 
 export default async function handler(req, res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', process.env.BASE_URL || '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    if (req.method === 'OPTIONS') return res.status(204).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+    // ── Internal agent notify (merged from telegram-notify) ──
+    if (req.query._route === 'notify') {
+        const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
+        const HMAC_SECRET = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || process.env.TELEGRAM_OWNER_CHAT_ID;
+        const LEVEL_ICONS = { info: 'ℹ️', success: '✅', warning: '⚠️', error: '❌' };
+        const authHeader = req.headers.authorization || '';
+        const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+        if (!token || !verifyBrainToken(token, HMAC_SECRET)) return res.status(401).json({ error: 'Unauthorized' });
+        const { message, level = 'info', chat_id } = req.body;
+        if (!message) return res.status(400).json({ error: 'message required' });
+        const targetChat = chat_id || OWNER_CHAT_ID;
+        if (!targetChat) return res.status(400).json({ error: 'No chat_id configured' });
+        try {
+            const result = await fetch(`${TELEGRAM_API}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: targetChat, text: `${LEVEL_ICONS[level] || 'ℹ️'} ${escapeMarkdown(message)}`, parse_mode: 'Markdown' })
+            }).then(r => r.json());
+            if (!result.ok) throw new Error(result.description);
+            return res.status(200).json({ ok: true });
+        } catch (err) {
+            return res.status(500).json({ error: err.message });
+        }
+    }
 
     const { user_id, user_email, user_name, type, title, body, link, metadata } = req.body || {};
     if (!user_id || !type || !title) return res.status(400).json({ error: 'user_id, type, title required' });
@@ -57,6 +103,25 @@ export default async function handler(req, res) {
                 if (notif?.id) await sb.from('notifications').update({ email_sent: true }).eq('id', notif.id);
             }
         }
+    }
+
+    // Notificar a Pancho por Slack (#pvb-ops)
+    const SLACK_CRITICAL = ['proof_uploaded', 'payment_confirmed', 'payment_rejected', 'stage_blocked'];
+    if (process.env.SLACK_WEBHOOK_URL && SLACK_CRITICAL.includes(type)) {
+        const icons = { proof_uploaded: '📎', payment_confirmed: '✅', payment_rejected: '⚠️', stage_blocked: '🔴' };
+        const nombre = user_name || user_email || 'Cliente';
+        await fetch(process.env.SLACK_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: `${icons[type]} *${title}*`,
+                blocks: [
+                    { type: 'section', text: { type: 'mrkdwn', text: `${icons[type]} *${title}*\n👤 ${nombre}${body ? '\n' + body : ''}` } },
+                    ...(link ? [{ type: 'actions', elements: [{ type: 'button', text: { type: 'plain_text', text: 'Ver' }, url: link }] }] : []),
+                ],
+            }),
+        });
+        results.slack = 'sent';
     }
 
     // Notificar a Pancho por Telegram (@pvb_provee)

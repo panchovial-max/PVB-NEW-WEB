@@ -8,6 +8,8 @@
     { "source": "/masterbrain", "destination": "/master-brain.html", "permanent": false },
     { "source": "/master-brain", "destination": "/master-brain.html", "permanent": false },
     { "source": "/brain", "destination": "/master-brain.html", "permanent": false },
+    { "source": "/agent-os", "destination": "/agent-os.html", "permanent": false },
+    { "source": "/agents", "destination": "/agent-os.html", "permanent": false },
     { "source": "/conta", "destination": "/studio.html", "permanent": false },
     { "source": "/produccion", "destination": "/produccion.html", "permanent": false },
     { "source": "/proveedores", "destination": "/proveedores.html", "permanent": false },
@@ -20,29 +22,40 @@
     { "source": "/reviews", "destination": "/reviews.html", "permanent": false }
   ],
   "functions": {
-    "api/telegram-bot.js": { "maxDuration": 60 }
+    "api/telegram-bot.js": { "maxDuration": 60 },
+    "api/bot-router.js":   { "maxDuration": 60 },
+    "api/brain.js":        { "maxDuration": 30 },
+    "api/agent-run.js":    { "maxDuration": 60 }
   },
   "rewrites": [
-    { "source": "/api/og-fetch", "destination": "/api/og-fetch.js" },
-    { "source": "/api/uf-value", "destination": "/api/uf-value.js" },
+    { "source": "/api/og-fetch",          "destination": "/api/og-fetch.js" },
+    { "source": "/api/uf-value",          "destination": "/api/uf-value.js" },
     { "source": "/api/send-notification", "destination": "/api/send-notification.js" },
-    { "source": "/api/provider-match", "destination": "/api/provider-match.js" },
-    { "source": "/api/providers", "destination": "/api/providers.js" },
-    { "source": "/api/notion-sync",      "destination": "/api/notion-sync.js" },
-    { "source": "/api/notion-webhook",   "destination": "/api/notion-webhook.js" },
-    { "source": "/api/brain-login",      "destination": "/api/brain-login.js" },
-    { "source": "/api/brain-clients",    "destination": "/api/brain-clients.js" },
-    { "source": "/api/telegram-bot",     "destination": "/api/telegram-bot.js" },
-    { "source": "/api/telegram-notify",  "destination": "/api/telegram-notify.js" }
+    { "source": "/api/providers",         "destination": "/api/providers.js" },
+    { "source": "/api/notion-webhook",    "destination": "/api/notion-webhook.js" },
+    { "source": "/api/notion-proxy",      "destination": "/api/notion-proxy.js" },
+    { "source": "/api/brain",             "destination": "/api/brain.js" },
+    { "source": "/api/agent-run",         "destination": "/api/agent-run.js" },
+    { "source": "/api/telegram-bot",      "destination": "/api/telegram-bot.js" },
+    { "source": "/api/bot-router/:path*", "destination": "/api/bot-router.js" },
+    { "source": "/api/boleta-upload",     "destination": "/api/boleta-upload.js" },
+    { "source": "/api/brief-parse",       "destination": "/api/brief-parse.js" },
+    { "source": "/api/telegram-notify",   "destination": "/api/send-notification.js?_route=notify" },
+    { "source": "/api/provider-match",    "destination": "/api/providers.js" },
+    { "source": "/api/brain-login",       "destination": "/api/brain.js" },
+    { "source": "/api/brain-clients",     "destination": "/api/brain.js" },
+    { "source": "/api/pvb-chat",          "destination": "/api/brain.js" }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-XSS-Protection", "value": "1; mode=block" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        { "key": "X-Content-Type-Options",   "value": "nosniff" },
+        { "key": "X-Frame-Options",          "value": "DENY" },
+        { "key": "X-XSS-Protection",         "value": "1; mode=block" },
+        { "key": "Referrer-Policy",          "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy",       "value": "camera=(), microphone=(self), geolocation=()" },
+        { "key": "Content-Security-Policy",  "value": "default-src 'self'; script-src 'self' cdn.jsdelivr.net cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' fonts.googleapis.com cdnjs.cloudflare.com 'unsafe-inline'; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: blob: *.supabase.co *.googleusercontent.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.telegram.org https://api.notion.com https://api.anthropic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" }
       ]
     }
   ]

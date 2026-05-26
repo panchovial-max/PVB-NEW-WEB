@@ -1,8 +1,8 @@
 // bot-router.js — Router unificado para todos los bots de PVB
 // Detecta qué bot recibió el mensaje por el secret path y delega
 
-import { handleTasksMessage } from './tasks-bot.js';
-import { handleFinancesMessage } from './finances-bot.js';
+import { handleTasksMessage } from '../lib/tasks-bot.js';
+import { handleFinancesMessage } from '../lib/finances-bot.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(200).json({ ok: true });
