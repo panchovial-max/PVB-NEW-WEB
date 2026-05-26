@@ -93,8 +93,10 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(204).end();
 
-  // ── POST → login ──────────────────────────────────────────
-  if (req.method === 'POST') {
+  const { action = '' } = req.query;
+
+  // ── POST without action → login ───────────────────────────
+  if (req.method === 'POST' && !action) {
     try {
       const { pin } = req.body;
       const expectedPin = (process.env.STUDIO_PIN || '1404').trim();
@@ -106,7 +108,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── GET/POST → data actions (requires token) ─────────────
+  // ── GET/POST with action → data actions (requires token) ──
   if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const authHeader = req.headers.authorization || '';
@@ -114,10 +116,11 @@ export default async function handler(req, res) {
   if (!token || !verifyBrainToken(token, secret)) return res.status(401).json({ error: 'Unauthorized' });
 
   const supabase = createClient(process.env.SUPABASE_URL, secret);
-  const { action = 'list', user_id, platform } = req.query;
+  const { user_id, platform } = req.query;
+  const resolvedAction = action || 'list';
 
   try {
-    if (action === 'list') {
+    if (resolvedAction === 'list') {
       const { data: profiles, error } = await supabase.from('user_profiles').select('id, full_name, email, company, created_at').order('created_at', { ascending: false });
       if (error) throw error;
       const { data: accounts } = await supabase.from('social_accounts').select('user_id, platform, account_name, metadata, last_sync_at, is_active').eq('is_active', true);
@@ -133,7 +136,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, clients });
     }
 
-    if (action === 'stats') {
+    if (resolvedAction === 'stats') {
       if (!user_id || !platform) return res.status(400).json({ error: 'user_id and platform required' });
       const { data: account, error } = await supabase.from('social_accounts').select('*').eq('user_id', user_id).eq('platform', platform).eq('is_active', true).single();
       if (error || !account) return res.status(404).json({ error: `No ${platform} account` });
@@ -147,7 +150,7 @@ export default async function handler(req, res) {
     }
 
     // ── Hub: Notion tasks + projects + finances ───────────────
-    if (action === 'hub') {
+    if (resolvedAction === 'hub') {
       const NOTION_KEY = process.env.NOTION_API_KEY;
       const NOTION_VER = '2022-06-28';
       const nHeaders = {
@@ -215,7 +218,7 @@ export default async function handler(req, res) {
     }
 
     // ── Telegram: enviar mensaje directo desde Master Brain ──
-    if (action === 'telegram') {
+    if (resolvedAction === 'telegram') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
       const { message, chat_id } = req.body || {};
       if (!message) return res.status(400).json({ error: 'message required' });
@@ -232,7 +235,7 @@ export default async function handler(req, res) {
     }
 
     // ── Client Accounts — PVB-owned infrastructure ──────────
-    if (action === 'accounts') {
+    if (resolvedAction === 'accounts') {
       const sb = getSupabase();
 
       if (req.method === 'GET') {
@@ -284,7 +287,7 @@ export default async function handler(req, res) {
     }
 
     // ── Chat: Claude Haiku + Notion tool use ─────────────────
-    if (action === 'chat') {
+    if (resolvedAction === 'chat') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
       const { message, history = [], proyecto = '' } = req.body || {};
       if (!message) return res.status(400).json({ error: 'message required' });
@@ -423,7 +426,7 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que p
     }
 
     // ── Drive upload ──────────────────────────────────────────
-    if (action === 'drive-upload') {
+    if (resolvedAction === 'drive-upload') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
       const { uploadFile, uploadFromUrl } = await import('../lib/google-drive.js');
       const { Readable } = await import('stream');
