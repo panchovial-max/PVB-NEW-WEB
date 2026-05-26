@@ -35,7 +35,7 @@
     { "source": "/api/notion-webhook",    "destination": "/api/notion-webhook.js" },
     { "source": "/api/notion-proxy",      "destination": "/api/notion-proxy.js" },
     { "source": "/api/brain",             "destination": "/api/brain.js" },
-    { "source": "/api/agent-run",         "destination": "/api/agent-run.js" },
+    { "source": "/api/agent-run",         "destination": "/api/_agent-run.js" },
     { "source": "/api/telegram-bot",      "destination": "/api/telegram-bot.js" },
     { "source": "/api/bot-router/:path*", "destination": "/api/bot-router.js" },
     { "source": "/api/boleta-upload",     "destination": "/api/boleta-upload.js" },
