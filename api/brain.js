@@ -218,6 +218,41 @@ export default async function handler(req, res) {
     }
 
     // ── Telegram: enviar mensaje directo desde Master Brain ──
+    // ── Webhook setup / status para tasks-bot ────────────────────
+    if (action === 'webhook-status') {
+      const bots = [
+        { name: 'tasks',    token: process.env.TELEGRAM_TASKS_BOT_TOKEN,    webhook: 'https://panchovial.com/api/bot-router/tasks' },
+        { name: 'finances', token: process.env.TELEGRAM_FINANCES_BOT_TOKEN, webhook: 'https://panchovial.com/api/bot-router/finances' },
+        { name: 'main',     token: process.env.TELEGRAM_BOT_TOKEN,          webhook: 'https://panchovial.com/api/telegram-bot' },
+      ];
+      const results = await Promise.all(bots.map(async b => {
+        if (!b.token) return { bot: b.name, error: 'no token' };
+        const r = await fetch(`https://api.telegram.org/bot${b.token}/getWebhookInfo`);
+        const d = await r.json();
+        return { bot: b.name, url: d.result?.url || '(none)', pending: d.result?.pending_update_count, last_error: d.result?.last_error_message || null, expected: b.webhook, registered: d.result?.url === b.webhook };
+      }));
+      return res.json({ ok: true, bots: results });
+    }
+
+    if (action === 'webhook-setup') {
+      const apiKey = req.headers['x-pvb-admin-key'];
+      if (apiKey !== process.env.PVB_ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+      const bots = [
+        { name: 'tasks',    token: process.env.TELEGRAM_TASKS_BOT_TOKEN,    webhook: 'https://panchovial.com/api/bot-router/tasks' },
+        { name: 'finances', token: process.env.TELEGRAM_FINANCES_BOT_TOKEN, webhook: 'https://panchovial.com/api/bot-router/finances' },
+      ];
+      const results = await Promise.all(bots.map(async b => {
+        if (!b.token) return { bot: b.name, error: 'no token' };
+        const r = await fetch(`https://api.telegram.org/bot${b.token}/setWebhook`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: b.webhook, allowed_updates: ['message'] }),
+        });
+        const d = await r.json();
+        return { bot: b.name, ok: d.ok, description: d.description };
+      }));
+      return res.json({ ok: true, results });
+    }
+
     if (resolvedAction === 'telegram') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
       const { message, chat_id } = req.body || {};
@@ -232,6 +267,41 @@ export default async function handler(req, res) {
       });
       const data = await r.json();
       return res.status(data.ok ? 200 : 500).json({ ok: data.ok, telegram: data });
+    }
+
+    // ── Style Memory — reglas de estilo PVB ──────────────────
+    if (action === 'style-memory') {
+      const sb = getSupabase();
+
+      if (req.method === 'GET') {
+        const { data, error } = await sb
+          .from('brain_style_memory')
+          .select('id,type,rule,context,created_at')
+          .order('created_at', { ascending: false });
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ rules: data || [] });
+      }
+
+      if (req.method === 'POST') {
+        const { sub, id, type, rule, context } = req.body || {};
+
+        if (sub === 'delete') {
+          const { error } = await sb.from('brain_style_memory').delete().eq('id', id);
+          if (error) return res.status(500).json({ error: error.message });
+          return res.status(200).json({ ok: true });
+        }
+
+        if (sub === 'create') {
+          if (!rule) return res.status(400).json({ error: 'rule required' });
+          const { data, error } = await sb
+            .from('brain_style_memory')
+            .insert({ type: type || 'change', rule, context: context || null })
+            .select()
+            .single();
+          if (error) return res.status(500).json({ error: error.message });
+          return res.status(200).json({ ok: true, rule: data });
+        }
+      }
     }
 
     // ── Esperanza — leads del agente de ventas ───────────────
