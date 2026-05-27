@@ -6,6 +6,8 @@
 
 /* Force dark mode for brain interface */
 body.theme-dark {
+    color: var(--brain-text);
+    background-color: var(--brain-bg);
     --brain-bg: #0a0a0a;
     --brain-surface: rgba(18, 18, 20, 0.8);
     --brain-surface-solid: #121214;
@@ -14,7 +16,9 @@ body.theme-dark {
     --brain-border-light: rgba(255, 255, 255, 0.12);
     --brain-text: #f5f0e8;
     --brain-text-dim: #72727f;
+    --brain-muted: #8b8b9a;
     --brain-accent: #d4b070;
+    --brain-gold: #d4b070;
     --brain-accent-glow: rgba(212, 176, 112, 0.5);
     --brain-green: #34d399;
     --brain-blue: #60a5fa;
