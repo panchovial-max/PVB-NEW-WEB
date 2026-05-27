@@ -2666,20 +2666,79 @@ function initProyectosTab() {
     document.getElementById('newProjectModal').classList.remove('hidden');
     document.getElementById('briefStartDate').valueAsDate = new Date();
   });
-  document.getElementById('closeModalBtn')?.addEventListener('click', () => document.getElementById('newProjectModal').classList.add('hidden'));
-  document.getElementById('closeModalBackdrop')?.addEventListener('click', () => document.getElementById('newProjectModal').classList.add('hidden'));
-  document.getElementById('cancelBriefBtn')?.addEventListener('click', () => document.getElementById('newProjectModal').classList.add('hidden'));
+  const closeModal = () => {
+    document.getElementById('newProjectModal').classList.add('hidden');
+    const form = document.getElementById('briefForm');
+    if (form) { form.dataset.editMode = 'false'; }
+    document.querySelector('#newProjectModal h3').textContent = 'Nueva Campaña';
+  };
+  document.getElementById('closeModalBtn')?.addEventListener('click', closeModal);
+  document.getElementById('closeModalBackdrop')?.addEventListener('click', closeModal);
+  document.getElementById('cancelBriefBtn')?.addEventListener('click', closeModal);
 
   document.getElementById('briefForm')?.addEventListener('submit', e => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = Object.fromEntries(fd.entries());
     data.formats = fd.getAll('formats');
-    createProject(data);
-    e.target.reset();
-    document.getElementById('newProjectModal').classList.add('hidden');
-    renderProjects();
-    showNotification('Proyecto creado', 'success');
+    if (e.target.dataset.editMode === 'true') {
+      // Editing existing project
+      const p = currentProject;
+      p.name = data.campaignName;
+      p.client = data.client;
+      p.contact = { name: data.contactName, role: data.contactRole, email: data.contactEmail };
+      p.budget = data.budget;
+      p.objective = data.objective;
+      p.kpis = data.kpis;
+      p.startDate = data.startDate;
+      p.launchDate = data.launchDate;
+      p.formats = data.formats || fd.getAll('formats');
+      p.path = data.path;
+      p.references = data.references;
+      p.notes = data.notes;
+      saveProjects();
+      renderBriefDisplay();
+      document.getElementById('detailName').textContent = p.name;
+      e.target.dataset.editMode = 'false';
+      document.querySelector('#newProjectModal h3').textContent = 'Nueva Campaña';
+      document.getElementById('newProjectModal').classList.add('hidden');
+      showNotification('Brief actualizado', 'success');
+    } else {
+      createProject(data);
+      e.target.reset();
+      document.getElementById('newProjectModal').classList.add('hidden');
+      renderProjects();
+      showNotification('Proyecto creado', 'success');
+    }
+  });
+
+  document.getElementById('editBriefBtn')?.addEventListener('click', () => {
+    if (!currentProject) return;
+    const p = currentProject;
+    const form = document.getElementById('briefForm');
+    // Pre-fill fields
+    form.querySelector('[name=campaignName]').value = p.name || '';
+    form.querySelector('[name=client]').value = p.client || '';
+    form.querySelector('[name=contactName]').value = p.contact?.name || '';
+    form.querySelector('[name=contactRole]').value = p.contact?.role || '';
+    form.querySelector('[name=contactEmail]').value = p.contact?.email || '';
+    form.querySelector('[name=budget]').value = p.budget || '';
+    form.querySelector('[name=objective]').value = p.objective || '';
+    form.querySelector('[name=kpis]').value = p.kpis || '';
+    form.querySelector('[name=startDate]').value = p.startDate || '';
+    form.querySelector('[name=launchDate]').value = p.launchDate || '';
+    form.querySelector('[name=references]').value = p.references || '';
+    form.querySelector('[name=notes]').value = p.notes || '';
+    // Checkboxes
+    const formats = Array.isArray(p.formats) ? p.formats : (p.formats ? [p.formats] : []);
+    form.querySelectorAll('[name=formats]').forEach(cb => { cb.checked = formats.includes(cb.value); });
+    // Radio
+    const pathRadio = form.querySelector(`[name=path][value="${p.path}"]`);
+    if (pathRadio) pathRadio.checked = true;
+    // Set edit mode and open
+    form.dataset.editMode = 'true';
+    document.querySelector('#newProjectModal h3').textContent = 'Editar Brief';
+    document.getElementById('newProjectModal').classList.remove('hidden');
   });
 
   document.getElementById('backToProjectsBtn')?.addEventListener('click', () => {

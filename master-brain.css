@@ -2956,6 +2956,9 @@ body.theme-dark .nav-title {
 .project-sub-content.active { display: block; }
 
 /* Brief Display */
+.brief-toolbar { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+.btn-edit-brief { background: none; border: 1px solid var(--brain-border-light); color: var(--brain-text-dim); border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+.btn-edit-brief:hover { border-color: var(--brain-accent); color: var(--brain-accent); }
 .brief-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .brief-section { background: var(--brain-surface); border: 1px solid var(--brain-border); border-radius: 10px; padding: 16px; }
 .brief-section.full { grid-column: 1/-1; }
