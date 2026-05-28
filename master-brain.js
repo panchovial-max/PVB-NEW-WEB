@@ -340,6 +340,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.replaceState(null, '', window.location.pathname);
   }
   renderProposals();
+  loadStyleMemory();
   renderCampaigns();
   updateKPIs();
   initProyectosTab();
@@ -1210,6 +1211,14 @@ function setupEventListeners() {
   if (catFilter) catFilter.addEventListener('change', () => renderProposals(catFilter.value, statFilter.value));
   if (statFilter) statFilter.addEventListener('change', () => renderProposals(catFilter.value, statFilter.value));
 
+  // Style rule modal save button
+  document.getElementById('styleRuleSave')?.addEventListener('click', saveStyleRule);
+
+  // Close style rule modal on backdrop click
+  document.getElementById('styleRuleModal')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeStyleRuleModal();
+  });
+
   // Refresh
   document.getElementById('refreshData').addEventListener('click', () => {
     showNotification('Syncing agents...', 'info');
@@ -1343,7 +1352,100 @@ function getStatusColor(status) {
   return colors[status] || '#6B7280';
 }
 
-// ─── Render Proposals Feed ───
+// ─── Style Memory ───
+
+let styleMemoryRules = [];
+let pendingRuleType = null;
+let pendingRuleContext = '';
+
+async function loadStyleMemory() {
+  try {
+    const res = await fetch(`${API_BASE}?action=style-memory`, { headers: { 'x-studio-pin': studioPin } });
+    const data = await res.json();
+    styleMemoryRules = data.rules || [];
+  } catch {
+    styleMemoryRules = [];
+  }
+  renderStyleMemory();
+}
+
+function renderStyleMemory() {
+  const container = document.getElementById('styleMemoryRules');
+  if (!container) return;
+
+  if (!styleMemoryRules.length) {
+    container.innerHTML = '<span class="style-memory-empty">Sin reglas aún. Usa "Marcar cambio" o "Nunca más" en un reporte para registrar estándares.</span>';
+    return;
+  }
+
+  container.innerHTML = styleMemoryRules.map(r => `
+    <span class="style-rule-tag ${r.type}" title="${escapeHtml(r.context || '')}">
+      <span class="style-rule-tag-dot"></span>
+      ${escapeHtml(r.rule)}
+      <button type="button" class="style-rule-delete" onclick="deleteStyleRule('${r.id}')" aria-label="Eliminar regla">×</button>
+    </span>
+  `).join('');
+}
+
+async function deleteStyleRule(ruleId) {
+  try {
+    await fetch(`${API_BASE}?action=style-memory`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-studio-pin': studioPin },
+      body: JSON.stringify({ sub: 'delete', id: ruleId })
+    });
+    styleMemoryRules = styleMemoryRules.filter(r => r.id !== ruleId);
+    renderStyleMemory();
+  } catch {
+    showNotification('Error al eliminar regla', 'error');
+  }
+}
+
+function openStyleRuleModal(type, context) {
+  pendingRuleType = type;
+  pendingRuleContext = context;
+  const modal = document.getElementById('styleRuleModal');
+  const title = document.getElementById('styleRuleModalTitle');
+  const ctx = document.getElementById('styleRuleContext');
+  const input = document.getElementById('styleRuleInput');
+  if (!modal) return;
+  title.textContent = type === 'never' ? 'Nunca más — registrar regla' : 'Marcar cambio — registrar regla';
+  ctx.textContent = context ? `Reporte: "${context}"` : '';
+  input.value = '';
+  modal.classList.remove('hidden');
+  setTimeout(() => input.focus(), 50);
+}
+
+function closeStyleRuleModal() {
+  document.getElementById('styleRuleModal')?.classList.add('hidden');
+  pendingRuleType = null;
+  pendingRuleContext = '';
+}
+
+async function saveStyleRule() {
+  const input = document.getElementById('styleRuleInput');
+  const rule = input?.value.trim();
+  if (!rule) return;
+  try {
+    const res = await fetch(`${API_BASE}?action=style-memory`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-studio-pin': studioPin },
+      body: JSON.stringify({ sub: 'create', type: pendingRuleType, rule, context: pendingRuleContext })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      styleMemoryRules.unshift(data.rule);
+      renderStyleMemory();
+      closeStyleRuleModal();
+      showNotification('Regla guardada en memoria de estilo', 'success');
+    }
+  } catch {
+    showNotification('Error al guardar regla', 'error');
+  }
+}
+
+// ─── Render Reportes Feed ───
+
 function renderProposals(categoryFilter = 'all', statusFilter = 'pending') {
   const feed = document.getElementById('proposalsFeed');
   if (!feed) return;
@@ -1365,7 +1467,7 @@ function renderProposals(categoryFilter = 'all', statusFilter = 'pending') {
   }
 
   if (!proposals.length) {
-    feed.innerHTML = '<p class="no-data-text">No proposals match the current filters.</p>';
+    feed.innerHTML = '<p class="no-data-text">Sin reportes en esta vista.</p>';
     return;
   }
 
@@ -1374,15 +1476,12 @@ function renderProposals(categoryFilter = 'all', statusFilter = 'pending') {
     improvement: '&#9650;', bug: '&#9888;', opportunity: '&#9733;',
     optimization: '&#9881;', creative: '&#10024;'
   };
-  const statusIcons = {
-    pending: '&#9679;', approved: '&#10003;', rejected: '&#10007;',
-    in_progress: '&#9654;', completed: '&#10004;'
-  };
 
   feed.innerHTML = proposals.map(p => {
     const agent = allAgents.find(a => a.id === p.agent_id);
     const deptCfg = agent ? (DEPT_CONFIG[agent.dept] || {}) : {};
     const timeAgo = getTimeAgo(p.created_at);
+    const titleEsc = escapeHtml(p.title);
 
     return `
       <div class="proposal-card" data-proposal-id="${p.id}" data-status="${p.status}">
@@ -1399,21 +1498,21 @@ function renderProposals(categoryFilter = 'all', statusFilter = 'pending') {
               <span class="proposal-priority" style="color: ${priorityColors[p.priority]}">${p.priority}</span>
             </div>
           </div>
-          <h3 class="proposal-title">${p.title}</h3>
-          <p class="proposal-desc">${p.description}</p>
+          <h3 class="proposal-title">${titleEsc}</h3>
+          <p class="proposal-desc">${escapeHtml(p.description)}</p>
           <div class="proposal-meta">
-            ${p.estimated_impact ? `<span class="proposal-impact">Impact: ${p.estimated_impact}</span>` : ''}
-            ${p.estimated_effort ? `<span class="proposal-effort">Effort: ${p.estimated_effort}</span>` : ''}
+            ${p.estimated_impact ? `<span class="proposal-impact">Impacto: ${p.estimated_impact}</span>` : ''}
+            ${p.estimated_effort ? `<span class="proposal-effort">Esfuerzo: ${p.estimated_effort}</span>` : ''}
             ${p.target_area ? `<span class="proposal-area">${p.target_area}</span>` : ''}
           </div>
           ${p.status === 'pending' ? `
             <div class="proposal-actions">
-              <button class="proposal-btn approve" onclick="handleProposal('${p.id}', 'approved')">Approve</button>
-              <button class="proposal-btn reject" onclick="handleProposal('${p.id}', 'rejected')">Reject</button>
-              <button class="proposal-btn discuss" onclick="openAgentModal('${p.agent_id}')">Discuss</button>
+              <button type="button" class="proposal-btn archive" onclick="handleProposal('${p.id}', 'archived')">Archivar</button>
+              <button type="button" class="proposal-btn flag-change" onclick="openStyleRuleModal('change', ${JSON.stringify(titleEsc)})">Marcar cambio</button>
+              <button type="button" class="proposal-btn never" onclick="openStyleRuleModal('never', ${JSON.stringify(titleEsc)})">Nunca más</button>
             </div>
           ` : `
-            <div class="proposal-status-badge status-${p.status}">${statusIcons[p.status] || ''} ${p.status}</div>
+            <div class="proposal-status-badge status-${p.status}">&#10003; archivado</div>
           `}
         </div>
       </div>
@@ -1425,15 +1524,11 @@ function handleProposal(proposalId, newStatus) {
   const proposal = SAMPLE_PROPOSALS.find(p => p.id === proposalId);
   if (proposal) {
     proposal.status = newStatus;
-    proposal.reviewed_at = new Date().toISOString();
     renderProposals(
       document.getElementById('proposalCategoryFilter')?.value || 'all',
       document.getElementById('proposalStatusFilter')?.value || 'pending'
     );
-    showNotification(
-      `Proposal "${proposal.title}" ${newStatus}`,
-      newStatus === 'approved' ? 'success' : 'info'
-    );
+    showNotification('Reporte archivado', 'info');
   }
 }
 
@@ -2435,9 +2530,20 @@ function renderProjects() {
       <p class="project-card-contact">${p.contact?.name || ''} ${p.contact?.role ? '· ' + p.contact.role : ''}</p>
       <div class="project-card-phase">Fase activa: <strong>${phaseName}</strong></div>
       <div class="project-progress-bar"><div class="project-progress-fill" style="width:${progress}%"></div></div>
-      <div class="project-progress-label">${progress}% completado · Lanzamiento: ${p.launchDate || '—'}</div>
+      <div class="project-card-footer">
+        <span class="project-progress-label">${progress}% · ${p.launchDate || '—'}</span>
+        <button type="button" class="btn-card-edit-brief" data-id="${p.id}">✏️ Brief</button>
+      </div>
     `;
-    card.addEventListener('click', () => openProjectDetail(p.id));
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-card-edit-brief')) return;
+      openProjectDetail(p.id);
+    });
+    card.querySelector('.btn-card-edit-brief').addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentProject = pvbProjects.find(pr => pr.id === p.id);
+      document.getElementById('editBriefBtn')?.click();
+    });
     grid.appendChild(card);
   });
 }
