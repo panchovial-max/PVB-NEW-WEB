@@ -259,7 +259,7 @@ export default async function handler(req, res) {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
       const { message, chat_id } = req.body || {};
       if (!message) return res.status(400).json({ error: 'message required' });
-      const BOT = process.env.TELEGRAM_TASKS_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+      const BOT = process.env.TELEGRAM_BOT_TOKEN;
       const CHAT = chat_id || process.env.TELEGRAM_CHAT_ID;
       if (!BOT || !CHAT) return res.status(500).json({ error: 'Telegram not configured' });
       const r = await fetch(`https://api.telegram.org/bot${BOT}/sendMessage`, {
