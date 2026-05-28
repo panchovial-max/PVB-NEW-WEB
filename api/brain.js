@@ -108,6 +108,41 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── Webhook setup/status — solo admin key, sin token de sesión ──
+  if (action === 'webhook-status' || action === 'webhook-setup') {
+    const adminKey = req.headers['x-pvb-admin-key'];
+    if (adminKey !== process.env.PVB_ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+
+    const bots = [
+      { name: 'tasks',    token: process.env.TELEGRAM_TASKS_BOT_TOKEN,    webhook: 'https://panchovial.com/api/bot-router/tasks' },
+      { name: 'finances', token: process.env.TELEGRAM_FINANCES_BOT_TOKEN, webhook: 'https://panchovial.com/api/bot-router/finances' },
+      { name: 'main',     token: process.env.TELEGRAM_BOT_TOKEN,          webhook: 'https://panchovial.com/api/telegram-bot' },
+    ];
+
+    if (action === 'webhook-status') {
+      const results = await Promise.all(bots.map(async b => {
+        if (!b.token) return { bot: b.name, error: 'no token' };
+        const r = await fetch(`https://api.telegram.org/bot${b.token}/getWebhookInfo`);
+        const d = await r.json();
+        return { bot: b.name, url: d.result?.url || '(none)', pending: d.result?.pending_update_count, last_error: d.result?.last_error_message || null, expected: b.webhook, registered: d.result?.url === b.webhook };
+      }));
+      return res.json({ ok: true, bots: results });
+    }
+
+    if (action === 'webhook-setup') {
+      const results = await Promise.all(bots.filter(b => b.name !== 'main').map(async b => {
+        if (!b.token) return { bot: b.name, error: 'no token' };
+        const r = await fetch(`https://api.telegram.org/bot${b.token}/setWebhook`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: b.webhook, allowed_updates: ['message'] }),
+        });
+        const d = await r.json();
+        return { bot: b.name, ok: d.ok, description: d.description };
+      }));
+      return res.json({ ok: true, results });
+    }
+  }
+
   // ── GET/POST with action → data actions (requires token) ──
   if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -215,42 +250,6 @@ export default async function handler(req, res) {
       }));
 
       return res.status(200).json({ ok: true, tareas, proyectos, boletas });
-    }
-
-    // ── Telegram: enviar mensaje directo desde Master Brain ──
-    // ── Webhook setup / status para tasks-bot ────────────────────
-    if (action === 'webhook-status') {
-      const bots = [
-        { name: 'tasks',    token: process.env.TELEGRAM_TASKS_BOT_TOKEN,    webhook: 'https://panchovial.com/api/bot-router/tasks' },
-        { name: 'finances', token: process.env.TELEGRAM_FINANCES_BOT_TOKEN, webhook: 'https://panchovial.com/api/bot-router/finances' },
-        { name: 'main',     token: process.env.TELEGRAM_BOT_TOKEN,          webhook: 'https://panchovial.com/api/telegram-bot' },
-      ];
-      const results = await Promise.all(bots.map(async b => {
-        if (!b.token) return { bot: b.name, error: 'no token' };
-        const r = await fetch(`https://api.telegram.org/bot${b.token}/getWebhookInfo`);
-        const d = await r.json();
-        return { bot: b.name, url: d.result?.url || '(none)', pending: d.result?.pending_update_count, last_error: d.result?.last_error_message || null, expected: b.webhook, registered: d.result?.url === b.webhook };
-      }));
-      return res.json({ ok: true, bots: results });
-    }
-
-    if (action === 'webhook-setup') {
-      const apiKey = req.headers['x-pvb-admin-key'];
-      if (apiKey !== process.env.PVB_ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-      const bots = [
-        { name: 'tasks',    token: process.env.TELEGRAM_TASKS_BOT_TOKEN,    webhook: 'https://panchovial.com/api/bot-router/tasks' },
-        { name: 'finances', token: process.env.TELEGRAM_FINANCES_BOT_TOKEN, webhook: 'https://panchovial.com/api/bot-router/finances' },
-      ];
-      const results = await Promise.all(bots.map(async b => {
-        if (!b.token) return { bot: b.name, error: 'no token' };
-        const r = await fetch(`https://api.telegram.org/bot${b.token}/setWebhook`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: b.webhook, allowed_updates: ['message'] }),
-        });
-        const d = await r.json();
-        return { bot: b.name, ok: d.ok, description: d.description };
-      }));
-      return res.json({ ok: true, results });
     }
 
     if (resolvedAction === 'telegram') {
@@ -525,12 +524,25 @@ export default async function handler(req, res) {
       }
 
       const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+      // Cargar reglas de estilo activas desde Supabase
+      let styleRulesBlock = '';
+      try {
+        const sb = getSupabase();
+        const { data: rules } = await sb.from('brain_style_memory').select('type,rule').order('created_at', { ascending: false });
+        if (rules && rules.length) {
+          const neverRules = rules.filter(r => r.type === 'never').map(r => `• NUNCA: ${r.rule}`).join('\n');
+          const changeRules = rules.filter(r => r.type === 'change').map(r => `• SIEMPRE: ${r.rule}`).join('\n');
+          styleRulesBlock = `\n\nREGLAS DE ESTILO PVB (permanentes — respétalas en toda propuesta creativa):\n${[neverRules, changeRules].filter(Boolean).join('\n')}`;
+        }
+      } catch { /* no bloquear el chat si falla */ }
+
       const proyectoCtx = proyecto ? `\n\nCONTEXTO ACTIVO: Proyecto "${proyecto}". Enfoca tus respuestas y acciones en este proyecto salvo que pidan otra cosa.` : '';
       const SYSTEM = `Eres el asistente de orquestación de campañas de PVB Estudio Creativo — agencia audiovisual en Santiago, Chile. Clientes típicos: Kaya Unite, Refugio Chiloé, Romerelli.
 
 Tienes acceso a Notion: tareas personales y proyectos del estudio. Puedes consultar, crear, completar tareas y actualizar estado de proyectos.
 
-Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que pidan más detalle. Cuando completes una acción en Notion, confírmala brevemente.${proyectoCtx}`;
+Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que pidan más detalle. Cuando completes una acción en Notion, confírmala brevemente.${styleRulesBlock}${proyectoCtx}`;
 
       const messages = [...history.slice(-12), { role: 'user', content: message }];
       let resp = await anthropic.messages.create({ model: 'claude-haiku-4-5-20251001', max_tokens: 1024, system: SYSTEM, tools: TOOLS, messages });
