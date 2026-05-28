@@ -4,6 +4,7 @@
 // Propiedades: Tarea (title), Estado (select), Prioridad (select), Fecha (date), Contexto (select)
 
 import { uploadFromUrl } from '../lib/google-drive.js';
+import { notifyNotion } from '../lib/notion-query.js';
 
 const TASKS_DB_ID = 'ddaabf2319cd4ca09765f63976aa6c16';
 const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '5999159507';
@@ -434,10 +435,13 @@ export default async function handler(req, res) {
     return res.status(200).send('PVB Tasks Bot OK');
   }
 
+  // Responder 200 inmediatamente para evitar timeout de Telegram (5s)
+  res.status(200).send('ok');
+
   try {
     const update = req.body;
     const message = update.message || update.edited_message;
-    if (!message?.text) return res.status(200).send('ok');
+    if (!message) return;
 
     const chatId = message.chat.id;
     const isOwner = String(chatId) === String(OWNER_CHAT_ID);
@@ -445,7 +449,7 @@ export default async function handler(req, res) {
     // Solo responde al owner
     if (!isOwner) {
       await sendMessage(chatId, '🔒 Bot privado.');
-      return res.status(200).send('ok');
+      return;
     }
 
     // ── Audio/voz → transcribir y crear tarea ──
@@ -481,7 +485,7 @@ export default async function handler(req, res) {
       } catch (err) {
         await sendMessage(chatId, `❌ Error procesando audio: ${escapeMarkdown(err.message)}`);
       }
-      return res.status(200).send('ok');
+      return;
     }
 
     // ── Fotos → guardar en Drive ───────────────────────────────
@@ -494,10 +498,11 @@ export default async function handler(req, res) {
         const filename = `foto-${Date.now()}.jpg`;
         const file = await uploadFromUrl({ url: fileUrl, filename, mimeType: 'image/jpeg', project: null });
         await sendMessage(chatId, `📁 Foto guardada en Drive\n[Ver archivo](${file.webViewLink})`);
+        if (NOTION_KEY) notifyNotion(NOTION_KEY, { tipo: 'archivo_recibido', titulo: `Foto recibida: ${filename}`, detalle: file.webViewLink, origen: 'tasks-bot' });
       } catch (err) {
         await sendMessage(chatId, `❌ Error guardando foto: ${err.message}`);
       }
-      return res.status(200).send('ok');
+      return;
     }
 
     // ── Documentos → guardar en Drive ─────────────────────────
@@ -509,13 +514,14 @@ export default async function handler(req, res) {
         const fileUrl = `https://api.telegram.org/file/bot${process.env.TASKS_BOT_TOKEN}/${fileData.result.file_path}`;
         const file = await uploadFromUrl({ url: fileUrl, filename: doc.file_name || `doc-${Date.now()}`, mimeType: doc.mime_type || 'application/octet-stream', project: null });
         await sendMessage(chatId, `📁 Documento guardado en Drive\n[Ver archivo](${file.webViewLink})`);
+        if (NOTION_KEY) notifyNotion(NOTION_KEY, { tipo: 'archivo_recibido', titulo: `Documento: ${doc.file_name || 'sin nombre'}`, detalle: file.webViewLink, origen: 'tasks-bot' });
       } catch (err) {
         await sendMessage(chatId, `❌ Error guardando documento: ${err.message}`);
       }
-      return res.status(200).send('ok');
+      return;
     }
 
-    if (!message.text) return res.status(200).send('ok');
+    if (!message.text) return;
     const text = message.text.trim();
 
     if (text.startsWith('/')) {
@@ -559,9 +565,9 @@ export default async function handler(req, res) {
       await sendMessage(chatId, '💬 Usa los comandos del bot. Envía /help para ver opciones.');
     }
 
-    return res.status(200).send('ok');
+    return;
   } catch (err) {
     console.error('tasks-bot error:', err);
-    return res.status(200).send('ok');
+    return;
   }
 }
