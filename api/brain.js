@@ -204,11 +204,14 @@ export default async function handler(req, res) {
       const getDate  = (p, name) => p?.properties?.[name]?.date?.start ?? null;
       const getNum   = (p, name) => p?.properties?.[name]?.number ?? null;
 
-      const [tareasRes, proyectosRes, boletasRes] = await Promise.all([
-        queryNotion('ddaabf23-19cd-4ca0-9765-f63976aa6c16', {
-          filter: { property: 'Estado', select: { does_not_equal: 'Completada' } },
-          sorts: [{ property: 'Fecha', direction: 'ascending' }],
-          page_size: 15,
+      const [entregasRes, proyectosRes, boletasRes] = await Promise.all([
+        queryNotion('3337ab7f-975e-812c-a0ed-e6af65288d67', {
+          filter: { and: [
+            { property: 'Estado', select: { does_not_equal: 'Entregado' } },
+            { property: 'Estado', select: { does_not_equal: 'Cancelado' } },
+          ]},
+          sorts: [{ property: 'Deadline', direction: 'ascending' }],
+          page_size: 12,
         }),
         queryNotion('3337ab7f-975e-81b4-8045-d33fe1515aca', {
           filter: { property: 'Estado', select: { does_not_equal: 'Completado' } },
@@ -221,13 +224,13 @@ export default async function handler(req, res) {
         }),
       ]);
 
-      const tareas = (tareasRes.results || []).map(p => ({
+      const entregas = (entregasRes.results || []).map(p => ({
         id: p.id,
-        tarea: getText(p, 'Tarea') || getText(p, 'Name') || '—',
-        contexto: getSelect(p, 'Contexto'),
-        prioridad: getSelect(p, 'Prioridad'),
+        titulo: getText(p, 'Título') || getText(p, 'Titulo') || getText(p, 'Name') || '—',
         estado: getSelect(p, 'Estado'),
-        fecha: getDate(p, 'Fecha'),
+        prioridad: getSelect(p, 'Prioridad'),
+        deadline: getDate(p, 'Deadline') || getDate(p, 'Fecha Límite') || getDate(p, 'Fecha'),
+        cliente: getText(p, 'Cliente') || getSelect(p, 'Cliente'),
         url: p.url,
       }));
 
@@ -249,7 +252,7 @@ export default async function handler(req, res) {
         url: p.url,
       }));
 
-      return res.status(200).json({ ok: true, tareas, proyectos, boletas });
+      return res.status(200).json({ ok: true, entregas, proyectos, boletas });
     }
 
     if (resolvedAction === 'telegram') {

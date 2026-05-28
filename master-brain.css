@@ -3149,18 +3149,18 @@ body.theme-dark .nav-title {
 /* Gantt */
 .gantt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .gantt-header h3 { font-size: 16px; font-weight: 700; color: var(--brain-text); }
-.gantt-meta { font-size: 12px; color: var(--brain-text-dim); }
+.gantt-meta { font-size: 12px; color: var(--brain-text); }
 .gantt-table { width: 100%; border-collapse: collapse; }
 .gantt-row { display: grid; grid-template-columns: 260px 120px 110px 1fr 110px; gap: 0; border-bottom: 1px solid var(--brain-border); align-items: start; padding: 10px 0; }
-.gantt-row--header { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brain-text-dim); padding-bottom: 8px; }
+.gantt-row--header { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brain-text); padding-bottom: 8px; }
 .gantt-col-phase { display: flex; gap: 10px; align-items: flex-start; padding-right: 12px; }
 .gantt-phase-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
 .gantt-col-phase strong { font-size: 13px; color: var(--brain-text); display: block; margin-bottom: 4px; }
 .gantt-deliverables { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-.gantt-deliverable { font-size: 10px; background: rgba(255,255,255,.05); border-radius: 4px; padding: 2px 6px; color: var(--brain-text-dim); }
-.gantt-col-owner { font-size: 12px; color: var(--brain-text-dim); padding-top: 2px; }
-.gantt-col-dates { font-size: 11px; color: var(--brain-text-dim); padding-top: 2px; }
-.gantt-date-end { opacity: .6; }
+.gantt-deliverable { font-size: 10px; background: rgba(255,255,255,.08); border-radius: 4px; padding: 2px 6px; color: var(--brain-text); }
+.gantt-col-owner { font-size: 12px; color: var(--brain-text); padding-top: 2px; }
+.gantt-col-dates { font-size: 11px; color: var(--brain-text); padding-top: 2px; }
+.gantt-date-end { opacity: .7; }
 .gantt-col-bar { padding: 6px 12px 0; }
 .gantt-bar-track { position: relative; height: 8px; background: rgba(255,255,255,.06); border-radius: 4px; overflow: hidden; }
 .gantt-bar-fill { position: absolute; top: 0; height: 100%; border-radius: 4px; opacity: .85; }

@@ -1858,25 +1858,33 @@ function dotClass(p) {
   return '';
 }
 
-function renderHub({ tareas = [], proyectos = [], boletas = [] }) {
+function renderHub({ entregas = [], proyectos = [], boletas = [] }) {
   const fmtMonto = (n) => n != null ? `$${Number(n).toLocaleString('es-CL')}` : '—';
-  const fmtFecha = (d) => d ? d.slice(0, 10) : '';
+  const fmtFecha = (d) => {
+    if (!d) return '';
+    const diff = Math.ceil((new Date(d) - new Date()) / (1000*60*60*24));
+    const label = d.slice(0, 10);
+    if (diff < 0) return `<span style="color:var(--brain-red)">${label} ⚠ vencida</span>`;
+    if (diff === 0) return `<span style="color:var(--brain-orange)">${label} · hoy</span>`;
+    if (diff <= 3) return `<span style="color:var(--brain-orange)">${label} · ${diff}d</span>`;
+    return label;
+  };
 
-  const tareasHTML = tareas.length
-    ? tareas.map(t => `
+  const entregasHTML = entregas.length
+    ? entregas.map(e => `
       <div class="hub-item">
-        <div class="hub-item-dot ${dotClass(t.prioridad)}"></div>
+        <div class="hub-item-dot ${dotClass(e.prioridad)}"></div>
         <div class="hub-item-body">
-          <div class="hub-item-name">${escapeHtml(t.tarea)}</div>
+          <div class="hub-item-name">${escapeHtml(e.titulo)}</div>
           <div class="hub-item-meta">
-            ${t.contexto ? `<span class="hub-badge">${t.contexto}</span>` : ''}
-            ${t.prioridad ? `<span class="hub-badge ${prioClass(t.prioridad)}">${t.prioridad}</span>` : ''}
-            ${t.fecha ? `<span>${fmtFecha(t.fecha)}</span>` : ''}
+            ${e.cliente ? `<span class="hub-badge active">${escapeHtml(e.cliente)}</span>` : ''}
+            ${e.estado ? `<span class="hub-badge">${e.estado}</span>` : ''}
+            ${e.deadline ? `<span>${fmtFecha(e.deadline)}</span>` : ''}
           </div>
         </div>
-        ${t.url ? `<a class="hub-item-link" href="${t.url}" target="_blank">↗</a>` : ''}
+        ${e.url ? `<a class="hub-item-link" href="${e.url}" target="_blank">↗</a>` : ''}
       </div>`).join('')
-    : '<div class="hub-empty">Sin tareas pendientes ✓</div>';
+    : '<div class="hub-empty">Sin entregas pendientes ✓</div>';
 
   const proyectosHTML = proyectos.length
     ? proyectos.map(p => `
@@ -1906,13 +1914,13 @@ function renderHub({ tareas = [], proyectos = [], boletas = [] }) {
       <div class="hub-col-wide">
         <div class="hub-widget">
           <div class="hub-widget-title">
-            <span>✓</span> Tareas Pendientes
+            <span>📦</span> Entregas de Clientes
             <button class="hub-refresh-btn" onclick="loadHub(true)">↺ refresh</button>
           </div>
-          ${tareasHTML}
+          ${entregasHTML}
         </div>
         <div class="hub-widget">
-          <div class="hub-widget-title"><span>🎬</span> Proyectos Activos</div>
+          <div class="hub-widget-title"><span>🎬</span> Campañas Activas</div>
           ${proyectosHTML}
         </div>
       </div>
