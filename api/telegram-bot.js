@@ -357,23 +357,11 @@ export default async function handler(req, res) {
     return res.status(200).send('PVB Master Brain Bot OK');
   }
 
-  // Responder 200 inmediatamente para evitar timeout de Telegram (5s)
-  res.status(200).send('ok');
-
   try {
     const update = req.body;
-    const message = update.message || update.edited_message;
-    if (!message) return;
-
-    const chatId = message.chat.id;
-
-    // ── Mensajes de voz → Growth Director ──
-    if (message.voice) {
-      await handleGrowthVoice(chatId, message.voice.file_id, TELEGRAM_API);
-      return;
-    }
 
     // ── Callback queries (botones inline de Esperanza) ──
+    // Must be checked before message extraction — callback_query updates have no top-level message
     if (update.callback_query) {
       const cb = update.callback_query;
       const cbChatId = cb.message.chat.id;
@@ -385,10 +373,22 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ callback_query_id: cb.id })
       });
+      return res.status(200).send('ok');
+    }
+
+    const message = update.message || update.edited_message;
+    if (!message) return res.status(200).send('ok');
+
+    const chatId = message.chat.id;
+
+    // ── Mensajes de voz → Growth Director ──
+    if (message.voice) {
+      res.status(200).send('ok');
+      await handleGrowthVoice(chatId, message.voice.file_id, TELEGRAM_API);
       return;
     }
 
-    if (!message.text) return;
+    if (!message.text) return res.status(200).send('ok');
     const text = message.text.trim();
 
     // ── Reply a mensaje de proveedor → guardar en portal ──
@@ -396,6 +396,7 @@ export default async function handler(req, res) {
     if (replyTo?.text && replyTo.text.includes('Mensaje de proveedor')) {
       const match = replyTo.text.match(/provider_id:([a-f0-9-]{36})/);
       if (match) {
+        res.status(200).send('ok');
         await supabaseAdmin.from('provider_messages').insert({
           provider_id: match[1],
           from_role: 'admin',
@@ -413,12 +414,15 @@ export default async function handler(req, res) {
       const parts = text.split(' ');
       const command = parts[0].split('@')[0];
       const args = parts.slice(1);
+      // Comandos rápidos responden 200 al final normalmente
       const handled = await handleEsperanzaCommand(chatId, command, TELEGRAM_API);
       if (!handled) await handleCommand(chatId, command, args);
+      return res.status(200).send('ok');
     } else if (isOwner) {
+      // Para respuestas de IA, responder 200 rápido y procesar después
+      res.status(200).send('ok');
       const GROWTH_KEYWORDS = ['lead', 'cliente nuevo', 'prospecto', 'pipeline', 'venta', 'crecer', 'nuevos negocios', 'growth', 'outbound', 'estrategia', 'referido', 'campaña de captación', 'escalar', 'escala', 'expandir', 'ingresos', 'facturación', 'propuesta', 'precio', 'tarifa', 'competencia', 'posicionamiento', 'mercado', 'canal', 'adquisición', 'captar', 'ideas de negocio', 'oportunidad', 'ticket', 'upsell', 'retención'];
       const isGrowthQuery = GROWTH_KEYWORDS.some(k => text.toLowerCase().includes(k));
-
       if (isGrowthQuery) {
         await sendMessage(chatId, '📈 _Pensando..._');
         await handleGrowthMessage(chatId, text, TELEGRAM_API);
@@ -428,6 +432,7 @@ export default async function handler(req, res) {
         await sendMessage(chatId, reply);
       }
     } else {
+      res.status(200).send('ok');
       const handled = await handleEsperanza(chatId, text, message.from, TELEGRAM_API);
       if (!handled) {
         await sendMessage(chatId, '🧠 _Procesando..._');
@@ -437,5 +442,6 @@ export default async function handler(req, res) {
     }
   } catch (err) {
     console.error('telegram-bot error:', err);
+    if (!res.headersSent) res.status(200).send('ok');
   }
 }
