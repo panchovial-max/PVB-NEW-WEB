@@ -3094,14 +3094,27 @@ function initVoiceBot() {
     if (!ttsEnabled || !('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'es-CL';
-    utter.rate = 1.05;
+    utter.lang = 'es-ES';
+    utter.rate = 1.0;
     utter.pitch = 1;
-    // prefer a Spanish voice if available
+
+    function doSpeak() {
+      const voices = speechSynthesis.getVoices();
+      // Prefer "Esperanza" (built-in macOS/iOS voice) then any Spanish voice
+      const preferred = voices.find(v => v.name === 'Esperanza')
+        || voices.find(v => v.lang.startsWith('es'))
+        || null;
+      if (preferred) utter.voice = preferred;
+      speechSynthesis.speak(utter);
+    }
+
+    // getVoices() may be empty on first call — wait for voiceschanged
     const voices = speechSynthesis.getVoices();
-    const esVoice = voices.find(v => v.lang.startsWith('es')) || null;
-    if (esVoice) utter.voice = esVoice;
-    speechSynthesis.speak(utter);
+    if (voices.length) {
+      doSpeak();
+    } else {
+      speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
+    }
   }
 
   // ── Send message ──
