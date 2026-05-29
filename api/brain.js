@@ -6,6 +6,27 @@ import { createHmac } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 
+async function notifyDiscordError(source, err, context = {}) {
+  const webhook = process.env.DISCORD_WEBHOOK_ERRORES;
+  if (!webhook) return;
+  const fields = Object.entries(context).map(([name, value]) => ({
+    name, value: String(value).slice(0, 1024), inline: true,
+  }));
+  await fetch(webhook, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      embeds: [{
+        title: `🚨 Error en ${source}`,
+        description: `\`\`\`${err.message}\`\`\``,
+        color: 0xff4444,
+        fields,
+        timestamp: new Date().toISOString(),
+      }],
+    }),
+  }).catch(() => {});
+}
+
 function createBrainToken(secret) {
   const expires = Date.now() + 24 * 60 * 60 * 1000;
   const payload = `brain:${expires}`;
@@ -660,6 +681,7 @@ Sé específica y visionaria. Sin ambigüedades.`,
     return res.status(400).json({ error: 'Unknown action' });
   } catch (err) {
     console.error('brain error:', err);
+    await notifyDiscordError('brain.js', err, { action: req.body?.action || req.query?.action || 'unknown' });
     return res.status(500).json({ error: 'Internal server error', detail: err.message });
   }
 }

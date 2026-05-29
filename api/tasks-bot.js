@@ -6,6 +6,17 @@
 import { uploadFromUrl } from '../lib/google-drive.js';
 import { notifyNotion } from '../lib/notion-query.js';
 
+async function notifyDiscordError(source, err, context = {}) {
+  const webhook = process.env.DISCORD_WEBHOOK_ERRORES;
+  if (!webhook) return;
+  const fields = Object.entries(context).map(([name, value]) => ({ name, value: String(value).slice(0, 1024), inline: true }));
+  await fetch(webhook, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ embeds: [{ title: `🚨 Error en ${source}`, description: `\`\`\`${err.message}\`\`\``, color: 0xff4444, fields, timestamp: new Date().toISOString() }] }),
+  }).catch(() => {});
+}
+
 const TASKS_DB_ID = 'ddaabf2319cd4ca09765f63976aa6c16';
 const OWNER_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '5999159507';
 
@@ -14,7 +25,7 @@ let NOTION_KEY;
 let GROQ_API_KEY;
 
 function init() {
-  TELEGRAM_API = `https://api.telegram.org/bot${process.env.TASKS_BOT_TOKEN}`;
+  TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_TASKS_BOT_TOKEN}`;
   NOTION_KEY = process.env.NOTION_API_KEY;
   GROQ_API_KEY = process.env.GROQ_API_KEY;
 }
@@ -27,7 +38,7 @@ async function transcribeAudio(fileId) {
   if (!fileData.ok) throw new Error('No se pudo obtener el archivo de Telegram');
 
   const filePath = fileData.result.file_path;
-  const fileUrl = `https://api.telegram.org/file/bot${process.env.TASKS_BOT_TOKEN}/${filePath}`;
+  const fileUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TASKS_BOT_TOKEN}/${filePath}`;
 
   // 2. Descargar el audio
   const audioRes = await fetch(fileUrl);
@@ -494,7 +505,7 @@ export default async function handler(req, res) {
       try {
         const fileRes = await fetch(`${TELEGRAM_API}/getFile?file_id=${photo.file_id}`);
         const fileData = await fileRes.json();
-        const fileUrl = `https://api.telegram.org/file/bot${process.env.TASKS_BOT_TOKEN}/${fileData.result.file_path}`;
+        const fileUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TASKS_BOT_TOKEN}/${fileData.result.file_path}`;
         const filename = `foto-${Date.now()}.jpg`;
         const file = await uploadFromUrl({ url: fileUrl, filename, mimeType: 'image/jpeg', project: null });
         await sendMessage(chatId, `📁 Foto guardada en Drive\n[Ver archivo](${file.webViewLink})`);
@@ -511,7 +522,7 @@ export default async function handler(req, res) {
       try {
         const fileRes = await fetch(`${TELEGRAM_API}/getFile?file_id=${doc.file_id}`);
         const fileData = await fileRes.json();
-        const fileUrl = `https://api.telegram.org/file/bot${process.env.TASKS_BOT_TOKEN}/${fileData.result.file_path}`;
+        const fileUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TASKS_BOT_TOKEN}/${fileData.result.file_path}`;
         const file = await uploadFromUrl({ url: fileUrl, filename: doc.file_name || `doc-${Date.now()}`, mimeType: doc.mime_type || 'application/octet-stream', project: null });
         await sendMessage(chatId, `📁 Documento guardado en Drive\n[Ver archivo](${file.webViewLink})`);
         if (NOTION_KEY) notifyNotion(NOTION_KEY, { tipo: 'archivo_recibido', titulo: `Documento: ${doc.file_name || 'sin nombre'}`, detalle: file.webViewLink, origen: 'tasks-bot' });
@@ -568,6 +579,7 @@ export default async function handler(req, res) {
     return;
   } catch (err) {
     console.error('tasks-bot error:', err);
+    await notifyDiscordError('tasks-bot.js', err);
     return;
   }
 }
