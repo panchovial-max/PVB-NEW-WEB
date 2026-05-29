@@ -4,7 +4,7 @@
 // POST /api/brain?action=...  → telegram, chat (token requerido)
 import { createHmac } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
+import { LLMClient } from '../lib/llm-client.js';
 
 async function notifyDiscordError(source, err, context = {}) {
   const webhook = process.env.DISCORD_WEBHOOK_ERRORES;
@@ -547,7 +547,7 @@ export default async function handler(req, res) {
         return { error: 'Unknown tool' };
       }
 
-      const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const llm = new LLMClient();
 
       // Cargar reglas de estilo activas desde Supabase
       let styleRulesBlock = '';
@@ -569,7 +569,13 @@ Tienes acceso a Notion: tareas personales y proyectos del estudio. Puedes consul
 Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que pidan más detalle. Cuando completes una acción en Notion, confírmala brevemente.${styleRulesBlock}${proyectoCtx}`;
 
       const messages = [...history.slice(-12), { role: 'user', content: message }];
-      let resp = await anthropic.messages.create({ model: 'claude-haiku-4-5-20251001', max_tokens: 1024, system: SYSTEM, tools: TOOLS, messages });
+      let resp;
+      try {
+        resp = await llm.messages.create({ max_tokens: 1024, system: SYSTEM, tools: TOOLS, messages });
+      } catch (llmErr) {
+        console.error('LLM chat error:', llmErr.message);
+        return res.status(200).json({ ok: false, error: `LLM: ${llmErr.message}` });
+      }
 
       const actionsPerformed = [];
       while (resp.stop_reason === 'tool_use') {
@@ -580,7 +586,7 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que p
         })));
         messages.push({ role: 'assistant', content: resp.content });
         messages.push({ role: 'user', content: results });
-        resp = await anthropic.messages.create({ model: 'claude-haiku-4-5-20251001', max_tokens: 1024, system: SYSTEM, tools: TOOLS, messages });
+        resp = await llm.messages.create({ max_tokens: 1024, system: SYSTEM, tools: TOOLS, messages });
       }
 
       const reply = resp.content.find(b => b.type === 'text')?.text || '';
@@ -611,8 +617,7 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que p
       const { brief, iterate } = req.body || {};
       if (!brief) return res.status(400).json({ error: 'brief required' });
 
-      const Anthropic = (await import('@anthropic-ai/sdk')).default;
-      const ant = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const ant = new LLMClient({ preferred: 'groq' });
 
       const briefSummary = `
 Cliente: ${brief.client}
@@ -633,7 +638,6 @@ Notas de reunión: ${brief.notes || '—'}`.trim();
       const iterateContext = iterate ? `\n\nDirectriz adicional del equipo: ${iterate}` : '';
 
       const davidRes = await ant.messages.create({
-        model: 'claude-opus-4-7-20251101',
         max_tokens: 800,
         system: `Eres David, estratega creativo senior de PVB Estudio Creativo. Tienes el estilo de David Droga: directo, exigente con la estrategia, brillante con los insights de consumidor. Analizas briefs y entregas perspectiva estratégica clara. Tu output debe incluir:
 1. **Insight clave** — la verdad humana que conecta con la audiencia
@@ -646,7 +650,6 @@ Sé conciso y poderoso. No hagas preguntas. Toma posición.`,
       const davidContent = davidRes.content[0].text;
 
       const rubyRes = await ant.messages.create({
-        model: 'claude-opus-4-7-20251101',
         max_tokens: 800,
         system: `Eres Ruby, Directora Creativa de PVB Estudio Creativo. Eres visual, audaz, y siempre piensas en cómo las ideas se verán en pantalla. Recibes el brief del cliente y la dirección estratégica de David y las conviertes en una idea creativa ejecutable. Tu output debe incluir:
 1. **Concepto** — nombre de la campaña + idea en 1 frase poderosa
@@ -665,7 +668,6 @@ Sé específica y visionaria. Sin ambigüedades.`,
       ];
 
       const conceptRes = await ant.messages.create({
-        model: 'claude-sonnet-4-6',
         max_tokens: 400,
         system: 'Eres un sintetizador creativo. A partir de la sesión entre David (estrategia) y Ruby (creativo), genera un CONCEPTO FINAL de campaña en formato ejecutivo: 1 párrafo conciso que un Gerente de Marketing puede leer, entender y aprobar en 30 segundos. Incluye: nombre de la campaña, idea central, y por qué va a funcionar.',
         messages: [{ role: 'user', content: `Sesión creativa:\nDavid: ${davidContent}\n\nRuby: ${rubyContent}` }],

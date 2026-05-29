@@ -261,6 +261,8 @@ function checkBrainAuth() {
 
 function showPinScreen() {
   document.querySelector('.dashboard-nav').style.display = 'none';
+  const vbWidget = document.getElementById('vb-widget');
+  if (vbWidget) vbWidget.style.display = 'none';
   document.querySelector('.brain-main').innerHTML = `
     <div class="pin-screen">
       <div class="pin-box">
@@ -330,11 +332,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   function doInactivityLogout() {
     localStorage.removeItem('brain_token');
     showPinScreen();
-    document.querySelector('.dashboard-nav').style.display = 'none';
   }
   ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt =>
     document.addEventListener(evt, resetInactivityTimer, { passive: true })
   );
+
+  const vbWidget = document.getElementById('vb-widget');
+  if (vbWidget) vbWidget.style.display = '';
 
   allAgents = AGENTS_DATA;
   simulateAgentActivity();
@@ -361,6 +365,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateKPIs();
   initProyectosTab();
   setupEventListeners();
+  initVoiceBot();
 });
 
 function buildDepartments() {
@@ -3001,4 +3006,200 @@ function initEsperanzaTab() {
       showNotification(`Error: ${err.message}`, 'error');
     }
   });
+}
+
+// ── Voice Bot Widget ───────────────────────────────────────────────────────
+function initVoiceBot() {
+  const widget   = document.getElementById('vb-widget');
+  const fab      = document.getElementById('vbFab');
+  const panel    = document.getElementById('vbPanel');
+  const closeBtn = document.getElementById('vbClose');
+  const messages = document.getElementById('vbMessages');
+  const input    = document.getElementById('vbInput');
+  const micBtn   = document.getElementById('vbMic');
+  const sendBtn  = document.getElementById('vbSend');
+  const statusEl = document.getElementById('vbStatus');
+  const dot      = document.getElementById('vbDot');
+  const ttsBtn   = document.getElementById('vbTtsToggle');
+  const projSel  = document.getElementById('vbProjectSelect');
+  if (!widget) return;
+
+  let history = [];
+  let ttsEnabled = true;
+  let recording = false;
+
+  // ── TTS toggle ──
+  ttsBtn.classList.toggle('on', ttsEnabled);
+  ttsBtn.addEventListener('click', () => {
+    ttsEnabled = !ttsEnabled;
+    ttsBtn.classList.toggle('on', ttsEnabled);
+    ttsBtn.title = ttsEnabled ? 'Voz activada' : 'Voz desactivada';
+    if (!ttsEnabled) speechSynthesis.cancel();
+  });
+
+  // ── Open / close ──
+  fab.addEventListener('click', () => {
+    widget.classList.toggle('vb-collapsed');
+    if (!widget.classList.contains('vb-collapsed')) {
+      loadProjectsIntoVoiceBot();
+      input.focus();
+    }
+  });
+  closeBtn.addEventListener('click', () => widget.classList.add('vb-collapsed'));
+
+  // ── Load Notion projects into selector ──
+  let projectsLoaded = false;
+  async function loadProjectsIntoVoiceBot() {
+    if (projectsLoaded) return;
+    projectsLoaded = true;
+    try {
+      const token = localStorage.getItem('brain_token');
+      const res = await fetch('/api/brain?action=hub', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      (data.proyectos || []).forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.nombre;
+        opt.textContent = p.nombre + (p.cliente ? ` — ${p.cliente}` : '');
+        projSel.appendChild(opt);
+      });
+    } catch (_) {}
+  }
+
+  // ── Append message ──
+  function addMsg(role, text) {
+    const welcome = messages.querySelector('.vb-welcome');
+    if (welcome) welcome.remove();
+    const row = document.createElement('div');
+    row.className = `vb-msg vb-msg-${role}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'vb-bubble';
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    messages.appendChild(row);
+    messages.scrollTop = messages.scrollHeight;
+    return row;
+  }
+
+  function addThinking() {
+    const row = document.createElement('div');
+    row.className = 'vb-msg vb-thinking';
+    row.innerHTML = '<div class="vb-bubble"><span></span><span></span><span></span></div>';
+    messages.appendChild(row);
+    messages.scrollTop = messages.scrollHeight;
+    return row;
+  }
+
+  // ── TTS speak ──
+  function speak(text) {
+    if (!ttsEnabled || !('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'es-CL';
+    utter.rate = 1.05;
+    utter.pitch = 1;
+    // prefer a Spanish voice if available
+    const voices = speechSynthesis.getVoices();
+    const esVoice = voices.find(v => v.lang.startsWith('es')) || null;
+    if (esVoice) utter.voice = esVoice;
+    speechSynthesis.speak(utter);
+  }
+
+  // ── Send message ──
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    sendBtn.disabled = true;
+    dot.classList.add('active');
+    statusEl.textContent = 'pensando…';
+
+    addMsg('user', text);
+    history.push({ role: 'user', content: text });
+
+    const thinking = addThinking();
+    try {
+      const token = localStorage.getItem('brain_token');
+      const proyecto = projSel.value || '';
+      const res = await fetch('/api/brain?action=chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: text, history: history.slice(-10), proyecto }),
+      });
+      const data = await res.json();
+      thinking.remove();
+
+      if (!data.ok) throw new Error(data.error || 'Error del servidor');
+      if (!data.reply) throw new Error('Respuesta vacía del servidor');
+
+      addMsg('assistant', data.reply);
+      history.push({ role: 'assistant', content: data.reply });
+      speak(data.reply);
+
+      if (data.actionsPerformed?.length > 0) {
+        statusEl.textContent = `✓ ${data.actionsPerformed.length} acciones`;
+        setTimeout(() => { statusEl.textContent = 'listo'; }, 3000);
+      } else {
+        statusEl.textContent = 'listo';
+      }
+    } catch (err) {
+      thinking.remove();
+      addMsg('assistant', `Error: ${err.message}`);
+      statusEl.textContent = 'error';
+    }
+
+    sendBtn.disabled = false;
+    dot.classList.remove('active');
+    input.focus();
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+
+  // ── Voice input (STT) — auto-sends after transcription ──
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recog = new SR();
+    recog.lang = 'es-ES';
+    recog.continuous = false;
+    recog.interimResults = false;
+    recog.maxAlternatives = 1;
+
+    micBtn.addEventListener('click', () => {
+      if (recording) {
+        recog.stop();
+      } else {
+        speechSynthesis.cancel();
+        recog.start();
+        micBtn.classList.add('recording');
+        micBtn.title = 'Grabando… (clic para parar)';
+        statusEl.textContent = 'escuchando…';
+        recording = true;
+      }
+    });
+
+    recog.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      input.value = transcript;
+      // Auto-send immediately after voice input
+      sendMessage();
+    };
+
+    recog.onend = () => {
+      recording = false;
+      micBtn.classList.remove('recording');
+      micBtn.title = 'Hablar';
+      if (statusEl.textContent === 'escuchando…') statusEl.textContent = 'listo';
+    };
+
+    recog.onerror = () => {
+      recording = false;
+      micBtn.classList.remove('recording');
+      micBtn.title = 'Hablar';
+      statusEl.textContent = 'listo';
+    };
+  } else {
+    micBtn.style.display = 'none';
+  }
 }
