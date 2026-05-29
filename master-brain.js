@@ -320,6 +320,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Auto-logout after 5 minutes of inactivity
+  const INACTIVITY_MS = 5 * 60 * 1000;
+  let inactivityTimer = setTimeout(doInactivityLogout, INACTIVITY_MS);
+  function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(doInactivityLogout, INACTIVITY_MS);
+  }
+  function doInactivityLogout() {
+    localStorage.removeItem('brain_token');
+    showPinScreen();
+    document.querySelector('.dashboard-nav').style.display = 'none';
+  }
+  ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt =>
+    document.addEventListener(evt, resetInactivityTimer, { passive: true })
+  );
+
   allAgents = AGENTS_DATA;
   simulateAgentActivity();
   buildDepartments();
@@ -2275,6 +2291,12 @@ function initAccountsTab() {
     saveBtn.disabled = false;
     saveBtn.textContent = 'Crear cuenta';
   });
+
+  // Edit modal wiring
+  document.getElementById('aeSave')?.addEventListener('click', saveEditAccount);
+  document.getElementById('acctEditModal')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeEditAccount();
+  });
 }
 
 async function offboardAccount(id, name) {
@@ -2296,8 +2318,80 @@ async function offboardAccount(id, name) {
   }
 }
 
+let editingAccountId = null;
+
 function editAccount(id) {
-  showNotification('Editor de integrations coming soon — usa el Hub chat por ahora.', 'info');
+  // Buscar la cuenta en el DOM via data-id o recargar desde API
+  const token = localStorage.getItem('brain_token');
+  fetch(`/api/brain?action=accounts`, { headers: { Authorization: `Bearer ${token}` } })
+    .then(r => r.json())
+    .then(data => {
+      const acct = (data.accounts || []).find(a => a.id === id);
+      if (!acct) { showNotification('Cuenta no encontrada', 'error'); return; }
+      editingAccountId = id;
+
+      // Poblar campos
+      document.getElementById('aeClientName').value = acct.client_name || '';
+      document.getElementById('aeStatus').value     = acct.status || 'active';
+      document.getElementById('aeEmail').value      = acct.email_alias || '';
+      document.getElementById('aeService').value    = acct.service_type || '';
+      document.getElementById('aeBudget').value     = acct.monthly_budget_clp || '';
+      document.getElementById('aeContractEnd').value= acct.contract_end ? acct.contract_end.slice(0,10) : '';
+      document.getElementById('aeIgId').value       = acct.ig_account_id || '';
+      document.getElementById('aeNotionId').value   = acct.notion_page_id || '';
+      document.getElementById('aeTgId').value       = acct.telegram_chat_id || '';
+      document.getElementById('aeNotes').value      = acct.notes || '';
+
+      document.getElementById('acctEditModal').classList.remove('hidden');
+      document.getElementById('aeClientName').focus();
+    })
+    .catch(err => showNotification(`Error: ${err.message}`, 'error'));
+}
+
+function closeEditAccount() {
+  document.getElementById('acctEditModal').classList.add('hidden');
+  editingAccountId = null;
+}
+
+async function saveEditAccount() {
+  if (!editingAccountId) return;
+  const token = localStorage.getItem('brain_token');
+  const payload = {
+    sub: 'update',
+    id: editingAccountId,
+    client_name:       document.getElementById('aeClientName').value.trim(),
+    status:            document.getElementById('aeStatus').value,
+    email_alias:       document.getElementById('aeEmail').value.trim() || null,
+    service_type:      document.getElementById('aeService').value || null,
+    monthly_budget_clp:Number(document.getElementById('aeBudget').value) || null,
+    contract_end:      document.getElementById('aeContractEnd').value || null,
+    ig_account_id:     document.getElementById('aeIgId').value.trim() || null,
+    notion_page_id:    document.getElementById('aeNotionId').value.trim() || null,
+    telegram_chat_id:  document.getElementById('aeTgId').value.trim() || null,
+    notes:             document.getElementById('aeNotes').value.trim() || null,
+  };
+
+  const btn = document.getElementById('aeSave');
+  btn.textContent = 'Guardando…';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/brain?action=accounts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    closeEditAccount();
+    showNotification('Cuenta actualizada', 'success');
+    loadAccounts();
+  } catch (err) {
+    showNotification(`Error: ${err.message}`, 'error');
+  } finally {
+    btn.textContent = 'Guardar cambios';
+    btn.disabled = false;
+  }
 }
 
 // ── Esperanza — pipeline de leads ────────────────────────────────
