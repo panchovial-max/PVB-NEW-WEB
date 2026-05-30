@@ -732,7 +732,7 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo revis
       const messages = [...history.slice(-12), { role: 'user', content: message }];
       let resp;
       try {
-        resp = await llm.messages.create({ max_tokens: 1024, model: 'claude-opus-4-8', system: SYSTEM, tools: TOOLS, messages });
+        resp = await llm.messages.create({ max_tokens: 1024, system: SYSTEM, tools: TOOLS, messages });
       } catch (llmErr) {
         console.error('LLM chat error:', llmErr.message);
         return res.status(200).json({ ok: false, error: `LLM: ${llmErr.message}` });
@@ -751,7 +751,7 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo revis
         }));
         messages.push({ role: 'assistant', content: resp.content });
         messages.push({ role: 'user', content: results });
-        resp = await llm.messages.create({ max_tokens: 1024, model: 'claude-opus-4-8', system: SYSTEM, tools: TOOLS, messages });
+        resp = await llm.messages.create({ max_tokens: 1024, system: SYSTEM, tools: TOOLS, messages });
       }
 
       const reply = resp.content.find(b => b.type === 'text')?.text || '';
