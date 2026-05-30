@@ -3084,12 +3084,13 @@ function initVoiceBot() {
   const closeBtn = document.getElementById('vbClose');
   const messages = document.getElementById('vbMessages');
   const input    = document.getElementById('vbInput');
-  const micBtn   = document.getElementById('vbMic');
-  const sendBtn  = document.getElementById('vbSend');
-  const statusEl = document.getElementById('vbStatus');
-  const dot      = document.getElementById('vbDot');
-  const ttsBtn   = document.getElementById('vbTtsToggle');
-  const projSel  = document.getElementById('vbProjectSelect');
+  const micBtn       = document.getElementById('vbMic');
+  const sendBtn      = document.getElementById('vbSend');
+  const statusEl     = document.getElementById('vbStatus');
+  const dot          = document.getElementById('vbDot');
+  const ttsBtn       = document.getElementById('vbTtsToggle');
+  const autoListenBtn= document.getElementById('vbAutoListen');
+  const projSel      = document.getElementById('vbProjectSelect');
   if (!widget) return;
 
   const HISTORY_KEY = 'brain_chat_history';
@@ -3101,6 +3102,9 @@ function initVoiceBot() {
 
   let ttsEnabled = true;
   let recording = false;
+  let autoListen = false;
+  let autoListenTimer = null;
+  let onSpeakEnd = null; // set by STT block to restart mic after TTS
 
   // ── TTS toggle ──
   ttsBtn.classList.toggle('on', ttsEnabled);
@@ -3116,10 +3120,58 @@ function initVoiceBot() {
     widget.classList.toggle('vb-collapsed');
     if (!widget.classList.contains('vb-collapsed')) {
       loadProjectsIntoVoiceBot();
-      input.focus();
+      if (autoListen) scheduleAutoListen(300); else input.focus();
+    } else {
+      stopAutoListen();
     }
   });
-  closeBtn.addEventListener('click', () => widget.classList.add('vb-collapsed'));
+  closeBtn.addEventListener('click', () => { widget.classList.add('vb-collapsed'); stopAutoListen(); });
+
+  // ── Auto-listen toggle ──
+  autoListenBtn.addEventListener('click', () => {
+    autoListen = !autoListen;
+    autoListenBtn.classList.toggle('on', autoListen);
+    autoListenBtn.title = autoListen ? 'Modo continuo activo — clic para desactivar' : 'Activar modo conversación continua';
+    if (autoListen && !widget.classList.contains('vb-collapsed')) {
+      scheduleAutoListen(200);
+    } else if (!autoListen) {
+      stopAutoListen();
+    }
+  });
+
+  // ── VB Toast ──
+  function showVBToast(msg, level = 'info') {
+    const t = document.createElement('div');
+    t.className = `vb-toast vb-toast-${level}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(() => { requestAnimationFrame(() => t.classList.add('show')); });
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3500);
+  }
+
+  // ── Execute UI commands returned by the bot ──
+  function executeVBCommands(commands = []) {
+    for (const cmd of commands) {
+      if (cmd.type === 'navigate_tab') {
+        const tab = document.querySelector(`.brain-tab[data-tab="${cmd.tab}"]`);
+        if (tab) {
+          tab.click();
+          tab.classList.add('vb-highlight');
+          setTimeout(() => tab.classList.remove('vb-highlight'), 1500);
+        }
+      } else if (cmd.type === 'show_toast') {
+        showVBToast(cmd.message, cmd.level || 'info');
+      } else if (cmd.type === 'highlight') {
+        document.querySelectorAll(cmd.selector || '').forEach(el => {
+          el.classList.add('vb-highlight');
+          setTimeout(() => el.classList.remove('vb-highlight'), 2000);
+        });
+      } else if (cmd.type === 'scroll_to') {
+        const el = document.querySelector(cmd.selector || '');
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }
 
   // ── Load Notion projects into selector ──
   let projectsLoaded = false;
@@ -3183,12 +3235,16 @@ function initVoiceBot() {
 
   // ── TTS speak ──
   function speak(text) {
-    if (!ttsEnabled || !('speechSynthesis' in window)) return;
+    if (!ttsEnabled || !('speechSynthesis' in window)) {
+      onSpeakEnd?.();
+      return;
+    }
     speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'es-ES';
     utter.rate = 1.0;
     utter.pitch = 1;
+    utter.onend = () => onSpeakEnd?.();
 
     function doSpeak() {
       const voices = speechSynthesis.getVoices();
@@ -3239,11 +3295,12 @@ function initVoiceBot() {
       addMsg('assistant', data.reply);
       history.push({ role: 'assistant', content: data.reply });
       try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-40))); } catch {}
-      speak(data.reply);
+      if (data.commands?.length) executeVBCommands(data.commands);
+      speak(data.reply); // speak() calls onSpeakEnd when done → restarts mic if autoListen
 
       if (data.actionsPerformed?.length > 0) {
         statusEl.textContent = `✓ ${data.actionsPerformed.length} acciones`;
-        setTimeout(() => { statusEl.textContent = 'listo'; }, 3000);
+        setTimeout(() => { statusEl.textContent = autoListen ? 'escuchando…' : 'listo'; }, 3000);
       } else {
         statusEl.textContent = 'listo';
       }
@@ -3251,11 +3308,12 @@ function initVoiceBot() {
       thinking.remove();
       addMsg('assistant', `Error: ${err.message}`);
       statusEl.textContent = 'error';
+      if (autoListen) scheduleAutoListen(1500);
     }
 
     sendBtn.disabled = false;
     dot.classList.remove('active');
-    input.focus();
+    if (!autoListen) input.focus();
   }
 
   sendBtn.addEventListener('click', sendMessage);
@@ -3272,39 +3330,75 @@ function initVoiceBot() {
     recog.interimResults = false;
     recog.maxAlternatives = 1;
 
-    micBtn.addEventListener('click', () => {
-      if (recording) {
-        recog.stop();
-      } else {
+    function startListening() {
+      if (recording) return;
+      clearTimeout(autoListenTimer);
+      try {
         speechSynthesis.cancel();
         recog.start();
+        recording = true;
+        micBtn.classList.remove('auto-listening');
         micBtn.classList.add('recording');
         micBtn.title = 'Grabando… (clic para parar)';
         statusEl.textContent = 'escuchando…';
-        recording = true;
+      } catch (_) { /* recognition already running */ }
+    }
+
+    function scheduleAutoListen(delay = 600) {
+      clearTimeout(autoListenTimer);
+      autoListenTimer = setTimeout(() => {
+        if (autoListen && !recording) startListening();
+      }, delay);
+      micBtn.classList.add('auto-listening');
+    }
+
+    function stopAutoListen() {
+      autoListen = false;
+      clearTimeout(autoListenTimer);
+      autoListenBtn.classList.remove('on');
+      micBtn.classList.remove('auto-listening', 'recording');
+      micBtn.title = 'Hablar';
+      if (recording) { recog.stop(); recording = false; }
+    }
+
+    micBtn.addEventListener('click', () => {
+      if (recording) {
+        // Manual stop — also turn off auto-listen
+        autoListen = false;
+        autoListenBtn.classList.remove('on');
+        autoListenBtn.title = 'Activar modo conversación continua';
+        recog.stop();
+      } else {
+        startListening();
       }
     });
 
     recog.onresult = (e) => {
       const transcript = e.results[0][0].transcript;
       input.value = transcript;
-      // Auto-send immediately after voice input
       sendMessage();
     };
 
     recog.onend = () => {
       recording = false;
       micBtn.classList.remove('recording');
-      micBtn.title = 'Hablar';
-      if (statusEl.textContent === 'escuchando…') statusEl.textContent = 'listo';
+      micBtn.title = autoListen ? 'Modo continuo' : 'Hablar';
+      if (statusEl.textContent === 'escuchando…') statusEl.textContent = 'procesando…';
+      // Auto-restart handled by speak().onend or sendMessage(); don't restart here
+      // to avoid re-listening while the bot is still responding
     };
 
-    recog.onerror = () => {
+    recog.onerror = (e) => {
       recording = false;
       micBtn.classList.remove('recording');
       micBtn.title = 'Hablar';
       statusEl.textContent = 'listo';
+      if (autoListen && e.error !== 'aborted') scheduleAutoListen(2000);
     };
+
+    // Wire onSpeakEnd so speak() restarts mic after TTS finishes
+    onSpeakEnd = () => { if (autoListen) scheduleAutoListen(500); };
+
   } else {
     micBtn.style.display = 'none';
   }

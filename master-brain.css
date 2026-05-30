@@ -3019,6 +3019,36 @@ body.theme-dark .nav-title {
 .acct-actions { display: flex; gap: 6px; }
 .acct-offboarded { font-size: 11px; color: #6B7280; font-style: italic; }
 
+/* ── Edit Account Modal ─────────────────────────────────────────── */
+.acct-edit-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+}
+.acct-edit-modal.hidden { display: none; }
+.acct-edit-box {
+    background: var(--brain-surface);
+    border: 1px solid var(--brain-border-light);
+    border-radius: 14px;
+    padding: 2rem;
+    width: 620px; max-width: 95vw;
+    max-height: 90vh; overflow-y: auto;
+}
+.acct-edit-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem;
+}
+.acct-edit-title {
+    color: var(--brain-text); font-size: 16px; font-weight: 700; margin: 0;
+}
+.acct-edit-close {
+    background: none; border: none; color: var(--brain-text-dim);
+    font-size: 22px; cursor: pointer; line-height: 1; padding: 0;
+    transition: color 0.2s;
+}
+.acct-edit-close:hover { color: var(--brain-text); }
+
 /* ── Esperanza Tab ──────────────────────────────────────────────── */
 .esp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
 .esp-filter-row { display: flex; gap: 8px; align-items: center; }
@@ -3193,3 +3223,70 @@ body.theme-dark .nav-title {
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; }
 .btn-cancel { background: none; border: 1px solid var(--brain-border); color: var(--brain-text-dim); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; }
 .btn-submit-brief { background: var(--brain-accent); color: #0a0a0a; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+
+/* ── Voice Bot Widget ─────────────────────────────────────────────────────── */
+.vb-widget { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+
+.vb-fab { display: flex; align-items: center; gap: 8px; background: var(--brain-accent); color: #0a0a0a; border: none; border-radius: 28px; padding: 12px 18px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; box-shadow: 0 4px 20px rgba(212,176,112,0.4); transition: transform 0.15s, box-shadow 0.15s; position: relative; }
+.vb-fab:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(212,176,112,0.5); }
+.vb-fab-icon { font-size: 18px; }
+.vb-fab-label { letter-spacing: 0.04em; }
+.vb-fab-dot { position: absolute; top: 6px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--brain-green); border: 2px solid #0a0a0a; display: none; }
+.vb-fab-dot.active { display: block; animation: vb-pulse 2s infinite; }
+@keyframes vb-pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+.vb-panel { display: none; width: 360px; min-height: 360px; max-height: 80vh; background: var(--brain-surface-solid); border: 1px solid var(--brain-border-light); border-radius: 16px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.6); flex-direction: column; resize: vertical; }
+.vb-widget:not(.vb-collapsed) .vb-panel { display: flex; }
+
+.vb-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(212,176,112,0.06); border-bottom: 1px solid var(--brain-border); }
+.vb-header-info { display: flex; align-items: center; gap: 12px; }
+.vb-avatar { font-size: 28px; line-height: 1; }
+.vb-title { font-size: 13px; font-weight: 700; color: var(--brain-text); letter-spacing: 0.05em; }
+.vb-subtitle { font-size: 11px; color: var(--brain-muted); margin-top: 1px; }
+.vb-header-actions { display: flex; gap: 8px; }
+.vb-tts-toggle, .vb-close { background: none; border: 1px solid var(--brain-border); color: var(--brain-muted); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, color 0.2s; }
+.vb-tts-toggle:hover, .vb-close:hover { border-color: var(--brain-accent); color: var(--brain-accent); }
+.vb-tts-toggle.on { border-color: var(--brain-accent); color: var(--brain-accent); }
+
+.vb-messages { flex: 1; min-height: 120px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.vb-messages::-webkit-scrollbar { width: 4px; }
+.vb-messages::-webkit-scrollbar-thumb { background: var(--brain-border); border-radius: 2px; }
+.vb-welcome { color: var(--brain-muted); font-size: 12px; text-align: center; padding: 12px 0; }
+.vb-msg { display: flex; }
+.vb-msg-user { justify-content: flex-end; }
+.vb-msg-assistant { justify-content: flex-start; }
+.vb-bubble { max-width: 85%; padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.vb-msg-user .vb-bubble { background: var(--brain-accent); color: #0a0a0a; border-bottom-right-radius: 4px; }
+.vb-msg-assistant .vb-bubble { background: var(--brain-surface-2); border: 1px solid var(--brain-border); color: var(--brain-text); border-bottom-left-radius: 4px; }
+.vb-thinking { justify-content: flex-start; }
+.vb-thinking .vb-bubble { display: flex; gap: 4px; align-items: center; padding: 12px 14px; }
+.vb-thinking .vb-bubble span { width: 5px; height: 5px; border-radius: 50%; background: var(--brain-muted); animation: thinking-dot 1.2s infinite; }
+.vb-thinking .vb-bubble span:nth-child(2) { animation-delay: 0.2s; }
+.vb-thinking .vb-bubble span:nth-child(3) { animation-delay: 0.4s; }
+
+.vb-project-row { padding: 0 12px 6px; }
+.vb-project-select { width: 100%; background: var(--brain-bg); border: 1px solid var(--brain-border); color: var(--brain-muted); border-radius: 8px; padding: 6px 10px; font-size: 11px; font-family: inherit; }
+
+.vb-input-row { display: flex; gap: 8px; align-items: flex-end; padding: 10px 12px 14px; border-top: 1px solid var(--brain-border); }
+.vb-input { flex: 1; background: var(--brain-bg); border: 1px solid var(--brain-border); color: var(--brain-text); border-radius: 10px; padding: 9px 12px; font-size: 13px; font-family: inherit; resize: none; min-height: 38px; max-height: 100px; }
+.vb-input:focus { outline: none; border-color: var(--brain-gold); }
+.vb-mic { background: var(--brain-surface-2); border: 1px solid var(--brain-border); color: var(--brain-text); border-radius: 10px; width: 38px; height: 38px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s, border-color 0.15s; }
+.vb-mic:hover { border-color: var(--brain-accent); }
+.vb-mic.recording { background: rgba(239,68,68,0.15); border-color: #ef4444; animation: vb-pulse 0.8s infinite; }
+.vb-mic.auto-listening { background: rgba(212,176,112,0.12); border-color: var(--brain-accent); animation: vb-auto-ring 1.4s infinite; }
+@keyframes vb-auto-ring { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+.vb-auto-listen { background: none; border: 1px solid var(--brain-border); color: var(--brain-muted); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, color 0.2s; }
+.vb-auto-listen:hover { border-color: var(--brain-accent); color: var(--brain-accent); }
+.vb-auto-listen.on { border-color: var(--brain-accent); color: var(--brain-accent); background: rgba(212,176,112,0.08); }
+/* VB Toast */
+.vb-toast { position: fixed; bottom: 88px; right: 24px; background: var(--brain-surface-2); border: 1px solid var(--brain-border); color: var(--brain-text); border-radius: 10px; padding: 10px 16px; font-size: 13px; max-width: 300px; opacity: 0; transform: translateY(8px); transition: opacity 0.25s, transform 0.25s; pointer-events: none; z-index: 9999; }
+.vb-toast.show { opacity: 1; transform: translateY(0); }
+.vb-toast-success { border-color: var(--brain-green); color: var(--brain-green); }
+.vb-toast-warning { border-color: #f59e0b; color: #f59e0b; }
+.vb-toast-error { border-color: #ef4444; color: #ef4444; }
+/* VB highlight pulse for navigated elements */
+.vb-highlight { animation: vb-highlight-flash 1.5s ease-out; }
+@keyframes vb-highlight-flash { 0% { outline: 2px solid var(--brain-accent); outline-offset: 2px; } 100% { outline: 2px solid transparent; } }
+.vb-send { background: var(--brain-gold); color: #000; border: none; border-radius: 10px; width: 38px; height: 38px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.2s; }
+.vb-send:hover { opacity: 0.85; }
+.vb-send:disabled { opacity: 0.4; cursor: not-allowed; }

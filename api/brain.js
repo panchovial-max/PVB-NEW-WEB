@@ -483,6 +483,42 @@ export default async function handler(req, res) {
             project:  { type: 'string', description: 'Nombre del proyecto PVB (ej: Kaya, Refugio Chiloé). Omitir para General.' },
           }},
         },
+        {
+          name: 'create_project',
+          description: 'Crea un nuevo proyecto en Notion Proyectos PVB.',
+          input_schema: { type: 'object', required: ['nombre'], properties: {
+            nombre:  { type: 'string', description: 'Nombre del proyecto' },
+            cliente: { type: 'string', description: 'Nombre del cliente' },
+            estado:  { type: 'string', description: 'Estado inicial (ej: "En pausa", "En producción", "Propuesta"). Por defecto: En pausa.' },
+            fecha:   { type: 'string', description: 'Fecha de inicio YYYY-MM-DD' },
+          }},
+        },
+        {
+          name: 'update_task',
+          description: 'Actualiza campos de una tarea en Notion: título, fecha, prioridad o estado.',
+          input_schema: { type: 'object', required: ['task_id'], properties: {
+            task_id:  { type: 'string', description: 'ID de la tarea (viene de get_tasks)' },
+            tarea:    { type: 'string', description: 'Nuevo título' },
+            fecha:    { type: 'string', description: 'Nueva fecha YYYY-MM-DD' },
+            prioridad:{ type: 'string', enum: ['Alta', 'Media', 'Baja'] },
+            estado:   { type: 'string', description: 'Ej: "Pendiente", "En progreso", "Completada"' },
+          }},
+        },
+        {
+          name: 'ui_navigate',
+          description: 'Navega a una sección de Master Brain cambiando el tab activo. Úsalo cuando el usuario pida "ir a", "muéstrame", "abre" o "navega a".',
+          input_schema: { type: 'object', required: ['tab'], properties: {
+            tab: { type: 'string', enum: ['neural-map','hub','accounts','esperanza','proposals','proyectos','campaigns','departments','agents','clients','competitor-config','activity','routines','portfolio','learnings','audit'], description: 'Tab destino' },
+          }},
+        },
+        {
+          name: 'ui_toast',
+          description: 'Muestra un mensaje flotante visual en Master Brain. Útil para confirmar acciones completadas o dar alertas cortas.',
+          input_schema: { type: 'object', required: ['message'], properties: {
+            message: { type: 'string', description: 'Texto del mensaje' },
+            level:   { type: 'string', enum: ['info','success','warning','error'], description: 'Estilo visual' },
+          }},
+        },
       ];
 
       async function runTool(name, input) {
@@ -544,6 +580,32 @@ export default async function handler(req, res) {
           const file = await uploadFromUrl({ url: input.url, filename: input.filename, mimeType: input.mimeType, project: input.project || null });
           return { ok: true, id: file.id, viewUrl: file.webViewLink, name: file.name };
         }
+        if (name === 'create_project') {
+          const props = {
+            Nombre: { title: [{ text: { content: input.nombre } }] },
+            Estado: { select: { name: input.estado || 'En pausa' } },
+          };
+          if (input.cliente) props.Cliente = { select: { name: input.cliente } };
+          if (input.fecha) props['Fecha inicio'] = { date: { start: input.fecha } };
+          const r = await fetch('https://api.notion.com/v1/pages', { method: 'POST', headers: NH, body: JSON.stringify({ parent: { database_id: DB_PROJECTS }, properties: props }) });
+          const data = await r.json();
+          return { ok: r.ok, id: data.id };
+        }
+        if (name === 'update_task') {
+          const props = {};
+          if (input.tarea)     props.Tarea     = { title: [{ text: { content: input.tarea } }] };
+          if (input.fecha)     props.Fecha     = { date: { start: input.fecha } };
+          if (input.prioridad) props.Prioridad = { select: { name: input.prioridad } };
+          if (input.estado)    props.Estado    = { select: { name: input.estado } };
+          const r = await fetch(`https://api.notion.com/v1/pages/${input.task_id}`, { method: 'PATCH', headers: NH, body: JSON.stringify({ properties: props }) });
+          return { ok: r.ok };
+        }
+        if (name === 'ui_navigate') {
+          return { command: { type: 'navigate_tab', tab: input.tab } };
+        }
+        if (name === 'ui_toast') {
+          return { command: { type: 'show_toast', message: input.message, level: input.level || 'info' } };
+        }
         return { error: 'Unknown tool' };
       }
 
@@ -562,11 +624,15 @@ export default async function handler(req, res) {
       } catch { /* no bloquear el chat si falla */ }
 
       const proyectoCtx = proyecto ? `\n\nCONTEXTO ACTIVO: Proyecto "${proyecto}". Enfoca tus respuestas y acciones en este proyecto salvo que pidan otra cosa.` : '';
-      const SYSTEM = `Eres el asistente de orquestación de campañas de PVB Estudio Creativo — agencia audiovisual en Santiago, Chile. Clientes típicos: Kaya Unite, Refugio Chiloé, Romerelli.
+      const SYSTEM = `Eres el asistente de orquestación de PVB Estudio Creativo — agencia audiovisual en Santiago, Chile. Clientes típicos: Kaya Unite, Refugio Chiloé, Romerelli.
 
-Tienes acceso a Notion: tareas personales y proyectos del estudio. Puedes consultar, crear, completar tareas y actualizar estado de proyectos.
+Tienes acceso a Notion y a la interfaz de Master Brain:
+- Tareas: consultar, crear, completar y actualizar tareas en Notion.
+- Proyectos: consultar, crear y actualizar estado de proyectos en Notion.
+- Navegación: usa ui_navigate para llevar al usuario a cualquier sección de Master Brain cuando pida "ir a", "muéstrame", "abre" o "navega a". Tabs disponibles: neural-map (Office), hub, accounts, esperanza, proposals, proyectos, campaigns, departments, agents, clients, activity, routines, portfolio, learnings.
+- Notificaciones: usa ui_toast para confirmar acciones completadas o dar avisos cortos en la interfaz.
 
-Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que pidan más detalle. Cuando completes una acción en Notion, confírmala brevemente.${styleRulesBlock}${proyectoCtx}`;
+Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que pidan más detalle. Cuando hagas una acción en Notion o navegues, confírmalo brevemente.${styleRulesBlock}${proyectoCtx}`;
 
       const messages = [...history.slice(-12), { role: 'user', content: message }];
       let resp;
@@ -578,19 +644,23 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que p
       }
 
       const actionsPerformed = [];
+      const commands = [];
+      const notionActions = new Set(['complete_task','create_task','update_project_status','create_project','update_task']);
       while (resp.stop_reason === 'tool_use') {
         const uses = resp.content.filter(b => b.type === 'tool_use');
-        uses.forEach(t => { if (['complete_task','create_task','update_project_status'].includes(t.name)) actionsPerformed.push(t.name); });
-        const results = await Promise.all(uses.map(async t => ({
-          type: 'tool_result', tool_use_id: t.id, content: JSON.stringify(await runTool(t.name, t.input)),
-        })));
+        const results = await Promise.all(uses.map(async t => {
+          const result = await runTool(t.name, t.input);
+          if (result.command) commands.push(result.command);
+          if (notionActions.has(t.name)) actionsPerformed.push(t.name);
+          return { type: 'tool_result', tool_use_id: t.id, content: JSON.stringify(result) };
+        }));
         messages.push({ role: 'assistant', content: resp.content });
         messages.push({ role: 'user', content: results });
         resp = await llm.messages.create({ max_tokens: 1024, system: SYSTEM, tools: TOOLS, messages });
       }
 
       const reply = resp.content.find(b => b.type === 'text')?.text || '';
-      return res.status(200).json({ ok: true, reply, actionsPerformed });
+      return res.status(200).json({ ok: true, reply, actionsPerformed, commands });
     }
 
     // ── Drive upload ──────────────────────────────────────────
