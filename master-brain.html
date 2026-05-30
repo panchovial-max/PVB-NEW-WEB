@@ -87,14 +87,14 @@
             <button type="button" class="brain-tab" data-tab="hub">Hub ⚡</button>
             <button type="button" class="brain-tab" data-tab="accounts">Cuentas PVB 🔐</button>
             <button type="button" class="brain-tab" data-tab="esperanza">Esperanza 🌟</button>
-            <button type="button" class="brain-tab" data-tab="proposals">Proposals <span class="tab-badge tab-badge--hidden" id="proposalBadge">0</span></button>
+            <button type="button" class="brain-tab" data-tab="proposals">Reportes <span class="tab-badge tab-badge--hidden" id="proposalBadge">0</span></button>
             <button type="button" class="brain-tab" data-tab="proyectos">Proyectos 🎬</button>
             <button type="button" class="brain-tab" data-tab="campaigns">Campaigns</button>
             <button type="button" class="brain-tab" data-tab="departments">Departments</button>
             <button type="button" class="brain-tab" data-tab="agents">All Agents</button>
             <button type="button" class="brain-tab" data-tab="clients">Clientes <span class="tab-badge hidden" id="clientsBadge">0</span></button>
             <button type="button" class="brain-tab" data-tab="competitor-config">Competidores</button>
-            <button type="button" class="brain-tab" data-tab="activity">Activity</button>
+            <button type="button" class="brain-tab" data-tab="activity">Activity <span class="tab-badge tab-badge--hidden" id="activityBadge">0</span></button>
             <button type="button" class="brain-tab" data-tab="routines">Routines</button>
             <button type="button" class="brain-tab" data-tab="portfolio">Portfolio</button>
             <button type="button" class="brain-tab" data-tab="learnings">Learnings</button>
@@ -205,6 +205,72 @@
             <div class="accounts-list" id="accountsList">
                 <div class="hub-loading">Cargando cuentas…</div>
             </div>
+
+            <!-- Edit account modal -->
+            <div class="acct-edit-modal hidden" id="acctEditModal" role="dialog" aria-modal="true" aria-labelledby="acctEditTitle">
+                <div class="acct-edit-box">
+                    <div class="acct-edit-header">
+                        <h3 class="acct-edit-title" id="acctEditTitle">Editar cuenta</h3>
+                        <button type="button" class="acct-edit-close" onclick="closeEditAccount()" aria-label="Cerrar">×</button>
+                    </div>
+                    <div class="accounts-form-grid">
+                        <div class="accounts-field">
+                            <label class="accounts-label">Nombre cliente</label>
+                            <input type="text" class="accounts-input" id="aeClientName" placeholder="Kaya Unite">
+                        </div>
+                        <div class="accounts-field">
+                            <label class="accounts-label">Estado</label>
+                            <select class="accounts-input" id="aeStatus" title="Estado de la cuenta">
+                                <option value="active">Activo</option>
+                                <option value="paused">Pausado</option>
+                                <option value="offboarded">Offboarded</option>
+                            </select>
+                        </div>
+                        <div class="accounts-field">
+                            <label class="accounts-label">Email alias PVB</label>
+                            <input type="text" class="accounts-input" id="aeEmail" placeholder="kaya@pvb.cl">
+                        </div>
+                        <div class="accounts-field">
+                            <label class="accounts-label">Tipo de servicio</label>
+                            <select class="accounts-input" id="aeService" title="Tipo de servicio">
+                                <option value="">Seleccionar…</option>
+                                <option value="full-service">Full Service</option>
+                                <option value="social">Social Media</option>
+                                <option value="video">Video</option>
+                                <option value="foto">Fotografía</option>
+                            </select>
+                        </div>
+                        <div class="accounts-field">
+                            <label class="accounts-label">Budget mensual (CLP)</label>
+                            <input type="number" class="accounts-input" id="aeBudget" placeholder="1200000" step="50000">
+                        </div>
+                        <div class="accounts-field">
+                            <label class="accounts-label">Vencimiento contrato</label>
+                            <input type="date" class="accounts-input" id="aeContractEnd" title="Fecha de vencimiento del contrato">
+                        </div>
+                        <div class="accounts-field">
+                            <label class="accounts-label">IG Account ID</label>
+                            <input type="text" class="accounts-input" id="aeIgId" placeholder="17841400000000000">
+                        </div>
+                        <div class="accounts-field">
+                            <label class="accounts-label">Notion Page ID</label>
+                            <input type="text" class="accounts-input" id="aeNotionId" placeholder="3337ab7f-...">
+                        </div>
+                        <div class="accounts-field">
+                            <label class="accounts-label">Telegram Chat ID</label>
+                            <input type="text" class="accounts-input" id="aeTgId" placeholder="-100000000">
+                        </div>
+                        <div class="accounts-field accounts-field--full">
+                            <label class="accounts-label">Notas internas</label>
+                            <textarea class="accounts-input accounts-textarea" id="aeNotes" rows="2" placeholder="Notas, preferencias, contexto…"></textarea>
+                        </div>
+                    </div>
+                    <div class="accounts-form-actions">
+                        <button type="button" class="action-btn" id="aeSave">Guardar cambios</button>
+                        <button type="button" class="action-btn secondary" onclick="closeEditAccount()">Cancelar</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- TAB: Esperanza — leads del agente de ventas -->
@@ -243,30 +309,56 @@
             </div>
         </section>
 
-        <!-- TAB: Proposals — Autonomous agent suggestions -->
+        <!-- TAB: Reportes — Digest de actividad + Memoria de Estilo PVB -->
         <section class="brain-tab-content" id="tab-proposals">
+
+            <!-- Memoria de Estilo PVB -->
+            <div class="style-memory-panel" id="styleMemoryPanel">
+                <div class="style-memory-header">
+                    <span class="style-memory-title">Memoria de Estilo PVB</span>
+                    <span class="style-memory-subtitle">Clínico · Pulcro · Minimalista — reglas activas</span>
+                </div>
+                <div class="style-memory-rules" id="styleMemoryRules">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+
+            <!-- Filtros de reportes -->
             <div class="proposals-header">
                 <div class="proposals-filters">
-                    <select class="filter-select" id="proposalCategoryFilter" title="Filter by category" aria-label="Filter proposals by category">
-                        <option value="all">All Categories</option>
-                        <option value="improvement">Improvements</option>
-                        <option value="bug">Bugs Found</option>
-                        <option value="opportunity">Opportunities</option>
-                        <option value="optimization">Optimizations</option>
-                        <option value="creative">Creative Ideas</option>
+                    <select class="filter-select" id="proposalCategoryFilter" title="Filtrar por categoría" aria-label="Filtrar reportes por categoría">
+                        <option value="all">Todas las categorías</option>
+                        <option value="improvement">Mejoras</option>
+                        <option value="bug">Bugs detectados</option>
+                        <option value="opportunity">Oportunidades</option>
+                        <option value="optimization">Optimizaciones</option>
+                        <option value="creative">Ideas creativas</option>
                     </select>
-                    <select class="filter-select" id="proposalStatusFilter" title="Filter by status" aria-label="Filter proposals by status">
-                        <option value="pending">Pending Review</option>
-                        <option value="all">All Status</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="completed">Completed</option>
+                    <select class="filter-select" id="proposalStatusFilter" title="Filtrar por estado" aria-label="Filtrar reportes por estado">
+                        <option value="pending">Sin revisar</option>
+                        <option value="all">Todos</option>
+                        <option value="archived">Archivados</option>
                     </select>
                 </div>
             </div>
+
             <div class="proposals-feed" id="proposalsFeed">
                 <!-- Rendered by JS -->
             </div>
+
+            <!-- Modal: capturar regla de estilo -->
+            <div class="style-rule-modal hidden" id="styleRuleModal" role="dialog" aria-modal="true" aria-labelledby="styleRuleModalTitle">
+                <div class="style-rule-modal-box">
+                    <h3 id="styleRuleModalTitle" class="style-rule-modal-title" id="styleRuleModalTitle">Registrar regla de estilo</h3>
+                    <p class="style-rule-modal-context" id="styleRuleContext"></p>
+                    <textarea class="style-rule-input" id="styleRuleInput" rows="3" placeholder="Describe la regla. Ej: Nunca usar colores saturados en fondos. Siempre dejar espacio blanco generoso entre secciones."></textarea>
+                    <div class="style-rule-modal-actions">
+                        <button type="button" class="proposal-btn never" id="styleRuleSave">Guardar regla</button>
+                        <button type="button" class="proposal-btn" onclick="closeStyleRuleModal()">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+
         </section>
 
         <!-- TAB: Campaigns — Project progress tracking -->
@@ -569,6 +661,10 @@
               <div class="gantt-header">
                 <h3>Cronograma de Campaña</h3>
                 <span class="gantt-meta" id="ganttMeta"></span>
+                <button type="button" class="btn-sync-notion" id="syncNotionBtn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                  Sync → Notion
+                </button>
               </div>
               <div class="gantt-container" id="ganttContainer"></div>
             </div>
@@ -669,6 +765,43 @@
         </section>
 
     </main>
+
+    <!-- Voice Bot Widget (persistent, all tabs) -->
+    <div id="vb-widget" class="vb-widget vb-collapsed" aria-label="Brain Voice Bot">
+      <button type="button" class="vb-fab" id="vbFab" title="Abrir Brain Bot">
+        <span class="vb-fab-icon">🎙️</span>
+        <span class="vb-fab-label">Brain</span>
+        <span class="vb-fab-dot" id="vbDot"></span>
+      </button>
+      <div class="vb-panel" id="vbPanel">
+        <div class="vb-header">
+          <div class="vb-header-info">
+            <div class="vb-avatar">🧠</div>
+            <div>
+              <div class="vb-title">PVB Brain Bot</div>
+              <div class="vb-subtitle" id="vbStatus">listo</div>
+            </div>
+          </div>
+          <div class="vb-header-actions">
+            <button type="button" class="vb-tts-toggle" id="vbTtsToggle" title="Activar/desactivar voz">🔊</button>
+            <button type="button" class="vb-close" id="vbClose" title="Cerrar">✕</button>
+          </div>
+        </div>
+        <div class="vb-messages" id="vbMessages">
+          <div class="vb-welcome">Hola Pancho — ¿en qué te ayudo? Podés hablar o escribir.</div>
+        </div>
+        <div class="vb-project-row">
+          <select class="vb-project-select" id="vbProjectSelect" title="Contexto de proyecto">
+            <option value="">Sin proyecto específico</option>
+          </select>
+        </div>
+        <div class="vb-input-row">
+          <textarea class="vb-input" id="vbInput" placeholder="Escribí o presioná el mic…" rows="1"></textarea>
+          <button type="button" class="vb-mic" id="vbMic" title="Hablar">🎙️</button>
+          <button type="button" class="vb-send" id="vbSend" title="Enviar">↑</button>
+        </div>
+      </div>
+    </div>
 
     <script src="master-brain.js"></script>
 </body>

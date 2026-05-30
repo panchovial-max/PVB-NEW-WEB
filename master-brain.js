@@ -537,7 +537,7 @@ function renderActivity() {
   const totalCaps = countTotalCapabilities();
   const totalSkills = countTotalSkills();
 
-  let html = `
+  let html = renderSystemUpdates() + `
     <div class="budget-card" style="grid-column: 1 / -1">
       <div class="budget-card-header">
         <div class="budget-card-name">PVB Master Brain — Overview</div>
@@ -616,6 +616,74 @@ function renderRoutines() {
 }
 
 // ─── Audit Log ───
+// ─── System Updates Feed ───
+const SYSTEM_UPDATES = [
+  { date: '2026-05-29', type: 'skill',    icon: '🎬', title: 'YouTube Intelligence activado',        desc: 'Cron semanal (lunes 08:00) — 16 canales curados, verificación de URLs + sentiment de comentarios.' },
+  { date: '2026-05-29', type: 'workflow', icon: '🤖', title: 'AI Digest n8n activo',                 desc: 'Cada 3 días: 6 RSS feeds → Ollama → Telegram. Fuentes: TLDR AI, Verge AI, Google AI, n8n, Ollama, Anthropic SDK.' },
+  { date: '2026-05-28', type: 'agent',    icon: '💬', title: 'Esperanza — Sales Agent operativa',    desc: 'Instagram DM lead qualification via n8n + llama3.1:8b. Pendiente: conectar ManyChat Pro.' },
+  { date: '2026-05-28', type: 'config',   icon: '⚙️', title: 'Hermes default → Claude Haiku',        desc: 'Modelo primario cambiado de Gemini 2.5 Pro a Claude Haiku 4.5 para todos los crons.' },
+  { date: '2026-05-26', type: 'skill',    icon: '📁', title: 'Google Drive upload en todos los agentes', desc: 'Telegram AI, Master Brain chat y Tasks Bot pueden guardar archivos directo a Drive por proyecto.' },
+];
+
+const SYSTEM_UPDATE_TYPES = {
+  skill:    { label: 'Skill',    color: '#c9a96e' },
+  workflow: { label: 'Workflow', color: '#5a9fd4' },
+  agent:    { label: 'Agent',    color: '#7ec87e' },
+  config:   { label: 'Config',   color: '#b08fd4' },
+};
+
+function renderSystemUpdates() {
+  const lastSeen = localStorage.getItem('mb_updates_seen') || '2000-01-01';
+  const unseen = SYSTEM_UPDATES.filter(u => u.date > lastSeen);
+
+  const badge = document.getElementById('activityBadge');
+  if (badge) {
+    if (unseen.length > 0) {
+      badge.textContent = unseen.length;
+      badge.classList.remove('tab-badge--hidden');
+    } else {
+      badge.classList.add('tab-badge--hidden');
+    }
+  }
+
+  return `
+    <div class="budget-card" style="grid-column: 1 / -1">
+      <div class="budget-card-header">
+        <div class="budget-card-name">🆕 Novedades del Sistema</div>
+        <button type="button" class="btn-sm" onclick="markUpdatesRead()" style="font-size:11px;padding:2px 8px;opacity:0.7">Marcar leídas</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        ${SYSTEM_UPDATES.map(u => {
+          const typeInfo = SYSTEM_UPDATE_TYPES[u.type] || { label: u.type, color: '#c9a96e' };
+          const isNew = u.date > lastSeen;
+          return `
+            <div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+              <span style="font-size:20px;line-height:1">${u.icon}</span>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="font-weight:600;color:#f0e6d3">${u.title}</span>
+                  <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:${typeInfo.color}22;color:${typeInfo.color};border:1px solid ${typeInfo.color}44">${typeInfo.label}</span>
+                  ${isNew ? '<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:#7ec87e22;color:#7ec87e;border:1px solid #7ec87e44">NEW</span>' : ''}
+                </div>
+                <div style="font-size:12px;color:#a0927e;margin-top:3px">${u.desc}</div>
+                <div style="font-size:11px;color:#6b5d52;margin-top:2px">${u.date}</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function markUpdatesRead() {
+  const today = new Date().toISOString().slice(0, 10);
+  localStorage.setItem('mb_updates_seen', today);
+  const badge = document.getElementById('activityBadge');
+  if (badge) badge.classList.add('tab-badge--hidden');
+  renderActivity();
+}
+
 // ─── Learnings System ───
 let agentLearnings = {}; // { agent_id: [{ id, learning, category, confidence, times_applied }] }
 
