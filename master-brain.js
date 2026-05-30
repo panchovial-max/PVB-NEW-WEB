@@ -2202,21 +2202,27 @@ function initHubChat(proyectos = []) {
     }
   });
 
-  // Voice input via Web Speech API
+  // Voice input via Web Speech API — continuous mode, silence-detect to stop
   if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = 'es-ES'; // es-CL not broadly supported; es-ES gives best Spanish coverage
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.lang = 'es-ES';
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
     let recording = false;
+    let hubFinalText = '';
+    let hubSilenceTimer = null;
+    const HUB_SILENCE_MS = 2500;
 
     micBtn.addEventListener('click', () => {
       if (recording) {
+        clearTimeout(hubSilenceTimer);
         recognition.stop();
       } else {
+        hubFinalText = '';
+        input.value = '';
         recognition.start();
         micBtn.classList.add('recording');
         micBtn.title = 'Grabando… (clic para parar)';
@@ -2225,18 +2231,28 @@ function initHubChat(proyectos = []) {
     });
 
     recognition.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
-      input.value = (input.value ? input.value + ' ' : '') + transcript;
-      input.focus();
+      clearTimeout(hubSilenceTimer);
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) hubFinalText += e.results[i][0].transcript + ' ';
+        else interim = e.results[i][0].transcript;
+      }
+      input.value = hubFinalText + interim;
+      // Stop after 2.5s of silence — user can always click to stop sooner
+      hubSilenceTimer = setTimeout(() => recognition.stop(), HUB_SILENCE_MS);
     };
 
     recognition.onend = () => {
+      clearTimeout(hubSilenceTimer);
       recording = false;
       micBtn.classList.remove('recording');
       micBtn.title = 'Hablar';
+      input.value = hubFinalText.trim();
+      input.focus();
     };
 
     recognition.onerror = () => {
+      clearTimeout(hubSilenceTimer);
       recording = false;
       micBtn.classList.remove('recording');
       micBtn.title = 'Hablar';
@@ -3502,18 +3518,24 @@ function initVoiceBot() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
 
-  // ── Voice input (STT) — auto-sends after transcription ──
+  // ── Voice input (STT) — continuous mode, silence-detect + auto-send ──
   if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recog = new SR();
     recog.lang = 'es-ES';
-    recog.continuous = false;
-    recog.interimResults = false;
+    recog.continuous = true;     // no 8s hard cut
+    recog.interimResults = true; // show text live while speaking
     recog.maxAlternatives = 1;
+
+    let vbFinalText = '';
+    let vbSilenceTimer = null;
+    const VB_SILENCE_MS = 2500;  // stop after 2.5s of silence, then auto-send
 
     function startListening() {
       if (recording) return;
       clearTimeout(autoListenTimer);
+      clearTimeout(vbSilenceTimer);
+      vbFinalText = '';
       try {
         speechSynthesis.cancel();
         recog.start();
@@ -3536,6 +3558,7 @@ function initVoiceBot() {
     function stopAutoListen() {
       autoListen = false;
       clearTimeout(autoListenTimer);
+      clearTimeout(vbSilenceTimer);
       autoListenBtn.classList.remove('on');
       micBtn.classList.remove('auto-listening', 'recording');
       micBtn.title = 'Hablar';
@@ -3544,33 +3567,51 @@ function initVoiceBot() {
 
     micBtn.addEventListener('click', () => {
       if (recording) {
-        // Manual stop — also turn off auto-listen
+        // Manual stop — turn off auto-listen, stop mic, send whatever was captured
+        clearTimeout(vbSilenceTimer);
         autoListen = false;
         autoListenBtn.classList.remove('on');
         autoListenBtn.title = 'Activar modo conversación continua';
         recog.stop();
+        // onend will handle sending vbFinalText
       } else {
         startListening();
       }
     });
 
     recog.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
-      input.value = transcript;
-      sendMessage();
+      clearTimeout(vbSilenceTimer);
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) vbFinalText += e.results[i][0].transcript + ' ';
+        else interim = e.results[i][0].transcript;
+      }
+      // Show live transcript in status bar (keeps input clean until send)
+      statusEl.textContent = (vbFinalText + interim).trim().slice(-60) || 'escuchando…';
+      // Auto-stop after 2.5s of silence
+      vbSilenceTimer = setTimeout(() => recog.stop(), VB_SILENCE_MS);
     };
 
     recog.onend = () => {
+      clearTimeout(vbSilenceTimer);
       recording = false;
       micBtn.classList.remove('recording');
       micBtn.title = autoListen ? 'Modo continuo' : 'Hablar';
-      if (statusEl.textContent === 'escuchando…') statusEl.textContent = 'procesando…';
-      // Auto-restart handled by speak().onend or sendMessage(); don't restart here
-      // to avoid re-listening while the bot is still responding
+      const text = vbFinalText.trim();
+      if (text) {
+        input.value = text;
+        vbFinalText = '';
+        sendMessage(); // auto-send on silence/stop
+      } else {
+        statusEl.textContent = 'listo';
+        if (autoListen) scheduleAutoListen(500);
+      }
     };
 
     recog.onerror = (e) => {
+      clearTimeout(vbSilenceTimer);
       recording = false;
+      vbFinalText = '';
       micBtn.classList.remove('recording');
       micBtn.title = 'Hablar';
       statusEl.textContent = 'listo';
