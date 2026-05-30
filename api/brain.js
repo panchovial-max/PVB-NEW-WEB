@@ -424,6 +424,30 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    // ── TTS — ElevenLabs voice synthesis ─────────────────────
+    if (resolvedAction === 'tts') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const { text } = req.body || {};
+      if (!text) return res.status(400).json({ error: 'text required' });
+      const ELEVEN_KEY = process.env.ELEVENLABS_API_KEY;
+      if (!ELEVEN_KEY) return res.status(503).json({ error: 'ElevenLabs not configured' });
+      const voiceId = process.env.ELEVENLABS_VOICE_ESPERANZA || '21m00Tcm4TlvDq8ikWAM'; // Rachel multilingual
+      const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: { 'xi-api-key': ELEVEN_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: text.slice(0, 500), // cap to avoid long TTS costs
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: { stability: 0.45, similarity_boost: 0.75, style: 0.3, use_speaker_boost: true }
+        })
+      });
+      if (!ttsRes.ok) return res.status(502).json({ error: 'ElevenLabs error' });
+      const audio = await ttsRes.arrayBuffer();
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).send(Buffer.from(audio));
+    }
+
     // ── Chat: Claude Haiku + Notion tool use ─────────────────
     if (resolvedAction === 'chat') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });

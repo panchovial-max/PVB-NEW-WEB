@@ -3440,30 +3440,44 @@ function initVoiceBot() {
         || null;
   }
 
-  function speak(text) {
-    if (!ttsEnabled || !('speechSynthesis' in window)) {
-      onSpeakEnd?.();
-      return;
-    }
+  function speakFallback(text) {
+    if (!('speechSynthesis' in window)) { onSpeakEnd?.(); return; }
     speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.rate = 1.05;
     utter.pitch = 1;
     utter.onend = () => onSpeakEnd?.();
-
     function doSpeak() {
       const voice = pickSpanishVoice();
       if (voice) { utter.voice = voice; utter.lang = voice.lang; }
       else { utter.lang = 'es-MX'; }
       speechSynthesis.speak(utter);
     }
+    if (speechSynthesis.getVoices().length) doSpeak();
+    else speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
+  }
 
-    // getVoices() may be empty on first call — wait for voiceschanged
-    if (speechSynthesis.getVoices().length) {
-      doSpeak();
-    } else {
-      speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
-    }
+  async function speak(text) {
+    if (!ttsEnabled) { onSpeakEnd?.(); return; }
+    const token = localStorage.getItem('brain_token');
+    try {
+      const res = await fetch('/api/brain?action=tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ text }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => { URL.revokeObjectURL(url); onSpeakEnd?.(); };
+        audio.onerror = () => { URL.revokeObjectURL(url); speakFallback(text); };
+        await audio.play();
+        return;
+      }
+    } catch (_) {}
+    // ElevenLabs unavailable — fallback to Web Speech API (Esperanza macOS voice)
+    speakFallback(text);
   }
 
   // ── Send message ──
