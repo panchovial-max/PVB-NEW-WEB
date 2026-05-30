@@ -732,7 +732,7 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo revis
       const messages = [...history.slice(-12), { role: 'user', content: message }];
       let resp;
       try {
-        resp = await llm.messages.create({ max_tokens: 1024, system: SYSTEM, tools: TOOLS, messages });
+        resp = await llm.messages.create({ max_tokens: 1024, model: 'claude-opus-4-8', system: SYSTEM, tools: TOOLS, messages });
       } catch (llmErr) {
         console.error('LLM chat error:', llmErr.message);
         return res.status(200).json({ ok: false, error: `LLM: ${llmErr.message}` });
@@ -751,7 +751,7 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo revis
         }));
         messages.push({ role: 'assistant', content: resp.content });
         messages.push({ role: 'user', content: results });
-        resp = await llm.messages.create({ max_tokens: 1024, system: SYSTEM, tools: TOOLS, messages });
+        resp = await llm.messages.create({ max_tokens: 1024, model: 'claude-opus-4-8', system: SYSTEM, tools: TOOLS, messages });
       }
 
       const reply = resp.content.find(b => b.type === 'text')?.text || '';
@@ -843,6 +843,94 @@ Sé específica y visionaria. Sin ambigüedades.`,
         session,
         concept: conceptRes.content[0].text,
       });
+    }
+
+    // ── Sync Project → Notion (Gantt phases as Entregas) ─────
+    if (action === 'sync-project') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const { project } = req.body || {};
+      if (!project) return res.status(400).json({ error: 'project required' });
+
+      const NOTION_KEY = process.env.NOTION_API_KEY;
+      const NOTION_VER = '2022-06-28';
+      const NH = { Authorization: `Bearer ${NOTION_KEY}`, 'Notion-Version': NOTION_VER, 'Content-Type': 'application/json' };
+
+      const DB_PROYECTOS = '3337ab7f-975e-81b4-8045-d33fe1515aca';
+      const DB_ENTREGAS  = '3337ab7f-975e-812c-a0ed-e6af65288d67';
+
+      const STATUS_MAP_PROYECTO = {
+        briefing: 'Brief', creative: 'Creativo', preproduction: 'Pre-producción',
+        production: 'En producción', postproduction: 'Post-producción',
+        delivery: 'En entrega', live: 'Live', measuring: 'Métricas',
+      };
+      const STATUS_MAP_ENTREGA = {
+        pending: 'Pendiente', active: 'En curso', done: 'Entregado',
+        review: 'En revisión', risk: 'En riesgo',
+      };
+      const PHASE_NAMES = {
+        descubrimiento: 'Descubrimiento', estrategia: 'Estrategia Creativa',
+        presentacion: 'Presentación Cliente', preprod: 'Pre-Producción',
+        produccion: 'Producción', postprod: 'Post-Producción',
+        revisiones: 'Revisiones', aprobacion: 'Aprobación Final',
+        lanzamiento: 'Lanzamiento', medicion: 'Medición & Reporte',
+      };
+
+      // Create or update project page in Notion Proyectos DB
+      let notionPageId = project.notion_page_id || null;
+      const proyectoProps = {
+        'Nombre': { title: [{ text: { content: `${project.client} — ${project.name}` } }] },
+        'Estado':  { select: { name: STATUS_MAP_PROYECTO[project.status] || 'Brief' } },
+        'Cliente': { rich_text: [{ text: { content: project.client || '' } }] },
+      };
+      if (project.startDate) {
+        proyectoProps['Fecha inicio'] = { date: { start: project.startDate } };
+      }
+
+      if (notionPageId) {
+        await fetch(`https://api.notion.com/v1/pages/${notionPageId}`, {
+          method: 'PATCH', headers: NH,
+          body: JSON.stringify({ properties: proyectoProps }),
+        });
+      } else {
+        const r = await fetch('https://api.notion.com/v1/pages', {
+          method: 'POST', headers: NH,
+          body: JSON.stringify({ parent: { database_id: DB_PROYECTOS }, properties: proyectoProps }),
+        });
+        const d = await r.json();
+        if (d.id) notionPageId = d.id;
+      }
+
+      // Create/update Entrega pages for each gantt phase
+      const ganttIds = project.notion_gantt_ids ? { ...project.notion_gantt_ids } : {};
+      const gantt = Array.isArray(project.gantt) ? project.gantt : [];
+
+      await Promise.all(gantt.map(async (phase) => {
+        const phaseName = PHASE_NAMES[phase.phaseId] || phase.phaseId;
+        const entregaProps = {
+          'Título':  { title: [{ text: { content: phaseName } }] },
+          'Estado':  { select: { name: STATUS_MAP_ENTREGA[phase.status] || 'Pendiente' } },
+          'Cliente': { rich_text: [{ text: { content: project.client || '' } }] },
+        };
+        if (phase.endDate) entregaProps['Deadline'] = { date: { start: phase.endDate } };
+        if (phase.startDate) entregaProps['Fecha inicio'] = { date: { start: phase.startDate } };
+
+        const existingId = ganttIds[phase.phaseId];
+        if (existingId) {
+          await fetch(`https://api.notion.com/v1/pages/${existingId}`, {
+            method: 'PATCH', headers: NH,
+            body: JSON.stringify({ properties: entregaProps }),
+          });
+        } else {
+          const r = await fetch('https://api.notion.com/v1/pages', {
+            method: 'POST', headers: NH,
+            body: JSON.stringify({ parent: { database_id: DB_ENTREGAS }, properties: entregaProps }),
+          });
+          const d = await r.json();
+          if (d.id) ganttIds[phase.phaseId] = d.id;
+        }
+      }));
+
+      return res.status(200).json({ ok: true, notion_page_id: notionPageId, notion_gantt_ids: ganttIds });
     }
 
     return res.status(400).json({ error: 'Unknown action' });

@@ -2212,6 +2212,7 @@ function initHubChat(proyectos = []) {
     recognition.maxAlternatives = 1;
 
     let recording = false;
+    let intentionalStop = false;
     let hubFinalText = '';
     let hubSilenceTimer = null;
     const HUB_SILENCE_MS = 2500;
@@ -2219,14 +2220,18 @@ function initHubChat(proyectos = []) {
     micBtn.addEventListener('click', () => {
       if (recording) {
         clearTimeout(hubSilenceTimer);
+        intentionalStop = true;
         recognition.stop();
       } else {
         hubFinalText = '';
+        intentionalStop = false;
         input.value = '';
-        recognition.start();
-        micBtn.classList.add('recording');
-        micBtn.title = 'Grabando… (clic para parar)';
-        recording = true;
+        try {
+          recognition.start();
+          micBtn.classList.add('recording');
+          micBtn.title = 'Grabando… (clic para parar)';
+          recording = true;
+        } catch (_) {}
       }
     });
 
@@ -2239,11 +2244,16 @@ function initHubChat(proyectos = []) {
       }
       input.value = hubFinalText + interim;
       // Stop after 2.5s of silence — user can always click to stop sooner
-      hubSilenceTimer = setTimeout(() => recognition.stop(), HUB_SILENCE_MS);
+      hubSilenceTimer = setTimeout(() => { intentionalStop = true; recognition.stop(); }, HUB_SILENCE_MS);
     };
 
     recognition.onend = () => {
       clearTimeout(hubSilenceTimer);
+      // Browser-imposed cut (not silence timer, not user click) — restart immediately
+      if (!intentionalStop && recording) {
+        try { recognition.start(); return; } catch (_) {}
+      }
+      intentionalStop = false;
       recording = false;
       micBtn.classList.remove('recording');
       micBtn.title = 'Hablar';
@@ -2251,8 +2261,13 @@ function initHubChat(proyectos = []) {
       input.focus();
     };
 
-    recognition.onerror = () => {
+    recognition.onerror = (e) => {
       clearTimeout(hubSilenceTimer);
+      if (e.error === 'no-speech' && recording && !intentionalStop) {
+        // No speech detected but mic still active — restart silently
+        try { recognition.start(); return; } catch (_) {}
+      }
+      intentionalStop = false;
       recording = false;
       micBtn.classList.remove('recording');
       micBtn.title = 'Hablar';
@@ -3529,6 +3544,7 @@ function initVoiceBot() {
 
     let vbFinalText = '';
     let vbSilenceTimer = null;
+    let vbIntentionalStop = false;
     const VB_SILENCE_MS = 2500;  // stop after 2.5s of silence, then auto-send
 
     function startListening() {
@@ -3536,6 +3552,7 @@ function initVoiceBot() {
       clearTimeout(autoListenTimer);
       clearTimeout(vbSilenceTimer);
       vbFinalText = '';
+      vbIntentionalStop = false;
       try {
         speechSynthesis.cancel();
         recog.start();
@@ -3562,7 +3579,7 @@ function initVoiceBot() {
       autoListenBtn.classList.remove('on');
       micBtn.classList.remove('auto-listening', 'recording');
       micBtn.title = 'Hablar';
-      if (recording) { recog.stop(); recording = false; }
+      if (recording) { vbIntentionalStop = true; recog.stop(); recording = false; }
     }
 
     micBtn.addEventListener('click', () => {
@@ -3572,6 +3589,7 @@ function initVoiceBot() {
         autoListen = false;
         autoListenBtn.classList.remove('on');
         autoListenBtn.title = 'Activar modo conversación continua';
+        vbIntentionalStop = true;
         recog.stop();
         // onend will handle sending vbFinalText
       } else {
@@ -3589,11 +3607,16 @@ function initVoiceBot() {
       // Show live transcript in status bar (keeps input clean until send)
       statusEl.textContent = (vbFinalText + interim).trim().slice(-60) || 'escuchando…';
       // Auto-stop after 2.5s of silence
-      vbSilenceTimer = setTimeout(() => recog.stop(), VB_SILENCE_MS);
+      vbSilenceTimer = setTimeout(() => { vbIntentionalStop = true; recog.stop(); }, VB_SILENCE_MS);
     };
 
     recog.onend = () => {
       clearTimeout(vbSilenceTimer);
+      // Browser-imposed cut — restart immediately to keep mic alive
+      if (!vbIntentionalStop && recording) {
+        try { recog.start(); return; } catch (_) {}
+      }
+      vbIntentionalStop = false;
       recording = false;
       micBtn.classList.remove('recording');
       micBtn.title = autoListen ? 'Modo continuo' : 'Hablar';
@@ -3610,6 +3633,11 @@ function initVoiceBot() {
 
     recog.onerror = (e) => {
       clearTimeout(vbSilenceTimer);
+      if (e.error === 'no-speech' && recording && !vbIntentionalStop) {
+        // Browser reported no-speech but we're still in active listening — restart
+        try { recog.start(); return; } catch (_) {}
+      }
+      vbIntentionalStop = false;
       recording = false;
       vbFinalText = '';
       micBtn.classList.remove('recording');
