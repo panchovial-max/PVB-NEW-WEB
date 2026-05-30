@@ -2068,6 +2068,97 @@ function initHubTelegram() {
   });
 }
 
+// ── Shared UI helpers (used by Hub Chat + Voice Bot) ─────────────
+function showVBToast(msg, level = 'info') {
+  const t = document.createElement('div');
+  t.className = `vb-toast vb-toast-${level}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => { requestAnimationFrame(() => t.classList.add('show')); });
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+function executeVBCommands(commands = []) {
+  for (const cmd of commands) {
+    if (cmd.type === 'navigate_tab') {
+      const tab = document.querySelector(`.brain-tab[data-tab="${cmd.tab}"]`);
+      if (tab) { tab.click(); tab.classList.add('vb-highlight'); setTimeout(() => tab.classList.remove('vb-highlight'), 1500); }
+
+    } else if (cmd.type === 'show_toast') {
+      showVBToast(cmd.message, cmd.level || 'info');
+
+    } else if (cmd.type === 'highlight') {
+      document.querySelectorAll(cmd.selector || '').forEach(el => {
+        el.classList.add('vb-highlight'); setTimeout(() => el.classList.remove('vb-highlight'), 2000);
+      });
+
+    } else if (cmd.type === 'scroll_to') {
+      document.querySelector(cmd.selector || '')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    } else if (cmd.type === 'create_project_local') {
+      document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
+      const proj = createProject(cmd.data || cmd);
+      renderProjects();
+      setTimeout(() => openProjectDetail(proj.id), 250);
+      showVBToast(`Proyecto "${proj.name}" creado`, 'success');
+      syncProjectToNotion(proj); // auto-sync
+
+    } else if (cmd.type === 'open_project') {
+      document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
+      setTimeout(() => { if (cmd.id) openProjectDetail(cmd.id); }, 200);
+
+    } else if (cmd.type === 'update_project_field') {
+      const proj = pvbProjects.find(p => p.id === cmd.id);
+      if (proj && cmd.fields) {
+        Object.assign(proj, cmd.fields);
+        saveProjects();
+        renderProjects();
+        if (currentProject?.id === cmd.id) document.getElementById('detailStatus').textContent = PROJECT_STATUS[proj.status] || proj.status;
+        showVBToast('Proyecto actualizado', 'success');
+        syncProjectToNotion(proj); // auto-sync
+      }
+
+    } else if (cmd.type === 'advance_gantt_phase') {
+      const proj = pvbProjects.find(p => p.id === cmd.id);
+      if (proj?.gantt) {
+        const activeIdx = proj.gantt.findIndex(g => g.status === 'active');
+        if (activeIdx >= 0) {
+          proj.gantt[activeIdx].status = 'done';
+          if (proj.gantt[activeIdx + 1]) proj.gantt[activeIdx + 1].status = 'active';
+        }
+        saveProjects();
+        renderProjects();
+        if (currentProject?.id === cmd.id) renderGantt();
+        showVBToast('Fase avanzada ✓', 'success');
+        syncProjectToNotion(proj); // auto-sync
+
+      }
+
+    } else if (cmd.type === 'start_review_session') {
+      const filtered = cmd.filter_status ? pvbProjects.filter(p => p.status === cmd.filter_status) : pvbProjects;
+      localStorage.setItem('mb_review_session', JSON.stringify({ projects: filtered.map(p => p.id), currentIndex: 0, started: new Date().toISOString() }));
+      document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
+
+    } else if (cmd.type === 'review_advance') {
+      const session = JSON.parse(localStorage.getItem('mb_review_session') || 'null');
+      if (session) { session.currentIndex = (session.currentIndex || 0) + 1; localStorage.setItem('mb_review_session', JSON.stringify(session)); }
+      if (cmd.open_id) setTimeout(() => openProjectDetail(cmd.open_id), 200);
+
+    } else if (cmd.type === 'save_project_note') {
+      const proj = pvbProjects.find(p => p.id === cmd.id);
+      if (proj) {
+        if (!proj.projectNotes) proj.projectNotes = [];
+        const title = cmd.title ? `**${cmd.title}**\n` : '';
+        proj.projectNotes.push({ date: new Date().toISOString(), text: cmd.note, title: cmd.title || null, source: 'bot' });
+        proj.notes = (proj.notes || '') + `\n\n---\n${title}*${new Date().toLocaleDateString('es-CL')} — Bot*\n${cmd.note}`;
+        saveProjects();
+        if (currentProject?.id === cmd.id) renderBriefDisplay();
+        showVBToast(`Nota guardada en "${proj.name}"`, 'success');
+      }
+    }
+  }
+}
+
 // ── Hub Chat + Voice ─────────────────────────────────────────────
 let hubChatHistory = [];
 
@@ -2080,9 +2171,16 @@ function initHubChat(proyectos = []) {
   const projectSelect = document.getElementById('hubProjectSelect');
   if (!widget || !input || !sendBtn) return;
 
-  // Populate project selector from live Notion data
-  if (projectSelect && proyectos.length) {
+  // Populate project selector: local projects first (with IDs), then Notion
+  if (projectSelect) {
+    pvbProjects.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `${p.name}${p.client ? ` — ${p.client}` : ''}`;
+      projectSelect.appendChild(opt);
+    });
     proyectos.forEach(p => {
+      if (pvbProjects.find(lp => lp.name === p.nombre)) return;
       const opt = document.createElement('option');
       opt.value = p.nombre;
       opt.textContent = p.nombre + (p.cliente ? ` — ${p.cliente}` : '');
@@ -2153,7 +2251,22 @@ function initHubChat(proyectos = []) {
 
     const el = document.createElement('div');
     el.className = `hub-msg hub-msg-${role}`;
-    el.innerHTML = `<div class="hub-msg-bubble">${escapeHtml(text)}</div>`;
+    const noteBtn = role === 'assistant'
+      ? `<button type="button" class="hub-msg-note" title="Guardar como nota del proyecto">📝</button>`
+      : '';
+    el.innerHTML = `<div class="hub-msg-bubble">${escapeHtml(text)}${noteBtn}</div>`;
+    if (role === 'assistant') {
+      el.querySelector('.hub-msg-note')?.addEventListener('click', () => {
+        const proj = pvbProjects.find(p => p.id === projectSelect?.value || p.name === projectSelect?.value);
+        if (!proj) { showVBToast('Seleccioná un proyecto primero', 'warning'); return; }
+        if (!proj.projectNotes) proj.projectNotes = [];
+        proj.projectNotes.push({ date: new Date().toISOString(), text, source: 'hub-chat' });
+        proj.notes = (proj.notes || '') + `\n\n---\n*${new Date().toLocaleDateString('es-CL')} — Hub Chat*\n${text}`;
+        saveProjects();
+        if (currentProject?.id === proj.id) renderBriefDisplay();
+        showVBToast(`Nota guardada en "${proj.name}"`, 'success');
+      });
+    }
     messages.appendChild(el);
     messages.scrollTop = messages.scrollHeight;
     return el;
@@ -2181,11 +2294,21 @@ function initHubChat(proyectos = []) {
 
     try {
       const token = localStorage.getItem('brain_token');
-      const proyecto = document.getElementById('hubProjectSelect')?.value || '';
+      const rawVal = projectSelect?.value || '';
+      const selectedProj = pvbProjects.find(p => p.id === rawVal);
+      const proyecto = selectedProj ? selectedProj.name : rawVal;
+      const localProjects = pvbProjects.map(p => ({
+        id: p.id, name: p.name, client: p.client, status: p.status,
+        startDate: p.startDate, launchDate: p.launchDate, budget: p.budget,
+        objective: p.objective, kpis: p.kpis, notes: p.notes,
+        activePhase: p.gantt?.find(g => g.status === 'active')?.phaseId || null,
+        progress: p.gantt ? Math.round((p.gantt.filter(g => g.status === 'done').length / (p.gantt.length || 1)) * 100) : 0,
+      }));
+      const reviewSession = JSON.parse(localStorage.getItem('mb_review_session') || 'null');
       const res = await fetch('/api/brain?action=chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: text, history: hubChatHistory.slice(-10), proyecto }),
+        body: JSON.stringify({ message: text, history: hubChatHistory.slice(-10), proyecto, localProjects, reviewSession }),
       });
       const data = await res.json();
       thinking.remove();
@@ -2195,8 +2318,9 @@ function initHubChat(proyectos = []) {
       appendMessage('assistant', data.reply);
       hubChatHistory.push({ role: 'assistant', content: data.reply });
 
-      // If the AI created/completed tasks, refresh hub data
-      if (data.actionsPerformed && data.actionsPerformed.length > 0) {
+      if (data.commands?.length) executeVBCommands(data.commands);
+
+      if (data.actionsPerformed?.length > 0) {
         setTimeout(() => loadHub(true), 800);
       }
     } catch (err) {
@@ -2647,6 +2771,35 @@ function saveProjects() {
   localStorage.setItem('pvb_projects', JSON.stringify(pvbProjects));
 }
 
+async function syncProjectToNotion(project) {
+  const btn = document.getElementById('syncNotionBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando…'; }
+  try {
+    const token = localStorage.getItem('brain_token');
+    const r = await fetch('/api/brain?action=sync-project', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ project }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'sync failed');
+    const idx = pvbProjects.findIndex(p => p.id === project.id);
+    if (idx !== -1) {
+      pvbProjects[idx].notion_page_id = d.notion_page_id;
+      pvbProjects[idx].notion_gantt_ids = d.notion_gantt_ids;
+      saveProjects();
+    }
+    showNotification('Sincronizado con Notion ✓', 'success');
+  } catch (err) {
+    showNotification(`Error sync Notion: ${err.message}`, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Sync → Notion`;
+    }
+  }
+}
+
 function createProject(data) {
   const start = data.startDate || new Date().toISOString().split('T')[0];
   let d = new Date(start + 'T12:00:00');
@@ -3041,6 +3194,10 @@ function initProyectosTab() {
   document.getElementById('iterateInput')?.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); iterateCreativeSession(); }
   });
+
+  document.getElementById('syncNotionBtn')?.addEventListener('click', () => {
+    if (currentProject) syncProjectToNotion(currentProject);
+  });
 }
 
 function initEsperanzaTab() {
@@ -3169,114 +3326,6 @@ function initVoiceBot() {
       saveNoteToCurrentProject(input.value);
     }
   });
-
-  // ── VB Toast ──
-  function showVBToast(msg, level = 'info') {
-    const t = document.createElement('div');
-    t.className = `vb-toast vb-toast-${level}`;
-    t.textContent = msg;
-    document.body.appendChild(t);
-    requestAnimationFrame(() => { requestAnimationFrame(() => t.classList.add('show')); });
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3500);
-  }
-
-  // ── Execute UI commands returned by the bot ──
-  function executeVBCommands(commands = []) {
-    for (const cmd of commands) {
-      if (cmd.type === 'navigate_tab') {
-        const tab = document.querySelector(`.brain-tab[data-tab="${cmd.tab}"]`);
-        if (tab) {
-          tab.click();
-          tab.classList.add('vb-highlight');
-          setTimeout(() => tab.classList.remove('vb-highlight'), 1500);
-        }
-
-      } else if (cmd.type === 'show_toast') {
-        showVBToast(cmd.message, cmd.level || 'info');
-
-      } else if (cmd.type === 'highlight') {
-        document.querySelectorAll(cmd.selector || '').forEach(el => {
-          el.classList.add('vb-highlight');
-          setTimeout(() => el.classList.remove('vb-highlight'), 2000);
-        });
-
-      } else if (cmd.type === 'scroll_to') {
-        const el = document.querySelector(cmd.selector || '');
-        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-      } else if (cmd.type === 'create_project_local') {
-        document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
-        const proj = createProject(cmd.data || cmd);
-        renderProjects();
-        setTimeout(() => openProjectDetail(proj.id), 250);
-        showVBToast(`Proyecto "${proj.name}" creado`, 'success');
-
-      } else if (cmd.type === 'open_project') {
-        document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
-        setTimeout(() => {
-          if (cmd.id) openProjectDetail(cmd.id);
-        }, 200);
-
-      } else if (cmd.type === 'update_project_field') {
-        const proj = pvbProjects.find(p => p.id === cmd.id);
-        if (proj && cmd.fields) {
-          Object.assign(proj, cmd.fields);
-          saveProjects();
-          renderProjects();
-          if (currentProject?.id === cmd.id) {
-            document.getElementById('detailStatus').textContent = PROJECT_STATUS[proj.status] || proj.status;
-          }
-          showVBToast('Proyecto actualizado', 'success');
-        }
-
-      } else if (cmd.type === 'advance_gantt_phase') {
-        const proj = pvbProjects.find(p => p.id === cmd.id);
-        if (proj?.gantt) {
-          const activeIdx = proj.gantt.findIndex(g => g.status === 'active');
-          if (activeIdx >= 0) {
-            proj.gantt[activeIdx].status = 'done';
-            if (proj.gantt[activeIdx + 1]) proj.gantt[activeIdx + 1].status = 'active';
-          }
-          saveProjects();
-          renderProjects();
-          if (currentProject?.id === cmd.id) renderGantt();
-          showVBToast('Fase avanzada ✓', 'success');
-        }
-
-      } else if (cmd.type === 'start_review_session') {
-        const filtered = cmd.filter_status
-          ? pvbProjects.filter(p => p.status === cmd.filter_status)
-          : pvbProjects;
-        const session = { projects: filtered.map(p => p.id), currentIndex: 0, started: new Date().toISOString() };
-        localStorage.setItem('mb_review_session', JSON.stringify(session));
-        document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
-
-      } else if (cmd.type === 'review_advance') {
-        const session = JSON.parse(localStorage.getItem('mb_review_session') || 'null');
-        if (session) {
-          session.currentIndex = (session.currentIndex || 0) + 1;
-          localStorage.setItem('mb_review_session', JSON.stringify(session));
-        }
-        if (cmd.open_id) {
-          setTimeout(() => openProjectDetail(cmd.open_id), 200);
-        }
-
-      } else if (cmd.type === 'save_project_note') {
-        const proj = pvbProjects.find(p => p.id === cmd.id);
-        if (proj) {
-          if (!proj.projectNotes) proj.projectNotes = [];
-          const title = cmd.title ? `**${cmd.title}**\n` : '';
-          const entry = { date: new Date().toISOString(), text: cmd.note, title: cmd.title || null, source: 'bot' };
-          proj.projectNotes.push(entry);
-          const dated = `\n\n---\n${title}*${new Date().toLocaleDateString('es-CL')} — Bot*\n${cmd.note}`;
-          proj.notes = (proj.notes || '') + dated;
-          saveProjects();
-          if (currentProject?.id === cmd.id) renderBriefDisplay();
-          showVBToast(`Nota guardada en "${proj.name}"`, 'success');
-        }
-      }
-    }
-  }
 
   // ── Load Notion projects into selector ──
   let projectsLoaded = false;

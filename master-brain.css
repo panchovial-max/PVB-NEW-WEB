@@ -2960,7 +2960,9 @@ body.theme-dark .nav-title {
 .hub-msg.assistant { align-self: flex-start; }
 .hub-msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
 .hub-msg.user .hub-msg-bubble { background: var(--brain-gold); color: #000; border-bottom-right-radius: 4px; }
-.hub-msg.assistant .hub-msg-bubble { background: var(--brain-surface); border: 1px solid var(--brain-border); color: var(--brain-text); border-bottom-left-radius: 4px; }
+.hub-msg.assistant .hub-msg-bubble { background: var(--brain-surface); border: 1px solid var(--brain-border); color: var(--brain-text); border-bottom-left-radius: 4px; position: relative; }
+.hub-msg-note { display: inline-block; margin-left: 8px; background: none; border: none; cursor: pointer; font-size: 12px; opacity: 0.4; transition: opacity 0.2s; vertical-align: middle; padding: 0; }
+.hub-msg-note:hover { opacity: 1; }
 .hub-msg-role { font-size: 10px; color: var(--brain-muted); letter-spacing: 1px; padding: 0 4px; }
 .hub-chat-project-row { margin-bottom: 6px; }
 .hub-project-select { width: 100%; background: var(--brain-bg); border: 1px solid var(--brain-border); color: var(--brain-muted); border-radius: 8px; padding: 6px 10px; font-size: 11px; font-family: inherit; cursor: pointer; }
@@ -3177,9 +3179,12 @@ body.theme-dark .nav-title {
 .creative-error { color: var(--brain-red); padding: 16px; background: rgba(251,113,133,.08); border-radius: 8px; }
 
 /* Gantt */
-.gantt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.gantt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
 .gantt-header h3 { font-size: 16px; font-weight: 700; color: var(--brain-text); }
 .gantt-meta { font-size: 12px; color: var(--brain-text); }
+.btn-sync-notion { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--brain-accent); color: var(--brain-accent); border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+.btn-sync-notion:hover { background: var(--brain-accent); color: #000; }
+.btn-sync-notion:disabled { opacity: 0.5; cursor: not-allowed; }
 .gantt-table { width: 100%; border-collapse: collapse; }
 .gantt-row { display: grid; grid-template-columns: 260px 120px 110px 1fr 110px; gap: 0; border-bottom: 1px solid var(--brain-border); align-items: start; padding: 10px 0; }
 .gantt-row--header { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brain-text); padding-bottom: 8px; }
