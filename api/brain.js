@@ -557,7 +557,7 @@ export default async function handler(req, res) {
             budget:       { type: 'string', description: 'Presupuesto estimado (ej: $3.500.000 CLP)' },
             startDate:    { type: 'string', description: 'Fecha de inicio YYYY-MM-DD' },
             launchDate:   { type: 'string', description: 'Fecha de lanzamiento YYYY-MM-DD' },
-            path:         { type: 'string', enum: ['film-crew','ia','ambos'], description: 'Path de producción' },
+            path:         { type: 'string', description: 'Path de producción: film-crew, ia o ambos' },
             kpis:         { type: 'string', description: 'KPIs o métricas de éxito' },
             notes:        { type: 'string', description: 'Notas adicionales' },
           }},
