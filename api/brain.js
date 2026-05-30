@@ -338,7 +338,11 @@ export default async function handler(req, res) {
           .order('updated_at', { ascending: false });
         if (statusFilter && statusFilter !== 'all') query = query.eq('status', statusFilter);
         const { data, error } = await query;
-        if (error) return res.status(500).json({ error: error.message });
+        // Table may not exist yet — return empty gracefully instead of 500
+        if (error) {
+          const stats = { new: 0, warm: 0, hot: 0, converted: 0, lost: 0 };
+          return res.json({ ok: true, leads: [], stats, _tableNote: 'esperanza_leads table not found — run schema SQL in Supabase' });
+        }
 
         const stats = { new: 0, warm: 0, hot: 0, converted: 0, lost: 0 };
         (data || []).forEach(l => { if (stats[l.status] !== undefined) stats[l.status]++; });

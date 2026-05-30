@@ -131,3 +131,28 @@ CREATE POLICY "Auth users can read budgets" ON brain_budget_entries FOR SELECT T
 CREATE POLICY "Auth users can read tasks" ON brain_tasks FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Auth users can read routines" ON brain_routines FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Auth users can read audit" ON brain_audit_log FOR SELECT TO authenticated USING (true);
+
+-- Esperanza — Sales Agent leads pipeline
+CREATE TABLE IF NOT EXISTS esperanza_leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_id TEXT,
+  username TEXT,
+  name TEXT,
+  service TEXT,
+  interest TEXT,
+  step TEXT DEFAULT 'greeting',
+  decision TEXT,
+  status TEXT DEFAULT 'new' CHECK (status IN ('new','warm','hot','converted','lost')),
+  notion_page_id TEXT,
+  notes TEXT,
+  conversation JSONB DEFAULT '[]',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_esperanza_status ON esperanza_leads(status);
+CREATE INDEX IF NOT EXISTS idx_esperanza_updated ON esperanza_leads(updated_at);
+
+ALTER TABLE esperanza_leads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role full access" ON esperanza_leads FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Auth users can read leads" ON esperanza_leads FOR SELECT TO authenticated USING (true);
