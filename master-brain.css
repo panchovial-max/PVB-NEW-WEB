@@ -3287,6 +3287,10 @@ body.theme-dark .nav-title {
 /* VB highlight pulse for navigated elements */
 .vb-highlight { animation: vb-highlight-flash 1.5s ease-out; }
 @keyframes vb-highlight-flash { 0% { outline: 2px solid var(--brain-accent); outline-offset: 2px; } 100% { outline: 2px solid transparent; } }
+.vb-project-row { display: flex; align-items: center; gap: 6px; }
+.vb-note-save { background: none; border: 1px solid var(--brain-border); color: var(--brain-muted); border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: border-color 0.2s, background 0.2s; }
+.vb-note-save:hover { border-color: var(--brain-accent); background: rgba(212,176,112,0.08); }
+.vb-note-save.tab-badge--hidden { display: none; }
 .vb-send { background: var(--brain-gold); color: #000; border: none; border-radius: 10px; width: 38px; height: 38px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.2s; }
 .vb-send:hover { opacity: 0.85; }
 .vb-send:disabled { opacity: 0.4; cursor: not-allowed; }

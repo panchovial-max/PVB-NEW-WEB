@@ -423,7 +423,7 @@ export default async function handler(req, res) {
     // ── Chat: Claude Haiku + Notion tool use ─────────────────
     if (resolvedAction === 'chat') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
-      const { message, history = [], proyecto = '' } = req.body || {};
+      const { message, history = [], proyecto = '', localProjects = [], reviewSession = null } = req.body || {};
       if (!message) return res.status(400).json({ error: 'message required' });
 
       const NOTION_KEY = process.env.NOTION_API_KEY;
@@ -519,6 +519,66 @@ export default async function handler(req, res) {
             level:   { type: 'string', enum: ['info','success','warning','error'], description: 'Estilo visual' },
           }},
         },
+        {
+          name: 'create_project_local',
+          description: 'Crea un nuevo proyecto de campaña en Master Brain (interfaz local). Úsalo cuando pidan crear un proyecto, campaña o cliente nuevo.',
+          input_schema: { type: 'object', required: ['campaignName', 'client'], properties: {
+            campaignName: { type: 'string', description: 'Nombre de la campaña' },
+            client:       { type: 'string', description: 'Nombre del cliente o marca' },
+            objective:    { type: 'string', description: 'Objetivo de la campaña' },
+            budget:       { type: 'string', description: 'Presupuesto estimado (ej: $3.500.000 CLP)' },
+            startDate:    { type: 'string', description: 'Fecha de inicio YYYY-MM-DD' },
+            launchDate:   { type: 'string', description: 'Fecha de lanzamiento YYYY-MM-DD' },
+            path:         { type: 'string', enum: ['film-crew','ia','ambos'], description: 'Path de producción' },
+            kpis:         { type: 'string', description: 'KPIs o métricas de éxito' },
+            notes:        { type: 'string', description: 'Notas adicionales' },
+          }},
+        },
+        {
+          name: 'open_project',
+          description: 'Abre el detalle de un proyecto en Master Brain. Úsalo cuando el usuario pida ver un proyecto específico. Usa IDs de localProjects.',
+          input_schema: { type: 'object', required: ['id'], properties: {
+            id: { type: 'string', description: 'ID del proyecto de localProjects' },
+          }},
+        },
+        {
+          name: 'update_project_field',
+          description: 'Actualiza campos de un proyecto en Master Brain: status, launchDate, budget, objective, kpis, notes.',
+          input_schema: { type: 'object', required: ['id', 'fields'], properties: {
+            id: { type: 'string' },
+            fields: { type: 'object', description: 'Campos a actualizar. status: briefing|creative|preproduction|production|postproduction|delivery|live|measuring' },
+          }},
+        },
+        {
+          name: 'advance_gantt_phase',
+          description: 'Avanza un proyecto a la siguiente fase del Gantt (activa → done, siguiente → active).',
+          input_schema: { type: 'object', required: ['id'], properties: {
+            id: { type: 'string', description: 'ID del proyecto' },
+          }},
+        },
+        {
+          name: 'start_review_session',
+          description: 'Inicia una revisión ordenada de proyectos uno por uno. El bot presenta cada proyecto con su estado, fase activa y tareas de Notion.',
+          input_schema: { type: 'object', properties: {
+            filter_status: { type: 'string', description: 'Opcional: filtrar por estado. Omitir para todos los proyectos.' },
+          }},
+        },
+        {
+          name: 'review_advance',
+          description: 'Avanza al siguiente proyecto en la sesión de revisión activa.',
+          input_schema: { type: 'object', properties: {
+            open_id: { type: 'string', description: 'ID del proyecto siguiente a abrir en la UI' },
+          }},
+        },
+        {
+          name: 'save_project_note',
+          description: 'Guarda una nota o insight en el proyecto como entrada de notepad (.md). Úsalo cuando el usuario pida "guardar esto", "anotá", "guarda como nota", o cuando quieras registrar algo importante de la conversación.',
+          input_schema: { type: 'object', required: ['project_id', 'note'], properties: {
+            project_id: { type: 'string', description: 'ID del proyecto de localProjects' },
+            note:       { type: 'string', description: 'Contenido de la nota en markdown. Puede incluir bullet points, ideas, decisiones.' },
+            title:      { type: 'string', description: 'Título corto de la nota (opcional)' },
+          }},
+        },
       ];
 
       async function runTool(name, input) {
@@ -606,6 +666,28 @@ export default async function handler(req, res) {
         if (name === 'ui_toast') {
           return { command: { type: 'show_toast', message: input.message, level: input.level || 'info' } };
         }
+        // ── Local Master Brain UI commands ──
+        if (name === 'create_project_local') {
+          return { command: { type: 'create_project_local', data: input } };
+        }
+        if (name === 'open_project') {
+          return { command: { type: 'open_project', id: input.id } };
+        }
+        if (name === 'update_project_field') {
+          return { command: { type: 'update_project_field', id: input.id, fields: input.fields } };
+        }
+        if (name === 'advance_gantt_phase') {
+          return { command: { type: 'advance_gantt_phase', id: input.id } };
+        }
+        if (name === 'start_review_session') {
+          return { command: { type: 'start_review_session', filter_status: input.filter_status } };
+        }
+        if (name === 'review_advance') {
+          return { command: { type: 'review_advance', open_id: input.open_id } };
+        }
+        if (name === 'save_project_note') {
+          return { command: { type: 'save_project_note', id: input.project_id, note: input.note, title: input.title || null } };
+        }
         return { error: 'Unknown tool' };
       }
 
@@ -624,15 +706,28 @@ export default async function handler(req, res) {
       } catch { /* no bloquear el chat si falla */ }
 
       const proyectoCtx = proyecto ? `\n\nCONTEXTO ACTIVO: Proyecto "${proyecto}". Enfoca tus respuestas y acciones en este proyecto salvo que pidan otra cosa.` : '';
+
+      const localProjectsCtx = localProjects.length
+        ? `\n\nPROYECTOS EN MASTER BRAIN (${localProjects.length} proyectos):\n${localProjects.map((p, i) => `${i + 1}. [${p.id}] "${p.name}" — Cliente: ${p.client} — Estado: ${p.status} — Fase: ${p.activePhase || '—'} — ${p.progress}% completado — Lanzamiento: ${p.launchDate || '—'}`).join('\n')}`
+        : '\n\nPROYECTOS EN MASTER BRAIN: ninguno todavía.';
+
+      const reviewCtx = reviewSession
+        ? `\n\nSESIÓN DE REVISIÓN ACTIVA: proyecto ${reviewSession.currentIndex + 1} de ${reviewSession.projects?.length || 0} (ID actual: ${reviewSession.projects?.[reviewSession.currentIndex] || 'fin'}). Cuando el usuario diga "siguiente", "próximo" o "dale", usa review_advance con el ID del siguiente proyecto y preséntalo completo.`
+        : '';
+
       const SYSTEM = `Eres el asistente de orquestación de PVB Estudio Creativo — agencia audiovisual en Santiago, Chile. Clientes típicos: Kaya Unite, Refugio Chiloé, Romerelli.
 
-Tienes acceso a Notion y a la interfaz de Master Brain:
-- Tareas: consultar, crear, completar y actualizar tareas en Notion.
-- Proyectos: consultar, crear y actualizar estado de proyectos en Notion.
-- Navegación: usa ui_navigate para llevar al usuario a cualquier sección de Master Brain cuando pida "ir a", "muéstrame", "abre" o "navega a". Tabs disponibles: neural-map (Office), hub, accounts, esperanza, proposals, proyectos, campaigns, departments, agents, clients, activity, routines, portfolio, learnings.
-- Notificaciones: usa ui_toast para confirmar acciones completadas o dar avisos cortos en la interfaz.
+Tienes acceso completo a Notion y a la interfaz de Master Brain:
+- Tareas Notion: consultar, crear, completar y actualizar (get_tasks, create_task, complete_task, update_task).
+- Proyectos Notion: consultar, crear, actualizar estado (get_projects, create_project, update_project_status).
+- Proyectos Master Brain (LOCAL): crear con create_project_local, abrir con open_project, actualizar campos con update_project_field, avanzar Gantt con advance_gantt_phase. Usa los IDs de localProjects.
+- Navegación: ui_navigate para cambiar tabs (neural-map, hub, accounts, esperanza, proposals, proyectos, campaigns, departments, agents, clients, activity, routines, portfolio, learnings).
+- Notificaciones: ui_toast para confirmaciones visuales.
+- Revisión de proyectos: start_review_session para iniciar revisión ordenada uno por uno, review_advance para siguiente.
+- Notepad de proyecto: save_project_note para guardar ideas, insights o decisiones como nota .md en un proyecto. Úsalo cuando el usuario diga "anotá", "guardá esto", "quiero dejar registro" o al terminar una sesión creativa importante.
 
-Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que pidan más detalle. Cuando hagas una acción en Notion o navegues, confírmalo brevemente.${styleRulesBlock}${proyectoCtx}`;
+Al revisar un proyecto, presenta: nombre, cliente, estado, fase activa, % progreso, próximas tareas de Notion, y pregunta qué decidir.
+Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo revisión de proyectos. Confirma cada acción brevemente.${styleRulesBlock}${proyectoCtx}${localProjectsCtx}${reviewCtx}`;
 
       const messages = [...history.slice(-12), { role: 'user', content: message }];
       let resp;
@@ -645,7 +740,7 @@ Responde en español chileno, directo y conciso. Máximo 3-4 líneas salvo que p
 
       const actionsPerformed = [];
       const commands = [];
-      const notionActions = new Set(['complete_task','create_task','update_project_status','create_project','update_task']);
+      const notionActions = new Set(['complete_task','create_task','update_project_status','create_project','update_task','create_project_local','update_project_field','advance_gantt_phase']);
       while (resp.stop_reason === 'tool_use') {
         const uses = resp.content.filter(b => b.type === 'tool_use');
         const results = await Promise.all(uses.map(async t => {

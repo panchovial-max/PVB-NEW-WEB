@@ -3091,6 +3091,7 @@ function initVoiceBot() {
   const ttsBtn       = document.getElementById('vbTtsToggle');
   const autoListenBtn= document.getElementById('vbAutoListen');
   const projSel      = document.getElementById('vbProjectSelect');
+  const noteSaveBtn  = document.getElementById('vbNoteSave');
   if (!widget) return;
 
   const HISTORY_KEY = 'brain_chat_history';
@@ -3139,6 +3140,36 @@ function initVoiceBot() {
     }
   });
 
+  // ── Project note-pad ──
+  projSel.addEventListener('change', () => {
+    const hasProjId = projSel.value && pvbProjects.find(p => p.name === projSel.value || p.id === projSel.value);
+    noteSaveBtn.classList.toggle('tab-badge--hidden', !hasProjId);
+    noteSaveBtn.title = hasProjId ? `Guardar nota en "${projSel.value}" (Shift+Enter)` : '';
+  });
+
+  function saveNoteToCurrentProject(text) {
+    if (!text.trim()) return;
+    const proj = pvbProjects.find(p => p.name === projSel.value || p.id === projSel.value);
+    if (!proj) { showVBToast('Seleccioná un proyecto primero', 'warning'); return; }
+    if (!proj.projectNotes) proj.projectNotes = [];
+    proj.projectNotes.push({ date: new Date().toISOString(), text: text.trim(), source: 'voice-bot' });
+    // Also append to notes field (shown in brief) as markdown chunk
+    const dated = `\n\n---\n**Nota ${new Date().toLocaleDateString('es-CL')}**\n${text.trim()}`;
+    proj.notes = (proj.notes || '') + dated;
+    saveProjects();
+    showVBToast(`Nota guardada en "${proj.name}"`, 'success');
+    input.value = '';
+    renderBriefDisplay(); // refresh if brief is open
+  }
+
+  noteSaveBtn?.addEventListener('click', () => saveNoteToCurrentProject(input.value));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.shiftKey && projSel.value) {
+      e.preventDefault();
+      saveNoteToCurrentProject(input.value);
+    }
+  });
+
   // ── VB Toast ──
   function showVBToast(msg, level = 'info') {
     const t = document.createElement('div');
@@ -3159,16 +3190,90 @@ function initVoiceBot() {
           tab.classList.add('vb-highlight');
           setTimeout(() => tab.classList.remove('vb-highlight'), 1500);
         }
+
       } else if (cmd.type === 'show_toast') {
         showVBToast(cmd.message, cmd.level || 'info');
+
       } else if (cmd.type === 'highlight') {
         document.querySelectorAll(cmd.selector || '').forEach(el => {
           el.classList.add('vb-highlight');
           setTimeout(() => el.classList.remove('vb-highlight'), 2000);
         });
+
       } else if (cmd.type === 'scroll_to') {
         const el = document.querySelector(cmd.selector || '');
         el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      } else if (cmd.type === 'create_project_local') {
+        document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
+        const proj = createProject(cmd.data || cmd);
+        renderProjects();
+        setTimeout(() => openProjectDetail(proj.id), 250);
+        showVBToast(`Proyecto "${proj.name}" creado`, 'success');
+
+      } else if (cmd.type === 'open_project') {
+        document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
+        setTimeout(() => {
+          if (cmd.id) openProjectDetail(cmd.id);
+        }, 200);
+
+      } else if (cmd.type === 'update_project_field') {
+        const proj = pvbProjects.find(p => p.id === cmd.id);
+        if (proj && cmd.fields) {
+          Object.assign(proj, cmd.fields);
+          saveProjects();
+          renderProjects();
+          if (currentProject?.id === cmd.id) {
+            document.getElementById('detailStatus').textContent = PROJECT_STATUS[proj.status] || proj.status;
+          }
+          showVBToast('Proyecto actualizado', 'success');
+        }
+
+      } else if (cmd.type === 'advance_gantt_phase') {
+        const proj = pvbProjects.find(p => p.id === cmd.id);
+        if (proj?.gantt) {
+          const activeIdx = proj.gantt.findIndex(g => g.status === 'active');
+          if (activeIdx >= 0) {
+            proj.gantt[activeIdx].status = 'done';
+            if (proj.gantt[activeIdx + 1]) proj.gantt[activeIdx + 1].status = 'active';
+          }
+          saveProjects();
+          renderProjects();
+          if (currentProject?.id === cmd.id) renderGantt();
+          showVBToast('Fase avanzada ✓', 'success');
+        }
+
+      } else if (cmd.type === 'start_review_session') {
+        const filtered = cmd.filter_status
+          ? pvbProjects.filter(p => p.status === cmd.filter_status)
+          : pvbProjects;
+        const session = { projects: filtered.map(p => p.id), currentIndex: 0, started: new Date().toISOString() };
+        localStorage.setItem('mb_review_session', JSON.stringify(session));
+        document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
+
+      } else if (cmd.type === 'review_advance') {
+        const session = JSON.parse(localStorage.getItem('mb_review_session') || 'null');
+        if (session) {
+          session.currentIndex = (session.currentIndex || 0) + 1;
+          localStorage.setItem('mb_review_session', JSON.stringify(session));
+        }
+        if (cmd.open_id) {
+          setTimeout(() => openProjectDetail(cmd.open_id), 200);
+        }
+
+      } else if (cmd.type === 'save_project_note') {
+        const proj = pvbProjects.find(p => p.id === cmd.id);
+        if (proj) {
+          if (!proj.projectNotes) proj.projectNotes = [];
+          const title = cmd.title ? `**${cmd.title}**\n` : '';
+          const entry = { date: new Date().toISOString(), text: cmd.note, title: cmd.title || null, source: 'bot' };
+          proj.projectNotes.push(entry);
+          const dated = `\n\n---\n${title}*${new Date().toLocaleDateString('es-CL')} — Bot*\n${cmd.note}`;
+          proj.notes = (proj.notes || '') + dated;
+          saveProjects();
+          if (currentProject?.id === cmd.id) renderBriefDisplay();
+          showVBToast(`Nota guardada en "${proj.name}"`, 'success');
+        }
       }
     }
   }
@@ -3182,7 +3287,16 @@ function initVoiceBot() {
       const token = localStorage.getItem('brain_token');
       const res = await fetch('/api/brain?action=hub', { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
+      // Local projects first (with IDs for note-saving)
+      pvbProjects.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${p.name}${p.client ? ` — ${p.client}` : ''}`;
+        projSel.appendChild(opt);
+      });
+      // Then Notion projects
       (data.proyectos || []).forEach(p => {
+        if (pvbProjects.find(lp => lp.name === p.nombre)) return; // skip duplicates
         const opt = document.createElement('option');
         opt.value = p.nombre;
         opt.textContent = p.nombre + (p.cliente ? ` — ${p.cliente}` : '');
@@ -3234,6 +3348,18 @@ function initVoiceBot() {
   }
 
   // ── TTS speak ──
+  function pickSpanishVoice() {
+    const vs = speechSynthesis.getVoices();
+    return vs.find(v => v.name === 'Esperanza')              // macOS es-MX
+        || vs.find(v => v.name === 'Paulina')                // macOS es-MX alt
+        || vs.find(v => v.name === 'Monica')                 // macOS es-ES
+        || vs.find(v => /^Jorge/i.test(v.name))              // macOS es-ES male
+        || vs.find(v => /es[-_]MX/i.test(v.lang))
+        || vs.find(v => /es[-_]ES/i.test(v.lang))
+        || vs.find(v => v.lang.startsWith('es'))
+        || null;
+  }
+
   function speak(text) {
     if (!ttsEnabled || !('speechSynthesis' in window)) {
       onSpeakEnd?.();
@@ -3241,24 +3367,19 @@ function initVoiceBot() {
     }
     speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'es-ES';
-    utter.rate = 1.0;
+    utter.rate = 1.05;
     utter.pitch = 1;
     utter.onend = () => onSpeakEnd?.();
 
     function doSpeak() {
-      const voices = speechSynthesis.getVoices();
-      // Prefer "Esperanza" (built-in macOS/iOS voice) then any Spanish voice
-      const preferred = voices.find(v => v.name === 'Esperanza')
-        || voices.find(v => v.lang.startsWith('es'))
-        || null;
-      if (preferred) utter.voice = preferred;
+      const voice = pickSpanishVoice();
+      if (voice) { utter.voice = voice; utter.lang = voice.lang; }
+      else { utter.lang = 'es-MX'; }
       speechSynthesis.speak(utter);
     }
 
     // getVoices() may be empty on first call — wait for voiceschanged
-    const voices = speechSynthesis.getVoices();
-    if (voices.length) {
+    if (speechSynthesis.getVoices().length) {
       doSpeak();
     } else {
       speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
@@ -3280,11 +3401,22 @@ function initVoiceBot() {
     const thinking = addThinking();
     try {
       const token = localStorage.getItem('brain_token');
-      const proyecto = projSel.value || '';
+      // Selected project — prefer name for Notion context, ID for local ops
+      const selectedProj = pvbProjects.find(p => p.id === projSel.value);
+      const proyecto = selectedProj ? selectedProj.name : (projSel.value || '');
+      // Send local project state so the bot can create/edit Master Brain projects
+      const localProjects = (pvbProjects || []).map(p => ({
+        id: p.id, name: p.name, client: p.client, status: p.status,
+        startDate: p.startDate, launchDate: p.launchDate, budget: p.budget,
+        objective: p.objective, kpis: p.kpis, notes: p.notes,
+        activePhase: p.gantt?.find(g => g.status === 'active')?.phaseId || null,
+        progress: p.gantt ? Math.round((p.gantt.filter(g => g.status === 'done').length / (p.gantt.length || 1)) * 100) : 0,
+      }));
+      const reviewSession = JSON.parse(localStorage.getItem('mb_review_session') || 'null');
       const res = await fetch('/api/brain?action=chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: text, history: history.slice(-10), proyecto }),
+        body: JSON.stringify({ message: text, history: history.slice(-10), proyecto, localProjects, reviewSession }),
       });
       const data = await res.json();
       thinking.remove();
