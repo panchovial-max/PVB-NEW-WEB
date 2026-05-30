@@ -3024,7 +3024,13 @@ function initVoiceBot() {
   const projSel  = document.getElementById('vbProjectSelect');
   if (!widget) return;
 
+  const HISTORY_KEY = 'brain_chat_history';
+  const MESSAGES_KEY = 'brain_chat_messages';
+
+  // Restore history from localStorage
   let history = [];
+  try { history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch {}
+
   let ttsEnabled = true;
   let recording = false;
 
@@ -3063,6 +3069,24 @@ function initVoiceBot() {
         projSel.appendChild(opt);
       });
     } catch (_) {}
+  }
+
+  // Restore UI messages from localStorage
+  if (history.length) {
+    const welcome = messages.querySelector('.vb-welcome');
+    if (welcome) welcome.remove();
+    history.slice(-20).forEach(m => {
+      if (m.role === 'user' || m.role === 'assistant') {
+        const row = document.createElement('div');
+        row.className = `vb-msg vb-msg-${m.role}`;
+        const bubble = document.createElement('div');
+        bubble.className = 'vb-bubble';
+        bubble.textContent = typeof m.content === 'string' ? m.content : '';
+        row.appendChild(bubble);
+        messages.appendChild(row);
+      }
+    });
+    messages.scrollTop = messages.scrollHeight;
   }
 
   // ── Append message ──
@@ -3146,6 +3170,7 @@ function initVoiceBot() {
 
       addMsg('assistant', data.reply);
       history.push({ role: 'assistant', content: data.reply });
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-40))); } catch {}
       speak(data.reply);
 
       if (data.actionsPerformed?.length > 0) {
