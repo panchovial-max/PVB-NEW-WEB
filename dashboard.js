@@ -46,7 +46,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         session_token: session.access_token,
         user_id: session.user.id,
         email: session.user.email,
-        full_name: session.user.user_metadata?.full_name || session.user.email
+        full_name: session.user.user_metadata?.full_name || session.user.email,
+        pvb_role: session.user.user_metadata?.pvb_role || null
     });
 });
 
@@ -57,6 +58,12 @@ async function initializeDashboard(userData) {
         const userGreeting = document.getElementById('userGreeting');
         if (userGreeting && userData.full_name) {
             userGreeting.textContent = `Welcome, ${userData.full_name.split(' ')[0]}!`;
+        }
+
+        // Show Brain button only to PVB staff/admin
+        if (userData.pvb_role === 'admin' || userData.pvb_role === 'staff') {
+            const brainBtn = document.getElementById('brainBtn');
+            if (brainBtn) brainBtn.classList.remove('btn-brain--hidden');
         }
 
         // Expose userData for calendar.js and other modules

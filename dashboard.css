@@ -199,6 +199,9 @@ body {
     background: rgba(160, 130, 80, 0.12);
     border-color: var(--gold);
 }
+.btn-brain--hidden {
+    display: none;
+}
 
 .btn-settings {
     background: transparent;
@@ -1324,6 +1327,7 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 1001;
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
 }
 
