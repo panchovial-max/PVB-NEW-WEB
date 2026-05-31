@@ -432,13 +432,13 @@ export default async function handler(req, res) {
       const ELEVEN_KEY = process.env.ELEVENLABS_API_KEY;
       if (!ELEVEN_KEY) return res.status(503).json({ error: 'ElevenLabs not configured' });
       try {
-        const voiceId = process.env.ELEVENLABS_VOICE_ESPERANZA || '21m00Tcm4TlvDq8ikWAM';
+        const voiceId = process.env.ELEVENLABS_VOICE_ESPERANZA || 'EXAVITQu4vr4xnSDxMaL'; // Sarah — warm female es/en
         const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
           method: 'POST',
           headers: { 'xi-api-key': ELEVEN_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            text: text.slice(0, 400),
-            model_id: 'eleven_multilingual_v2',
+            text: text.slice(0, 300),
+            model_id: 'eleven_flash_v2_5', // fastest model — lower latency, cheaper
             voice_settings: { stability: 0.5, similarity_boost: 0.75 }
           })
         });
@@ -448,9 +448,8 @@ export default async function handler(req, res) {
           return res.status(502).json({ error: `ElevenLabs ${ttsRes.status}`, detail: errBody.slice(0, 100) });
         }
         const audio = await ttsRes.arrayBuffer();
-        res.setHeader('Content-Type', 'audio/mpeg');
-        res.setHeader('Cache-Control', 'no-store');
-        return res.status(200).send(Buffer.from(audio));
+        const b64 = Buffer.from(audio).toString('base64');
+        return res.status(200).json({ audio: `data:audio/mpeg;base64,${b64}` });
       } catch (ttsErr) {
         console.error('[TTS] exception:', ttsErr.message);
         return res.status(500).json({ error: ttsErr.message });

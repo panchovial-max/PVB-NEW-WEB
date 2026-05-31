@@ -3474,17 +3474,11 @@ function initVoiceBot() {
         body: JSON.stringify({ text }),
       });
       if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        ttsAudio._prevUrl && URL.revokeObjectURL(ttsAudio._prevUrl);
+        const { audio: dataUrl } = await res.json();
         ttsAudio._pendingText = text;
-        ttsAudio._prevUrl = url;
-        ttsAudio.src = url;
+        ttsAudio.src = dataUrl;
         ttsAudio.load();
-        await ttsAudio.play().catch(() => {
-          // Autoplay blocked — still fire onSpeakEnd so mic restarts
-          onSpeakEnd?.();
-        });
+        await ttsAudio.play().catch(() => { onSpeakEnd?.(); });
         return;
       } else {
         const err = await res.json().catch(() => ({}));
