@@ -3457,6 +3457,13 @@ function initVoiceBot() {
     else speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
   }
 
+  // Shared Audio element — reusing avoids browser autoplay unlock issues
+  const ttsAudio = new Audio();
+  ttsAudio.onended = () => onSpeakEnd?.();
+  ttsAudio.onerror = () => { if (ttsAudio._pendingText) speakFallback(ttsAudio._pendingText); };
+  // Unlock audio context on first user interaction (required by some browsers)
+  document.addEventListener('click', () => { ttsAudio.load(); }, { once: true });
+
   async function speak(text) {
     if (!ttsEnabled) { onSpeakEnd?.(); return; }
     const token = localStorage.getItem('brain_token');
@@ -3469,13 +3476,24 @@ function initVoiceBot() {
       if (res.ok) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.onended = () => { URL.revokeObjectURL(url); onSpeakEnd?.(); };
-        audio.onerror = () => { URL.revokeObjectURL(url); speakFallback(text); };
-        await audio.play();
+        ttsAudio._prevUrl && URL.revokeObjectURL(ttsAudio._prevUrl);
+        ttsAudio._pendingText = text;
+        ttsAudio._prevUrl = url;
+        ttsAudio.src = url;
+        ttsAudio.load();
+        await ttsAudio.play().catch(() => {
+          // Autoplay blocked — still fire onSpeakEnd so mic restarts
+          onSpeakEnd?.();
+        });
         return;
+      } else {
+        const err = await res.json().catch(() => ({}));
+        console.warn('[TTS] ElevenLabs error:', res.status, err);
+        showVBToast(`TTS: ${err.error || res.status}`, 'warning');
       }
-    } catch (_) {}
+    } catch (e) {
+      console.warn('[TTS] fetch error:', e.message);
+    }
     // ElevenLabs unavailable — fallback to Web Speech API (Esperanza macOS voice)
     speakFallback(text);
   }
