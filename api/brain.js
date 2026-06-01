@@ -478,12 +478,42 @@ export default async function handler(req, res) {
           estado: p.properties?.Estado?.select?.name || '—',
           cliente: p.properties?.Cliente?.select?.name || getText(p, 'Cliente') || '—',
           fecha: p.properties?.['Fecha inicio']?.date?.start || p.properties?.Fecha?.date?.start || null,
+          launchDate: p.properties?.['Fecha lanzamiento']?.date?.start || p.properties?.['Launch Date']?.date?.start || null,
+          objetivo: getText(p, 'Objetivo') || getText(p, 'Descripción') || '',
           cover: p.cover?.external?.url || p.cover?.file?.url || null,
           icon: p.icon?.emoji || null,
+          last_edited: p.last_edited_time,
         }));
         return res.status(200).json({ ok: true, projects });
       } catch (e) {
         return res.status(500).json({ error: e.message });
+      }
+    }
+
+    // ── Brainstorm — David (Droga) + Rubín (Creative Council) ──
+    if (resolvedAction === 'brainstorm') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const { message, proyecto = '', history = [] } = req.body || {};
+      if (!message) return res.status(400).json({ error: 'message required' });
+
+      const PVB_CTX = `\n\nAgencia: PVB Estudio Creativo — productora audiovisual y agencia de marketing en Santiago, Chile. Clientes típicos: Kaya Unite, Refugio Chiloé, Romerelli.${proyecto ? `\nProyecto en foco: "${proyecto}"` : ''}`;
+
+      const DROGA = `Eres David Droga — fundador de Droga5, ahora líder de Accenture Song. CCO y voz estratégica máxima de PVB.${PVB_CTX}\n\nTu rol EXCLUSIVO: visión de negocio de alto nivel. Posicionamiento de la agencia, decisiones de crecimiento, qué clientes perseguir y cuáles no, pricing premium, diferenciación competitiva, cultura de agencia.\n\nEstilo: directo, provocador, ejecutivo. Español chileno informal. Máximo 3-4 párrafos. Cierra con una decisión concreta esta semana.`;
+
+      const RUBIN = `Eres el Consejo Creativo de PVB. Tu voz de referencia es Rick Rubin — minimalismo radical, escuchar la esencia antes de hablar, encontrar lo que la obra quiere ser. Sumas el instinto humano de Leo Burnett, la honestidad disruptiva de Bill Bernbach, y la cultura como motor de Dan Wieden.${PVB_CTX}\n\nTu rol EXCLUSIVO: generar ideas creativas de alto impacto. Conceptos de campaña, territorios creativos, referencias culturales, copies que cortan, dirección de arte que sorprende.\n\nEstilo: cada idea en una oración. Sin bullet points vacíos. Español chileno. Máximo 3 párrafos. Terminas con la idea más disruptiva — aunque incomode.`;
+
+      const msgs = [...(history || []).slice(-6), { role: 'user', content: message }];
+      const llm = new LLMClient();
+      try {
+        const [drogarResp, rubinResp] = await Promise.all([
+          llm.messages.create({ max_tokens: 500, system: DROGA, messages: msgs }),
+          llm.messages.create({ max_tokens: 500, system: RUBIN,  messages: msgs }),
+        ]);
+        const droga = drogarResp.content.find(b => b.type === 'text')?.text || '';
+        const rubin  = rubinResp.content.find(b => b.type === 'text')?.text  || '';
+        return res.status(200).json({ ok: true, droga, rubin });
+      } catch (e) {
+        return res.status(200).json({ ok: false, error: e.message });
       }
     }
 

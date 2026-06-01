@@ -2960,13 +2960,34 @@ async function loadNotionProjectsGallery() {
       container.innerHTML = '<div class="notion-gallery-empty">Sin proyectos en Notion aún.</div>';
       return;
     }
+
+    // Bidirectional sync: update local projects that are linked to Notion
+    let syncCount = 0;
+    data.projects.forEach(np => {
+      const local = pvbProjects.find(lp => lp.notion_page_id === np.id);
+      if (local) {
+        // Notion → local: update status and name if changed
+        let changed = false;
+        const notionStatus = NOTION_TO_LOCAL_STATUS[np.estado] || local.status;
+        if (notionStatus !== local.status) { local.status = notionStatus; changed = true; }
+        if (np.nombre && np.nombre !== '—' && np.nombre !== local.name) { local.name = np.nombre; changed = true; }
+        if (np.launchDate && np.launchDate !== local.launchDate) { local.launchDate = np.launchDate; changed = true; }
+        if (changed) syncCount++;
+      }
+    });
+    if (syncCount > 0) { saveProjects(); renderProjects(); }
+
     container.innerHTML = data.projects.map(p => {
       const color = STATUS_COLOR[p.estado] || '#6b7280';
       const initial = (p.nombre || '?')[0].toUpperCase();
-      const cover = p.cover ? `style="background-image:url('${p.cover}')"` : '';
+      const coverStyle = p.cover ? `style="background-image:url('${p.cover}')"` : '';
+      const local = pvbProjects.find(lp => lp.notion_page_id === p.id);
+      const syncBadge = local
+        ? `<span class="notion-sync-badge synced" title="Vinculado a Master Brain">⚡</span>`
+        : `<button class="notion-import-btn" data-notion-id="${p.id}" data-nombre="${escapeHtml(p.nombre)}" data-cliente="${escapeHtml(p.cliente)}" data-estado="${escapeHtml(p.estado)}" data-fecha="${p.fecha || ''}" data-objetivo="${escapeHtml(p.objetivo || '')}">+ Import</button>`;
       return `
-        <div class="notion-project-card">
-          <div class="notion-card-cover ${p.cover ? 'has-cover' : ''}" ${cover}>
+        <div class="notion-project-card" data-notion-id="${p.id}">
+          <div class="notion-card-cover ${p.cover ? 'has-cover' : ''}" ${coverStyle}>
             ${p.icon ? `<span class="notion-card-icon">${p.icon}</span>` : `<span class="notion-card-initial">${initial}</span>`}
           </div>
           <div class="notion-card-body">
@@ -2975,14 +2996,57 @@ async function loadNotionProjectsGallery() {
               <span class="notion-card-status" style="color:${color};border-color:${color}40">${p.estado}</span>
             </div>
             <h4 class="notion-card-name">${p.nombre}</h4>
-            ${p.fecha ? `<div class="notion-card-date">${new Date(p.fecha).toLocaleDateString('es-CL', {month:'short',year:'numeric'})}</div>` : ''}
+            <div class="notion-card-footer">
+              ${p.fecha ? `<span class="notion-card-date">${new Date(p.fecha).toLocaleDateString('es-CL', {month:'short',year:'numeric'})}</span>` : '<span></span>'}
+              ${syncBadge}
+            </div>
           </div>
         </div>`;
     }).join('');
+
+    // Wire Import buttons
+    container.querySelectorAll('.notion-import-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const { notionId, nombre, cliente, estado, fecha, objetivo } = btn.dataset;
+        const proj = createProject({
+          campaignName: nombre, client: cliente,
+          startDate: fecha || new Date().toISOString().slice(0, 10),
+          objective: objetivo,
+        });
+        proj.notion_page_id = notionId;
+        proj.status = NOTION_TO_LOCAL_STATUS[estado] || 'briefing';
+        saveProjects();
+        renderProjects();
+        showVBToast(`"${nombre}" importado a Master Brain`, 'success');
+        loadNotionProjectsGallery(); // refresh to show sync badge
+      });
+    });
+
+    // Wire card click → open local project if linked
+    container.querySelectorAll('.notion-project-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.notion-import-btn')) return;
+        const notionId = card.dataset.notionId;
+        const local = pvbProjects.find(lp => lp.notion_page_id === notionId);
+        if (local) {
+          document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
+          setTimeout(() => openProjectDetail(local.id), 150);
+        }
+      });
+    });
+
   } catch (e) {
     container.innerHTML = `<div class="notion-gallery-empty">Error: ${e.message}</div>`;
   }
 }
+
+const NOTION_TO_LOCAL_STATUS = {
+  'Nuevo': 'briefing', 'Briefing': 'briefing',
+  'En curso': 'production', 'Activo': 'production', 'Producción': 'production',
+  'Revisión': 'postproduction', 'Post': 'postproduction',
+  'Entregado': 'delivery', 'Completado': 'measuring', 'Pausado': 'briefing',
+};
 
 function openProjectDetail(id) {
   currentProject = pvbProjects.find(p => p.id === id);
@@ -3401,16 +3465,50 @@ function initVoiceBot() {
   // ── Brainstorm button — sesión creativa con David & Rubín ──
   const brainstormBtn = document.getElementById('vbBrainstorm');
   let brainstormActive = false;
+  let brainstormHistory = [];
+
+  async function sendBrainstorm(text) {
+    if (!text.trim()) return;
+    const token = localStorage.getItem('brain_token');
+    const selectedProj = pvbProjects.find(p => p.id === projSel.value);
+    const proyecto = selectedProj?.name || projSel.value || '';
+
+    addMsg('user', text);
+    brainstormHistory.push({ role: 'user', content: text });
+    input.value = '';
+    const thinking = addThinking();
+    dot.classList.add('active');
+    statusEl.textContent = 'pensando…';
+    try {
+      const res = await fetch('/api/brain?action=brainstorm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: text, proyecto, history: brainstormHistory.slice(-6) }),
+      });
+      const data = await res.json();
+      thinking.remove();
+      if (!data.ok) throw new Error(data.error);
+      // Display Droga and Rubín responses with labels
+      const combined = `🎯 **David Droga:**\n${data.droga}\n\n🎨 **Rubín (Consejo Creativo):**\n${data.rubin}`;
+      addMsg('assistant', combined);
+      brainstormHistory.push({ role: 'assistant', content: combined });
+      speak(data.droga + ' ... ' + data.rubin);
+    } catch (err) {
+      thinking.remove();
+      addMsg('assistant', `Error: ${err.message}`);
+    }
+    dot.classList.remove('active');
+    statusEl.textContent = 'listo';
+  }
+
   brainstormBtn?.addEventListener('click', () => {
     brainstormActive = !brainstormActive;
     brainstormBtn.classList.toggle('on', brainstormActive);
     brainstormBtn.title = brainstormActive ? 'Brainstorm activo — clic para salir' : 'Sesión creativa con David & Rubín';
     if (brainstormActive) {
-      // Open widget if collapsed
       widget.classList.remove('vb-collapsed');
-      // Inject brainstorm context message
-      input.value = 'Iniciemos una sesión de brainstorming con el equipo creativo — David y Rubín. Quiero explorar ideas y perspectivas creativas para el proyecto actual.';
-      sendMessage();
+      brainstormHistory = [];
+      sendBrainstorm('Quiero iniciar una sesión de brainstorming. Presenten sus perspectivas sobre el proyecto actual y cuál sería el ángulo más disruptivo para atacarlo.');
     } else {
       showVBToast('Sesión creativa cerrada', 'info');
     }
@@ -3649,9 +3747,12 @@ function initVoiceBot() {
     if (!autoListen) input.focus();
   }
 
-  sendBtn.addEventListener('click', sendMessage);
+  sendBtn.addEventListener('click', () => brainstormActive ? sendBrainstorm(input.value.trim()) : sendMessage());
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      brainstormActive ? sendBrainstorm(input.value.trim()) : sendMessage();
+    }
   });
 
   // ── Voice input (STT) — continuous mode, silence-detect + auto-send ──
