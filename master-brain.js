@@ -2155,6 +2155,20 @@ function executeVBCommands(commands = []) {
         if (currentProject?.id === cmd.id) renderBriefDisplay();
         showVBToast(`Nota guardada en "${proj.name}"`, 'success');
       }
+    } else if (cmd.type === 'delete_project_local') {
+      const idx = pvbProjects.findIndex(p => p.id === cmd.id);
+      if (idx !== -1) {
+        const name = pvbProjects[idx].name;
+        pvbProjects.splice(idx, 1);
+        saveProjects();
+        if (currentProject?.id === cmd.id) {
+          currentProject = null;
+          document.getElementById('pvbProjectsList').classList.remove('hidden');
+          document.getElementById('pvbProjectDetail').classList.add('hidden');
+        }
+        renderProjects();
+        showVBToast(`Proyecto "${name}" eliminado`, 'warning');
+      }
     }
   }
 }
@@ -2891,11 +2905,14 @@ function renderProjects() {
       <div class="project-progress-bar"><div class="project-progress-fill" style="width:${progress}%"></div></div>
       <div class="project-card-footer">
         <span class="project-progress-label">${progress}% · ${p.launchDate || '—'}</span>
-        <button type="button" class="btn-card-edit-brief" data-id="${p.id}">✏️ Brief</button>
+        <div class="project-card-actions">
+          <button type="button" class="btn-card-edit-brief" data-id="${p.id}">✏️ Brief</button>
+          <button type="button" class="btn-card-delete" data-id="${p.id}" title="Eliminar proyecto">🗑</button>
+        </div>
       </div>
     `;
     card.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-card-edit-brief')) return;
+      if (e.target.closest('.btn-card-edit-brief') || e.target.closest('.btn-card-delete')) return;
       openProjectDetail(p.id);
     });
     card.querySelector('.btn-card-edit-brief').addEventListener('click', (e) => {
@@ -2903,8 +2920,68 @@ function renderProjects() {
       currentProject = pvbProjects.find(pr => pr.id === p.id);
       document.getElementById('editBriefBtn')?.click();
     });
+    card.querySelector('.btn-card-delete').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const proj = pvbProjects.find(pr => pr.id === p.id);
+      if (!proj) return;
+      if (!confirm(`¿Eliminar "${proj.name}"? Esta acción no se puede deshacer.`)) return;
+      pvbProjects.splice(pvbProjects.indexOf(proj), 1);
+      saveProjects();
+      if (currentProject?.id === proj.id) {
+        currentProject = null;
+        document.getElementById('pvbProjectsList').classList.remove('hidden');
+        document.getElementById('pvbProjectDetail').classList.add('hidden');
+      }
+      renderProjects();
+      showVBToast(`"${proj.name}" eliminado`, 'warning');
+    });
     grid.appendChild(card);
   });
+}
+
+// ── Notion Projects Gallery ───────────────────────────────────────────────────
+const STATUS_COLOR = {
+  'En curso': '#22c55e', 'Activo': '#22c55e', 'Producción': '#f59e0b',
+  'Entregado': '#60a5fa', 'Completado': '#6b7280', 'Pausado': '#ef4444',
+  'Nuevo': '#a78bfa', 'Briefing': '#a78bfa',
+};
+
+async function loadNotionProjectsGallery() {
+  const container = document.getElementById('notionProjectsGallery');
+  if (!container) return;
+  container.innerHTML = '<div class="notion-gallery-loading">Cargando proyectos…</div>';
+  try {
+    const token = localStorage.getItem('brain_token');
+    const res = await fetch('/api/brain?action=notion-projects', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!data.ok || !data.projects?.length) {
+      container.innerHTML = '<div class="notion-gallery-empty">Sin proyectos en Notion aún.</div>';
+      return;
+    }
+    container.innerHTML = data.projects.map(p => {
+      const color = STATUS_COLOR[p.estado] || '#6b7280';
+      const initial = (p.nombre || '?')[0].toUpperCase();
+      const cover = p.cover ? `style="background-image:url('${p.cover}')"` : '';
+      return `
+        <div class="notion-project-card">
+          <div class="notion-card-cover ${p.cover ? 'has-cover' : ''}" ${cover}>
+            ${p.icon ? `<span class="notion-card-icon">${p.icon}</span>` : `<span class="notion-card-initial">${initial}</span>`}
+          </div>
+          <div class="notion-card-body">
+            <div class="notion-card-meta">
+              <span class="notion-card-client">${p.cliente}</span>
+              <span class="notion-card-status" style="color:${color};border-color:${color}40">${p.estado}</span>
+            </div>
+            <h4 class="notion-card-name">${p.nombre}</h4>
+            ${p.fecha ? `<div class="notion-card-date">${new Date(p.fecha).toLocaleDateString('es-CL', {month:'short',year:'numeric'})}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = `<div class="notion-gallery-empty">Error: ${e.message}</div>`;
+  }
 }
 
 function openProjectDetail(id) {
@@ -3128,6 +3205,9 @@ function switchSubTab(name) {
 function initProyectosTab() {
   loadProjects();
   renderProjects();
+  loadNotionProjectsGallery();
+
+  document.getElementById('refreshNotionGallery')?.addEventListener('click', loadNotionProjectsGallery);
 
   document.getElementById('openNewProjectBtn')?.addEventListener('click', () => {
     document.getElementById('newProjectModal').classList.remove('hidden');

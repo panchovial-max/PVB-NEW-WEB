@@ -457,6 +457,36 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── Notion Projects — public gallery feed ────────────────
+    if (resolvedAction === 'notion-projects') {
+      if (req.method !== 'GET') return res.status(405).json({ error: 'GET required' });
+      const NK = process.env.NOTION_API_KEY;
+      if (!NK) return res.status(503).json({ error: 'Notion not configured' });
+      const NH = { 'Authorization': `Bearer ${NK}`, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' };
+      const DB_PROJ = process.env.NOTION_DB_PROJECTS;
+      if (!DB_PROJ) return res.status(200).json({ ok: true, projects: [] });
+      try {
+        const r = await fetch(`https://api.notion.com/v1/databases/${DB_PROJ}/query`, {
+          method: 'POST', headers: NH,
+          body: JSON.stringify({ page_size: 50, sorts: [{ timestamp: 'last_edited_time', direction: 'descending' }] })
+        });
+        const data = await r.json();
+        const getText = (p, key) => p.properties?.[key]?.title?.[0]?.plain_text || p.properties?.[key]?.rich_text?.[0]?.plain_text || '';
+        const projects = (data.results || []).map(p => ({
+          id: p.id,
+          nombre: getText(p, 'Nombre') || getText(p, 'Name') || getText(p, 'Proyecto') || '—',
+          estado: p.properties?.Estado?.select?.name || '—',
+          cliente: p.properties?.Cliente?.select?.name || getText(p, 'Cliente') || '—',
+          fecha: p.properties?.['Fecha inicio']?.date?.start || p.properties?.Fecha?.date?.start || null,
+          cover: p.cover?.external?.url || p.cover?.file?.url || null,
+          icon: p.icon?.emoji || null,
+        }));
+        return res.status(200).json({ ok: true, projects });
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
+    }
+
     // ── Chat: Claude Haiku + Notion tool use ─────────────────
     if (resolvedAction === 'chat') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
@@ -616,6 +646,14 @@ export default async function handler(req, res) {
             title:      { type: 'string', description: 'Título corto de la nota (opcional)' },
           }},
         },
+        {
+          name: 'delete_project_local',
+          description: 'Elimina un proyecto de Master Brain. SIEMPRE advierte al usuario antes de confirmar la eliminación. Solo ejecuta si el usuario confirma explícitamente.',
+          input_schema: { type: 'object', required: ['id'], properties: {
+            id:      { type: 'string', description: 'ID del proyecto a eliminar (de localProjects)' },
+            confirm: { type: 'boolean', description: 'true solo si el usuario confirmó explícitamente la eliminación' },
+          }},
+        },
       ];
 
       async function runTool(name, input) {
@@ -725,6 +763,10 @@ export default async function handler(req, res) {
         if (name === 'save_project_note') {
           return { command: { type: 'save_project_note', id: input.project_id, note: input.note, title: input.title || null } };
         }
+        if (name === 'delete_project_local') {
+          if (!input.confirm) return { command: { type: 'show_toast', message: '⚠️ ¿Confirmas eliminar el proyecto? Responde "sí, eliminar" para confirmar.', level: 'warning' } };
+          return { command: { type: 'delete_project_local', id: input.id } };
+        }
         return { error: 'Unknown tool' };
       }
 
@@ -757,7 +799,7 @@ export default async function handler(req, res) {
 Tienes acceso completo a Notion y a la interfaz de Master Brain:
 - Tareas Notion: consultar, crear, completar y actualizar (get_tasks, create_task, complete_task, update_task).
 - Proyectos Notion: consultar, crear, actualizar estado (get_projects, create_project, update_project_status).
-- Proyectos Master Brain (LOCAL): crear con create_project_local, abrir con open_project, actualizar campos con update_project_field, avanzar Gantt con advance_gantt_phase. Usa los IDs de localProjects.
+- Proyectos Master Brain (LOCAL): crear con create_project_local, abrir con open_project, actualizar campos con update_project_field, avanzar Gantt con advance_gantt_phase, eliminar con delete_project_local (siempre pedir confirmación primero — confirm:false muestra aviso, confirm:true ejecuta). Usa los IDs de localProjects.
 - Navegación: ui_navigate para cambiar tabs (neural-map, hub, accounts, esperanza, proposals, proyectos, campaigns, departments, agents, clients, activity, routines, portfolio, learnings).
 - Notificaciones: ui_toast para confirmaciones visuales.
 - Revisión de proyectos: start_review_session para iniciar revisión ordenada uno por uno, review_advance para siguiente.
