@@ -3398,6 +3398,24 @@ function initVoiceBot() {
   });
   closeBtn.addEventListener('click', () => { widget.classList.add('vb-collapsed'); stopAutoListen(); });
 
+  // ── Brainstorm button — sesión creativa con David & Rubín ──
+  const brainstormBtn = document.getElementById('vbBrainstorm');
+  let brainstormActive = false;
+  brainstormBtn?.addEventListener('click', () => {
+    brainstormActive = !brainstormActive;
+    brainstormBtn.classList.toggle('on', brainstormActive);
+    brainstormBtn.title = brainstormActive ? 'Brainstorm activo — clic para salir' : 'Sesión creativa con David & Rubín';
+    if (brainstormActive) {
+      // Open widget if collapsed
+      widget.classList.remove('vb-collapsed');
+      // Inject brainstorm context message
+      input.value = 'Iniciemos una sesión de brainstorming con el equipo creativo — David y Rubín. Quiero explorar ideas y perspectivas creativas para el proyecto actual.';
+      sendMessage();
+    } else {
+      showVBToast('Sesión creativa cerrada', 'info');
+    }
+  });
+
   // ── Auto-listen toggle ──
   autoListenBtn.addEventListener('click', () => {
     autoListen = !autoListen;

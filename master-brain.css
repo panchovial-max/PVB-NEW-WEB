@@ -3308,6 +3308,10 @@ body.theme-dark .nav-title {
 .vb-auto-listen { background: none; border: 1px solid var(--brain-border); color: var(--brain-muted); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, color 0.2s; }
 .vb-auto-listen:hover { border-color: var(--brain-accent); color: var(--brain-accent); }
 .vb-auto-listen.on { border-color: var(--brain-accent); color: var(--brain-accent); background: rgba(212,176,112,0.08); }
+.vb-brainstorm { background: none; border: 1px solid var(--brain-border); color: var(--brain-muted); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.vb-brainstorm:hover { border-color: #f59e0b; color: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,.25); }
+.vb-brainstorm.on { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,.1); box-shadow: 0 0 10px rgba(245,158,11,.35); animation: bulb-pulse 2s ease-in-out infinite; }
+@keyframes bulb-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.65; } }
 /* VB Toast */
 .vb-toast { position: fixed; bottom: 88px; right: 24px; background: var(--brain-surface-2); border: 1px solid var(--brain-border); color: var(--brain-text); border-radius: 10px; padding: 10px 16px; font-size: 13px; max-width: 300px; opacity: 0; transform: translateY(8px); transition: opacity 0.25s, transform 0.25s; pointer-events: none; z-index: 9999; }
 .vb-toast.show { opacity: 1; transform: translateY(0); }
