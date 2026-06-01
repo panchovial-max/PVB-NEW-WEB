@@ -432,15 +432,14 @@ export default async function handler(req, res) {
       const ELEVEN_KEY = process.env.ELEVENLABS_API_KEY;
       if (!ELEVEN_KEY) return res.status(503).json({ error: 'ElevenLabs not configured' });
       try {
-        const voiceId = process.env.ELEVENLABS_VOICE_ESPERANZA || 'EXAVITQu4vr4xnSDxMaL'; // Sarah — warm female es/en
+        const voiceId = process.env.ELEVENLABS_VOICE_ESPERANZA || 'XrExE9yKIg1WjnnlVkGX'; // Matilda — natural en es/en multilingual
         const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
           method: 'POST',
           headers: { 'xi-api-key': ELEVEN_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: text.slice(0, 300),
-            model_id: 'eleven_flash_v2_5',
-            language_code: 'es',
-            voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+            model_id: 'eleven_multilingual_v2',
+            voice_settings: { stability: 0.5, similarity_boost: 0.8 }
           })
         });
         if (!ttsRes.ok) {
