@@ -3046,9 +3046,10 @@ function renderGantt() {
   const container = document.getElementById('ganttContainer');
   const meta = document.getElementById('ganttMeta');
   if (!container) return;
-  const start = new Date(currentProject.startDate + 'T12:00:00');
+  const startRaw = currentProject.startDate || new Date().toISOString().slice(0, 10);
+  const start = new Date(startRaw + 'T12:00:00');
   const totalDays = GANTT_PHASES.reduce((s, p) => s + p.days + 1, 0);
-  meta.textContent = `${currentProject.startDate} → ${currentProject.launchDate || 'TBD'} · ${totalDays} días estimados`;
+  meta.textContent = `${startRaw} → ${currentProject.launchDate || 'TBD'} · ${totalDays} días estimados`;
   let html = `<div class="gantt-table">
     <div class="gantt-row gantt-row--header">
       <div class="gantt-col-phase">Fase</div>
@@ -3061,7 +3062,8 @@ function renderGantt() {
     const g = currentProject.gantt?.find(gg => gg.phaseId === phase.id) || { startDate: '—', endDate: '—', status: 'pending', notes: '' };
     const statusClass = `gantt-status--${g.status}`;
     const barWidth = Math.round((phase.days / totalDays) * 100);
-    const barOffset = g.startDate !== '—' ? Math.round(((new Date(g.startDate + 'T12:00:00') - start) / (1000 * 60 * 60 * 24)) / totalDays * 100) : 0;
+    const gStart = g.startDate && g.startDate !== '—' ? new Date(g.startDate + 'T12:00:00') : null;
+    const barOffset = gStart && !isNaN(gStart) ? Math.round(((gStart - start) / (1000 * 60 * 60 * 24)) / totalDays * 100) : 0;
     const dlList = phase.deliverables.map(d => `<span class="gantt-deliverable">${d}</span>`).join('');
     html += `
     <div class="gantt-row" data-phase="${phase.id}">
@@ -3575,8 +3577,18 @@ function initVoiceBot() {
     let vbIntentionalStop = false;
     const VB_SILENCE_MS = 2500;  // stop after 2.5s of silence, then auto-send
 
+    // Pre-unlock audio for Safari — must happen inside a user gesture
+    let audioUnlocked = false;
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      audioUnlocked = true;
+      const sil = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+      sil.play().catch(() => {});
+    }
+
     function startListening() {
       if (recording) return;
+      unlockAudio();
       clearTimeout(autoListenTimer);
       clearTimeout(vbSilenceTimer);
       vbFinalText = '';
