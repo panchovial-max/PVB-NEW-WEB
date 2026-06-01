@@ -3462,7 +3462,6 @@ function initVoiceBot() {
   async function speak(text) {
     if (!ttsEnabled) { onSpeakEnd?.(); return; }
     const token = localStorage.getItem('brain_token');
-    statusEl.textContent = '🎙 cargando voz…';
     try {
       const res = await fetch('/api/brain?action=tts', {
         method: 'POST',
@@ -3471,27 +3470,23 @@ function initVoiceBot() {
       });
       if (res.ok) {
         const { audio: dataUrl } = await res.json();
-        const audio = new Audio(dataUrl);
-        audio.onended = () => { statusEl.textContent = autoListen ? 'escuchando…' : 'listo'; onSpeakEnd?.(); };
-        audio.onerror = (e) => { console.warn('[TTS] audio error', e.type); speakFallback(text); };
-        const playProm = audio.play();
-        if (playProm !== undefined) {
-          playProm.catch(err => {
-            console.warn('[TTS] autoplay blocked:', err.message);
-            statusEl.textContent = 'listo';
-            speakFallback(text);
-          });
-        }
+        // Reuse the unlocked element — Safari only allows play() on elements
+        // that were previously interacted with in a user gesture context
+        ttsAudio.onended = () => { statusEl.textContent = autoListen ? 'escuchando…' : 'listo'; onSpeakEnd?.(); };
+        ttsAudio.onerror = () => speakFallback(text);
+        ttsAudio.src = dataUrl;
+        ttsAudio.play().catch(err => {
+          console.warn('[TTS] play blocked:', err.message);
+          speakFallback(text);
+        });
         return;
       } else {
         const errText = await res.text().catch(() => '');
         console.warn('[TTS] error:', res.status, errText.slice(0, 100));
-        statusEl.textContent = `TTS ${res.status}`;
         showVBToast(`TTS error ${res.status}`, 'warning');
       }
     } catch (e) {
       console.warn('[TTS] fetch error:', e.message);
-      statusEl.textContent = 'TTS offline';
     }
     speakFallback(text);
   }
@@ -3577,18 +3572,18 @@ function initVoiceBot() {
     let vbIntentionalStop = false;
     const VB_SILENCE_MS = 2500;  // stop after 2.5s of silence, then auto-send
 
-    // Pre-unlock audio for Safari — must happen inside a user gesture
+    // Shared audio element — must be unlocked inside a user gesture (Safari requirement)
+    const ttsAudio = new Audio();
     let audioUnlocked = false;
-    function unlockAudio() {
-      if (audioUnlocked) return;
-      audioUnlocked = true;
-      const sil = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-      sil.play().catch(() => {});
-    }
 
     function startListening() {
       if (recording) return;
-      unlockAudio();
+      // Unlock the SAME element we'll use for TTS — Safari ties unlock to specific element
+      if (!audioUnlocked) {
+        audioUnlocked = true;
+        ttsAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+        ttsAudio.play().catch(() => {});
+      }
       clearTimeout(autoListenTimer);
       clearTimeout(vbSilenceTimer);
       vbFinalText = '';
