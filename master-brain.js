@@ -3457,16 +3457,10 @@ function initVoiceBot() {
     else speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
   }
 
-  // Shared Audio element — reusing avoids browser autoplay unlock issues
-  const ttsAudio = new Audio();
-  ttsAudio.onended = () => onSpeakEnd?.();
-  ttsAudio.onerror = () => { if (ttsAudio._pendingText) speakFallback(ttsAudio._pendingText); };
-  // Unlock audio context on first user interaction (required by some browsers)
-  document.addEventListener('click', () => { ttsAudio.load(); }, { once: true });
-
   async function speak(text) {
     if (!ttsEnabled) { onSpeakEnd?.(); return; }
     const token = localStorage.getItem('brain_token');
+    statusEl.textContent = '🎙 cargando voz…';
     try {
       const res = await fetch('/api/brain?action=tts', {
         method: 'POST',
@@ -3475,20 +3469,28 @@ function initVoiceBot() {
       });
       if (res.ok) {
         const { audio: dataUrl } = await res.json();
-        ttsAudio._pendingText = text;
-        ttsAudio.src = dataUrl;
-        ttsAudio.load();
-        await ttsAudio.play().catch(() => { onSpeakEnd?.(); });
+        const audio = new Audio(dataUrl);
+        audio.onended = () => { statusEl.textContent = autoListen ? 'escuchando…' : 'listo'; onSpeakEnd?.(); };
+        audio.onerror = (e) => { console.warn('[TTS] audio error', e.type); speakFallback(text); };
+        const playProm = audio.play();
+        if (playProm !== undefined) {
+          playProm.catch(err => {
+            console.warn('[TTS] autoplay blocked:', err.message);
+            statusEl.textContent = 'listo';
+            speakFallback(text);
+          });
+        }
         return;
       } else {
-        const err = await res.json().catch(() => ({}));
-        console.warn('[TTS] ElevenLabs error:', res.status, err);
-        showVBToast(`TTS: ${err.error || res.status}`, 'warning');
+        const errText = await res.text().catch(() => '');
+        console.warn('[TTS] error:', res.status, errText.slice(0, 100));
+        statusEl.textContent = `TTS ${res.status}`;
+        showVBToast(`TTS error ${res.status}`, 'warning');
       }
     } catch (e) {
       console.warn('[TTS] fetch error:', e.message);
+      statusEl.textContent = 'TTS offline';
     }
-    // ElevenLabs unavailable — fallback to Web Speech API (Esperanza macOS voice)
     speakFallback(text);
   }
 
