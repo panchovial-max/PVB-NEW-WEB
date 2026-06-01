@@ -448,8 +448,9 @@ export default async function handler(req, res) {
           return res.status(502).json({ error: `ElevenLabs ${ttsRes.status}`, detail: errBody.slice(0, 100) });
         }
         const audio = await ttsRes.arrayBuffer();
-        const b64 = Buffer.from(audio).toString('base64');
-        return res.status(200).json({ audio: `data:audio/mpeg;base64,${b64}` });
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('Cache-Control', 'no-store');
+        return res.status(200).send(Buffer.from(audio));
       } catch (ttsErr) {
         console.error('[TTS] exception:', ttsErr.message);
         return res.status(500).json({ error: ttsErr.message });
