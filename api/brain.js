@@ -438,7 +438,8 @@ export default async function handler(req, res) {
           headers: { 'xi-api-key': ELEVEN_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: text.slice(0, 300),
-            model_id: 'eleven_flash_v2_5', // fastest model — lower latency, cheaper
+            model_id: 'eleven_flash_v2_5',
+            language_code: 'es',
             voice_settings: { stability: 0.5, similarity_boost: 0.75 }
           })
         });
