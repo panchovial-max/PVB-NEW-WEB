@@ -3492,7 +3492,9 @@ function initVoiceBot() {
       const combined = `🎯 **David Droga:**\n${data.droga}\n\n🎨 **Rubín (Consejo Creativo):**\n${data.rubin}`;
       addMsg('assistant', combined);
       brainstormHistory.push({ role: 'assistant', content: combined });
-      speak(data.droga + ' ... ' + data.rubin);
+      // Speak David with Adam voice, then queue Rubín with Josh after David finishes
+      onSpeakEnd = () => { onSpeakEnd = null; speak(data.rubin, 'rubin'); };
+      speak(data.droga, 'droga');
     } catch (err) {
       thinking.remove();
       addMsg('assistant', `Error: ${err.message}`);
@@ -3655,14 +3657,14 @@ function initVoiceBot() {
     else speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
   }
 
-  async function speak(text) {
+  async function speak(text, voice = null) {
     if (!ttsEnabled) { onSpeakEnd?.(); return; }
     const token = localStorage.getItem('brain_token');
     try {
       const res = await fetch('/api/brain?action=tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, ...(voice ? { voice } : {}) }),
       });
       if (res.ok) {
         const arrayBuf = await res.arrayBuffer();

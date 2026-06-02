@@ -432,7 +432,13 @@ export default async function handler(req, res) {
       const ELEVEN_KEY = process.env.ELEVENLABS_API_KEY;
       if (!ELEVEN_KEY) return res.status(503).json({ error: 'ElevenLabs not configured' });
       try {
-        const voiceId = process.env.ELEVENLABS_VOICE_ESPERANZA || 'XrExE9yKIg1WjnnlVkGX'; // Matilda — natural en es/en multilingual
+        // voice param lets brainstorm mode use agent-specific voices
+        const voiceParam = req.body?.voice;
+        const VOICE_MAP = {
+          droga: process.env.ELEVENLABS_VOICE_DROGA || 'pNInz6obpgDQGcFmaJgB', // Adam — David
+          rubin: process.env.ELEVENLABS_VOICE_RUBIN || 'TxGEqnHWrfWFTfGW9XjX', // Josh — Rubín
+        };
+        const voiceId = VOICE_MAP[voiceParam] || process.env.ELEVENLABS_VOICE_ESPERANZA || 'XrExE9yKIg1WjnnlVkGX';
         const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
           method: 'POST',
           headers: { 'xi-api-key': ELEVEN_KEY, 'Content-Type': 'application/json' },
