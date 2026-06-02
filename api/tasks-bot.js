@@ -63,19 +63,19 @@ async function transcribeAudio(fileId) {
   return groqData.text.trim();
 }
 
-// ─── Parsear texto libre en tarea con Claude ─────────────
+// ─── Parsear texto libre en tarea con Groq ─────────────
 async function parsearTareaConClaude(texto) {
   const hoy = new Date().toISOString().split('T')[0];
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5',
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 200,
+      temperature: 0,
       messages: [{
         role: 'user',
         content: `Extrae la información de esta tarea personal en JSON. Hoy es ${hoy}.
@@ -96,7 +96,7 @@ Si no puedes determinar un campo, usa null para contexto/fecha y "Media" para pr
   });
 
   const data = await res.json();
-  const content = data.content?.[0]?.text || '{}';
+  const content = data.choices?.[0]?.message?.content || '{}';
   try {
     return JSON.parse(content);
   } catch {
