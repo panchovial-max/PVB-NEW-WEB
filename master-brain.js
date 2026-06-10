@@ -1025,7 +1025,6 @@ async function loadClients() {
       </div>
     `).join('');
 
-    // Platform chip click → load stats
     grid.querySelectorAll('.platform-chip').forEach(btn => {
       btn.addEventListener('click', () => loadClientStats(btn.dataset.clientId, btn.dataset.platform));
     });
@@ -1244,6 +1243,7 @@ function setupEventListeners() {
       tab.classList.add('active');
       document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
       if (tab.dataset.tab === 'clients') loadClients();
+      if (tab.dataset.tab === 'notion') loadNotionHub();
       if (tab.dataset.tab === 'hub') loadHub();
       if (tab.dataset.tab === 'accounts' && !accountsLoaded) { initAccountsTab(); loadAccounts(); }
       if (tab.dataset.tab === 'esperanza' && !esperanzaLoaded) { initEsperanzaTab(); loadEsperanza(); }
@@ -1255,6 +1255,7 @@ function setupEventListeners() {
   });
 
   document.getElementById('refreshClients')?.addEventListener('click', loadClients);
+  document.getElementById('refreshNotion')?.addEventListener('click', () => loadNotionHub(true));
 
   // Agent clicks (delegated)
   document.addEventListener('click', (e) => {
@@ -2122,16 +2123,20 @@ function executeVBCommands(commands = []) {
       const proj = pvbProjects.find(p => p.id === cmd.id);
       if (proj?.gantt) {
         const activeIdx = proj.gantt.findIndex(g => g.status === 'active');
+        let newPhaseId = null;
         if (activeIdx >= 0) {
           proj.gantt[activeIdx].status = 'done';
-          if (proj.gantt[activeIdx + 1]) proj.gantt[activeIdx + 1].status = 'active';
+          if (proj.gantt[activeIdx + 1]) {
+            proj.gantt[activeIdx + 1].status = 'active';
+            newPhaseId = proj.gantt[activeIdx + 1].phaseId;
+          }
         }
         saveProjects();
         renderProjects();
         if (currentProject?.id === cmd.id) renderGantt();
         showVBToast('Fase avanzada ✓', 'success');
         syncProjectToNotion(proj); // auto-sync
-
+        if (newPhaseId) triggerPhaseAgents(proj, newPhaseId);
       }
 
     } else if (cmd.type === 'start_review_session') {
@@ -2803,9 +2808,223 @@ const GANTT_PHASES = [
 
 const STATUS_LABELS = { pending: 'Pendiente', active: 'En curso', done: 'Completado', review: 'En revisión', risk: 'En riesgo' };
 const PROJECT_STATUS = { briefing: 'Brief', creative: 'Creativo', preproduction: 'Pre-Prod', production: 'Producción', postproduction: 'Post-Prod', delivery: 'Entrega', live: 'Live', measuring: 'Métricas' };
+const ACT_TAG_COLORS = { nota: '#8b5cf6', 'reunión': '#3b82f6', entrega: '#10b981', hito: '#f59e0b', cliente: '#E91E63' };
 
 let pvbProjects = [];
 let currentProject = null;
+
+// ── Overview ──────────────────────────────────────────────
+function renderOverview() {
+  if (!currentProject) return;
+  const p = currentProject;
+  const el = document.getElementById('overviewContent');
+  if (!el) return;
+  const color = clientColor(p.client || '');
+  const done = (p.gantt || []).filter(g => g.status === 'done').length;
+  const progress = p.gantt ? Math.round((done / GANTT_PHASES.length) * 100) : 0;
+  const launchDate = p.launchDate ? new Date(p.launchDate + 'T12:00:00') : null;
+  const daysToLaunch = launchDate ? Math.ceil((launchDate - Date.now()) / 864e5) : null;
+  const launchColor = daysToLaunch !== null ? (daysToLaunch <= 7 ? '#ef4444' : daysToLaunch <= 21 ? '#F59E0B' : color) : color;
+  const activeGantt = (p.gantt || []).find(g => g.status === 'active');
+  const activePhase = activeGantt ? GANTT_PHASES.find(ph => ph.id === activeGantt.phaseId) : null;
+  const activeIdx = p.gantt ? p.gantt.findIndex(g => g.status === 'active') : -1;
+  const nextPhase = activeIdx >= 0 ? GANTT_PHASES[activeIdx + 1] : null;
+  const agents = (p.assignedAgents || []).slice(0, 6).map(id => {
+    const ag = AGENTS_DATA.find(a => a.id === id);
+    return ag ? `<span class="ov-agent-chip" style="border-color:${clientColor(ag.dept)};color:${clientColor(ag.dept)}">${ag.name}</span>` : '';
+  }).join('');
+  const recentActs = [...(p.activity || [])].reverse().slice(0, 4);
+  const actHtml = recentActs.length
+    ? recentActs.map(a => {
+        const d = new Date(a.date).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+        const c = ACT_TAG_COLORS[a.tag] || '#8b5cf6';
+        return `<div class="ov-act-row"><span class="ov-act-tag" style="color:${c};border-color:${c}40">${a.tag||'nota'}</span><span class="ov-act-text">${escapeHtml(a.text)}</span><span class="ov-act-date">${d}</span></div>`;
+      }).join('')
+    : '<span class="ov-act-empty">Sin actividad registrada</span>';
+  const phasesBar = (p.gantt || []).map(g => {
+    const ph = GANTT_PHASES.find(x => x.id === g.phaseId);
+    const bg = g.status === 'done' ? ph?.color : g.status === 'active' ? ph?.color : 'rgba(255,255,255,0.06)';
+    return `<div class="ov-phase-seg" style="flex:${ph?.days||1};background:${bg};opacity:${g.status==='active'?1:g.status==='done'?0.7:1}" title="${ph?.name||g.phaseId} · ${STATUS_LABELS[g.status]||g.status}"></div>`;
+  }).join('');
+  const formats = Array.isArray(p.formats) ? p.formats.join(', ') : (p.formats || '—');
+  const competitors = (p.competitors || []);
+
+  el.innerHTML = `
+    <div class="ov-stats">
+      <div class="ov-stat"><div class="ov-stat-value" style="color:${color}">${progress}%</div><div class="ov-stat-label">Avance</div></div>
+      <div class="ov-stat"><div class="ov-stat-value" style="color:${launchColor}">${daysToLaunch !== null ? daysToLaunch : '—'}</div><div class="ov-stat-label">Días al launch</div></div>
+      <div class="ov-stat"><div class="ov-stat-value" style="color:${color}">${(p.assignedAgents||[]).length}</div><div class="ov-stat-label">Agentes</div></div>
+      <div class="ov-stat"><div class="ov-stat-value" style="color:${color}">${competitors.length}</div><div class="ov-stat-label">Competidores</div></div>
+    </div>
+
+    <div class="ov-section">
+      <div class="ov-section-label">PROGRESO DE CAMPAÑA</div>
+      <div class="ov-phases-bar">${phasesBar}</div>
+      <div class="ov-phase-info">
+        <span style="color:${activePhase?.color||color}">● ${activePhase?.name||'—'}</span>
+        ${activeGantt?.endDate ? `<span class="ov-phase-deadline">Deadline: ${activeGantt.endDate}</span>` : ''}
+        ${nextPhase ? `<span class="ov-phase-next">→ Próximo: ${nextPhase.name}</span>` : ''}
+      </div>
+    </div>
+
+    ${p.budget || formats !== '—' ? `<div class="ov-section">
+      <div class="ov-section-label">DETALLES</div>
+      <div class="ov-details-grid">
+        ${p.budget ? `<div class="ov-detail"><span class="ov-detail-label">Presupuesto</span><span class="ov-detail-value" style="color:${color}">${escapeHtml(p.budget)}</span></div>` : ''}
+        ${p.launchDate ? `<div class="ov-detail"><span class="ov-detail-label">Launch</span><span class="ov-detail-value">${p.launchDate}</span></div>` : ''}
+        ${formats !== '—' ? `<div class="ov-detail"><span class="ov-detail-label">Formatos</span><span class="ov-detail-value">${escapeHtml(formats)}</span></div>` : ''}
+        ${p.contact?.name ? `<div class="ov-detail"><span class="ov-detail-label">Contacto</span><span class="ov-detail-value">${escapeHtml(p.contact.name)}</span></div>` : ''}
+      </div>
+    </div>` : ''}
+
+    ${agents ? `<div class="ov-section">
+      <div class="ov-section-label">EQUIPO ASIGNADO</div>
+      <div class="ov-agents-row">${agents}${(p.assignedAgents||[]).length > 6 ? `<span class="ov-agents-more">+${p.assignedAgents.length-6}</span>` : ''}</div>
+    </div>` : ''}
+
+    ${competitors.length ? `<div class="ov-section">
+      <div class="ov-section-label">COMPETIDORES</div>
+      <div class="ov-comp-chips">${competitors.map(c => `<span class="ov-comp-chip">${escapeHtml(c.name)}${c.ig ? ' · '+escapeHtml(c.ig) : ''}</span>`).join('')}</div>
+    </div>` : ''}
+
+    <div class="ov-section">
+      <div class="ov-section-header">
+        <div class="ov-section-label">ACTIVIDAD RECIENTE</div>
+        <button type="button" class="ov-add-note-btn" id="ovAddNoteBtn">+ Nota rápida</button>
+      </div>
+      <div id="ovAddNoteForm" class="ov-add-note-form hidden">
+        <input type="text" id="ovNoteInput" placeholder="Nota, hito, actualización..." class="ov-note-input">
+        <select id="ovNoteTag" class="ov-note-tag">
+          <option value="nota">nota</option>
+          <option value="reunión">reunión</option>
+          <option value="entrega">entrega</option>
+          <option value="hito">hito</option>
+          <option value="cliente">cliente</option>
+        </select>
+        <button type="button" id="ovNoteSave" class="ov-note-save" style="background:${color}">Guardar</button>
+      </div>
+      <div class="ov-act-list">${actHtml}</div>
+    </div>
+  `;
+  document.getElementById('ovAddNoteBtn')?.addEventListener('click', () => {
+    document.getElementById('ovAddNoteForm').classList.toggle('hidden');
+    document.getElementById('ovNoteInput')?.focus();
+  });
+  document.getElementById('ovNoteInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('ovNoteSave')?.click();
+  });
+  document.getElementById('ovNoteSave')?.addEventListener('click', () => {
+    const text = document.getElementById('ovNoteInput')?.value?.trim();
+    const tag = document.getElementById('ovNoteTag')?.value || 'nota';
+    if (!text) return;
+    if (!currentProject.activity) currentProject.activity = [];
+    currentProject.activity.push({ id: 'act_' + Date.now(), date: new Date().toISOString().split('T')[0], text, tag });
+    const idx = pvbProjects.findIndex(x => x.id === currentProject.id);
+    if (idx !== -1) pvbProjects[idx] = currentProject;
+    saveProjects();
+    renderOverview();
+  });
+}
+
+// ── Competidores ──────────────────────────────────────────
+function renderCompetidores() {
+  if (!currentProject) return;
+  const el = document.getElementById('competidoresContent');
+  if (!el) return;
+  const competitors = currentProject.competitors || [];
+  el.innerHTML = `
+    <div class="comp-add-form">
+      <div class="comp-form-title">Agregar competidor</div>
+      <div class="comp-form-row">
+        <input type="text" id="compName" placeholder="Nombre / marca" class="comp-input">
+        <input type="text" id="compIg" placeholder="@instagram" class="comp-input comp-input--sm">
+        <input type="text" id="compWeb" placeholder="website.com" class="comp-input comp-input--sm">
+        <button type="button" id="compAddBtn" class="comp-add-btn">+ Agregar</button>
+      </div>
+      <textarea id="compNotes" placeholder="Notas: qué hacen, qué presupuesto manejan, qué les funciona..." class="comp-notes-input" rows="2"></textarea>
+    </div>
+    ${competitors.length ? `<div class="comp-list">${competitors.map(c => `
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-card-name">${escapeHtml(c.name)}</span>
+          <div class="comp-card-links">
+            ${c.ig ? `<a href="https://instagram.com/${c.ig.replace('@','')}" target="_blank" class="comp-link">📸 ${escapeHtml(c.ig)}</a>` : ''}
+            ${c.web ? `<a href="https://${c.web.replace(/^https?:\/\//,'')}" target="_blank" class="comp-link">🌐 ${escapeHtml(c.web)}</a>` : ''}
+          </div>
+          <button type="button" class="comp-delete" data-id="${c.id}">×</button>
+        </div>
+        ${c.notes ? `<div class="comp-card-notes">${escapeHtml(c.notes)}</div>` : ''}
+      </div>`).join('')}</div>`
+    : '<div class="comp-empty">Sin competidores registrados. Agrega los competidores de esta marca para mantener inteligencia competitiva.</div>'}
+  `;
+  document.getElementById('compAddBtn')?.addEventListener('click', () => {
+    const name = document.getElementById('compName')?.value?.trim();
+    if (!name) return;
+    if (!currentProject.competitors) currentProject.competitors = [];
+    currentProject.competitors.push({
+      id: 'comp_' + Date.now(),
+      name,
+      ig: document.getElementById('compIg')?.value?.trim() || '',
+      web: document.getElementById('compWeb')?.value?.trim() || '',
+      notes: document.getElementById('compNotes')?.value?.trim() || '',
+    });
+    const idx = pvbProjects.findIndex(x => x.id === currentProject.id);
+    if (idx !== -1) pvbProjects[idx] = currentProject;
+    saveProjects();
+    renderCompetidores();
+  });
+  el.querySelectorAll('.comp-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentProject.competitors = (currentProject.competitors || []).filter(c => c.id !== btn.dataset.id);
+      const idx = pvbProjects.findIndex(x => x.id === currentProject.id);
+      if (idx !== -1) pvbProjects[idx] = currentProject;
+      saveProjects();
+      renderCompetidores();
+    });
+  });
+}
+
+// ── Actividad ─────────────────────────────────────────────
+function renderActividad() {
+  if (!currentProject) return;
+  const el = document.getElementById('actividadContent');
+  if (!el) return;
+  const activity = [...(currentProject.activity || [])].reverse();
+  el.innerHTML = `
+    <div class="act-add-form">
+      <input type="text" id="actInput" placeholder="Registrar actividad, nota, hito de campaña..." class="act-input">
+      <select id="actTag" class="act-tag-select">
+        <option value="nota">nota</option>
+        <option value="reunión">reunión</option>
+        <option value="entrega">entrega</option>
+        <option value="hito">hito</option>
+        <option value="cliente">cliente</option>
+      </select>
+      <button type="button" id="actSave" class="act-save-btn">Registrar</button>
+    </div>
+    <div class="act-timeline">
+      ${activity.length ? activity.map(a => {
+        const d = new Date(a.date).toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' });
+        const c = ACT_TAG_COLORS[a.tag] || '#8b5cf6';
+        return `<div class="act-entry"><div class="act-dot" style="background:${c}"></div><div class="act-body"><span class="act-tag-badge" style="color:${c};border-color:${c}40">${a.tag||'nota'}</span><span class="act-text">${escapeHtml(a.text)}</span><span class="act-date">${d}</span></div></div>`;
+      }).join('') : '<div class="act-empty">Sin actividad. Registra la primera nota de esta campaña.</div>'}
+    </div>
+  `;
+  const saveAct = () => {
+    const text = document.getElementById('actInput')?.value?.trim();
+    const tag = document.getElementById('actTag')?.value || 'nota';
+    if (!text) return;
+    if (!currentProject.activity) currentProject.activity = [];
+    currentProject.activity.push({ id: 'act_' + Date.now(), date: new Date().toISOString().split('T')[0], text, tag });
+    const idx = pvbProjects.findIndex(x => x.id === currentProject.id);
+    if (idx !== -1) pvbProjects[idx] = currentProject;
+    saveProjects();
+    renderActividad();
+    if (document.getElementById('subtab-overview')?.classList.contains('active')) renderOverview();
+  };
+  document.getElementById('actSave')?.addEventListener('click', saveAct);
+  document.getElementById('actInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') saveAct(); });
+}
 
 function loadProjects() {
   const saved = localStorage.getItem('pvb_projects');
@@ -2814,6 +3033,189 @@ function loadProjects() {
 
 function saveProjects() {
   localStorage.setItem('pvb_projects', JSON.stringify(pvbProjects));
+}
+
+// ─── Activación de agentes por fase de producción ────────────────────────────
+const PHASE_AGENTS = {
+  produccion: {
+    agents: ['pvb-senior-editor', 'pvb-crew-ops', 'engineering-ai-engineer', 'project-management-project-shepherd'],
+    emoji: '🎬',
+    label: 'Producción',
+    telegramMsg: (proj) =>
+      `🎬 *Guión aprobado — Producción activa*\n\n*Proyecto:* ${proj.name}\n*Cliente:* ${proj.client || '—'}\n\nAgentes activados:\n• Senior Editor (DaVinci/Premiere)\n• Crew Ops (logística de rodaje)\n• AI Engineer (assets IA)\n• Project Shepherd (coordinación)\n\n_Revisa el call sheet y confirma el día de rodaje._`,
+  },
+  postprod: {
+    agents: ['pvb-senior-editor', 'engineering-ai-engineer', 'testing-reality-checker'],
+    emoji: '✂️',
+    label: 'Post-Producción',
+    telegramMsg: (proj) =>
+      `✂️ *Rodaje completado — Post-Producción activa*\n\n*Proyecto:* ${proj.name}\n\nAgentes activados:\n• Senior Editor (edición + color)\n• AI Engineer (motion / IA)\n• Reality Checker (QA entregables)\n\n_Sube el footage a la carpeta del proyecto._`,
+  },
+  revisiones: {
+    agents: ['testing-reality-checker', 'design-brand-guardian', 'support-support-responder'],
+    emoji: '🔍',
+    label: 'Revisiones',
+    telegramMsg: (proj) =>
+      `🔍 *Cut listo — Revisiones con cliente*\n\n*Proyecto:* ${proj.name}\n\nAgentes activados:\n• Reality Checker (QA)\n• Brand Guardian (consistencia)\n• Support Responder (comunicación cliente)`,
+  },
+  lanzamiento: {
+    agents: ['marketing-content-creator', 'marketing-social-media-strategist', 'support-analytics-reporter'],
+    emoji: '🚀',
+    label: 'Lanzamiento',
+    telegramMsg: (proj) =>
+      `🚀 *Aprobación final — Lanzamiento*\n\n*Proyecto:* ${proj.name}\n\nAgentes activados:\n• Content Creator (publicación)\n• Social Media Strategist (distribución)\n• Analytics Reporter (tracking)`,
+  },
+};
+
+async function triggerPhaseAgents(proj, newPhaseId) {
+  const config = PHASE_AGENTS[newPhaseId];
+  if (!config) return;
+
+  // 1. Iluminar desks de los agentes activados
+  config.agents.forEach(agentId => {
+    const desk = document.querySelector(`.agent-desk[data-agent-id="${agentId}"]`);
+    if (desk) {
+      desk.classList.add('desk-active');
+      desk.querySelector('.desk-lamp')?.classList.add('active');
+    }
+  });
+
+  // 2. Toast con banner especial
+  const banner = document.createElement('div');
+  banner.className = 'phase-agent-banner';
+  banner.innerHTML = `
+    <span class="phase-banner-emoji">${config.emoji}</span>
+    <div class="phase-banner-body">
+      <strong>${config.label} iniciada — ${proj.name}</strong>
+      <span>${config.agents.length} agentes activados</span>
+    </div>
+    <button onclick="this.parentElement.remove()" class="phase-banner-close">✕</button>
+  `;
+  document.querySelector('.brain-main')?.prepend(banner);
+  setTimeout(() => banner.remove(), 12000);
+
+  // 3. Notificar por Telegram
+  try {
+    const token = localStorage.getItem('brain_token');
+    if (!token) return;
+    await fetch('/api/brain?action=telegram', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ message: config.telegramMsg(proj) }),
+    });
+  } catch (e) {
+    console.warn('[triggerPhaseAgents] Telegram error:', e.message);
+  }
+}
+
+const CLIENT_PALETTE = [
+  '#6366f1','#E91E63','#FF9800','#00BCD4','#4CAF50',
+  '#9C27B0','#FF5722','#2196F3','#F59E0B','#10b981',
+  '#f43f5e','#8b5cf6','#06b6d4','#84cc16','#fb923c',
+];
+function clientColor(name = '') {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return CLIENT_PALETTE[h % CLIENT_PALETTE.length];
+}
+
+const DEPT_LABELS = {
+  ceo: 'CEO', creative: 'Creativo', marketing: 'Marketing',
+  analytics: 'Analytics', operations: 'Operaciones', tech: 'Tech',
+  finance: 'Finanzas', legal: 'Legal', production: 'Producción',
+};
+
+function renderEquipo() {
+  if (!currentProject) return;
+  const assigned = currentProject.assignedAgents || [];
+
+  // Assigned row
+  const assignedEl = document.getElementById('equipoAssigned');
+  if (!assigned.length) {
+    assignedEl.innerHTML = '<span class="equipo-empty">Sin agentes asignados aún</span>';
+  } else {
+    assignedEl.innerHTML = assigned.map(id => {
+      const ag = AGENTS_DATA.find(a => a.id === id);
+      if (!ag) return '';
+      const color = clientColor(ag.dept);
+      return `<span class="equipo-chip equipo-chip--assigned" data-id="${ag.id}" style="border-color:${color};color:${color}" title="${ag.title}">
+        ${ag.name} <span class="equipo-chip-remove">×</span>
+      </span>`;
+    }).join('');
+    assignedEl.querySelectorAll('.equipo-chip--assigned').forEach(chip => {
+      chip.addEventListener('click', () => toggleAgent(chip.dataset.id));
+    });
+  }
+
+  // Roster by dept
+  const roster = document.getElementById('equipoRoster');
+  const byDept = {};
+  for (const ag of AGENTS_DATA) {
+    if (!byDept[ag.dept]) byDept[ag.dept] = [];
+    byDept[ag.dept].push(ag);
+  }
+  roster.innerHTML = Object.entries(byDept).map(([dept, agents]) => `
+    <div class="equipo-dept">
+      <div class="equipo-dept-label">${DEPT_LABELS[dept] || dept}</div>
+      <div class="equipo-dept-agents">${agents.map(ag => {
+        const isOn = assigned.includes(ag.id);
+        const color = clientColor(ag.dept);
+        return `<button type="button" class="equipo-agent-btn${isOn ? ' on' : ''}" data-id="${ag.id}"
+          style="${isOn ? `background:${color}22;border-color:${color};color:${color}` : ''}"
+          title="${ag.title}">${ag.name}</button>`;
+      }).join('')}</div>
+    </div>
+  `).join('');
+  roster.querySelectorAll('.equipo-agent-btn').forEach(btn => {
+    btn.addEventListener('click', () => toggleAgent(btn.dataset.id));
+  });
+}
+
+function toggleAgent(agentId) {
+  if (!currentProject) return;
+  if (!currentProject.assignedAgents) currentProject.assignedAgents = [];
+  const idx = currentProject.assignedAgents.indexOf(agentId);
+  if (idx === -1) currentProject.assignedAgents.push(agentId);
+  else currentProject.assignedAgents.splice(idx, 1);
+  const projIdx = pvbProjects.findIndex(p => p.id === currentProject.id);
+  if (projIdx !== -1) pvbProjects[projIdx] = currentProject;
+  saveProjects();
+  renderEquipo();
+  renderProjects();
+}
+
+async function importFromNotion() {
+  const btn = document.getElementById('importNotionBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Importando…'; }
+  try {
+    const token = localStorage.getItem('brain_token');
+    const r = await fetch('/api/brain?action=import-notion-projects', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'import failed');
+    let added = 0, updated = 0;
+    for (const np of d.projects) {
+      const existing = pvbProjects.find(p => p.notion_page_id === np.notion_page_id);
+      if (existing) {
+        existing.status = np.status;
+        existing.launchDate = np.launchDate || existing.launchDate;
+        existing.budget = np.budget || existing.budget;
+        existing.notes = np.notes || existing.notes;
+        updated++;
+      } else {
+        pvbProjects.push(np);
+        added++;
+      }
+    }
+    saveProjects();
+    renderProjects();
+    showNotification(`Notion importado: ${added} nuevos, ${updated} actualizados`, 'success');
+  } catch (err) {
+    showNotification(`Error importando: ${err.message}`, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⬇ Importar Notion'; }
+  }
 }
 
 async function syncProjectToNotion(project) {
@@ -2867,12 +3269,17 @@ function createProject(data) {
     launchDate: data.launchDate,
     formats: data.formats || [],
     path: data.path,
+    website: data.website,
+    clientIg: data.clientIg,
     references: data.references,
     notes: data.notes,
     status: 'briefing',
     createdAt: new Date().toISOString(),
     concept: null,
     creativeSession: [],
+    assignedAgents: [],
+    competitors: [],
+    activity: [],
     gantt,
   };
   pvbProjects.unshift(project);
@@ -2891,20 +3298,27 @@ function renderProjects() {
     const card = document.createElement('div');
     card.className = 'project-card';
     card.dataset.id = p.id;
+    const color = clientColor(p.client || '');
+    card.style.setProperty('--client-color', color);
     const activePhase = p.gantt?.find(g => g.status === 'active');
     const phaseName = activePhase ? GANTT_PHASES.find(ph => ph.id === activePhase.phaseId)?.name : '—';
     const progress = p.gantt ? Math.round((p.gantt.filter(g => g.status === 'done').length / GANTT_PHASES.length) * 100) : 0;
+    const agents = (p.assignedAgents || []).slice(0, 4).map(id => {
+      const ag = AGENTS_DATA.find(a => a.id === id);
+      return ag ? `<span class="card-agent-dot" style="background:${clientColor(ag.dept)}" title="${ag.name}"></span>` : '';
+    }).join('');
+    const agentsMore = (p.assignedAgents || []).length > 4 ? `<span class="card-agent-more">+${(p.assignedAgents.length - 4)}</span>` : '';
     card.innerHTML = `
       <div class="project-card-header">
-        <span class="project-card-client">${p.client}</span>
+        <span class="project-card-client" style="color:${color}">${p.client}</span>
         <span class="project-card-status-badge">${PROJECT_STATUS[p.status] || p.status}</span>
       </div>
       <h3 class="project-card-name">${p.name}</h3>
       <p class="project-card-contact">${p.contact?.name || ''} ${p.contact?.role ? '· ' + p.contact.role : ''}</p>
       <div class="project-card-phase">Fase activa: <strong>${phaseName}</strong></div>
-      <div class="project-progress-bar"><div class="project-progress-fill" style="width:${progress}%"></div></div>
+      <div class="project-progress-bar"><div class="project-progress-fill" style="width:${progress}%;background:${color}"></div></div>
       <div class="project-card-footer">
-        <span class="project-progress-label">${progress}% · ${p.launchDate || '—'}</span>
+        <div class="card-agents-row">${agents}${agentsMore}</div>
         <div class="project-card-actions">
           <button type="button" class="btn-card-edit-brief" data-id="${p.id}">✏️ Brief</button>
           <button type="button" class="btn-card-delete" data-id="${p.id}" title="Eliminar proyecto">🗑</button>
@@ -2947,26 +3361,25 @@ const STATUS_COLOR = {
 };
 
 async function loadNotionProjectsGallery() {
-  const container = document.getElementById('notionProjectsGallery');
-  if (!container) return;
-  container.innerHTML = '<div class="notion-gallery-loading">Cargando proyectos…</div>';
+  const grid = document.getElementById('projectsGrid');
+  if (!grid) return;
+  // Remove any existing notion-only cards before re-fetching
+  grid.querySelectorAll('.project-card--notion-only').forEach(c => c.remove());
+  const refreshBtn = document.getElementById('refreshNotionGallery');
+  if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = '↺ …'; }
   try {
     const token = localStorage.getItem('brain_token');
     const res = await fetch('/api/brain?action=notion-projects', {
       headers: { Authorization: `Bearer ${token}` }
     });
     const data = await res.json();
-    if (!data.ok || !data.projects?.length) {
-      container.innerHTML = '<div class="notion-gallery-empty">Sin proyectos en Notion aún.</div>';
-      return;
-    }
+    if (!data.ok || !data.projects?.length) return;
 
     // Bidirectional sync: update local projects that are linked to Notion
     let syncCount = 0;
     data.projects.forEach(np => {
       const local = pvbProjects.find(lp => lp.notion_page_id === np.id);
       if (local) {
-        // Notion → local: update status and name if changed
         let changed = false;
         const notionStatus = NOTION_TO_LOCAL_STATUS[np.estado] || local.status;
         if (notionStatus !== local.status) { local.status = notionStatus; changed = true; }
@@ -2977,67 +3390,61 @@ async function loadNotionProjectsGallery() {
     });
     if (syncCount > 0) { saveProjects(); renderProjects(); }
 
-    container.innerHTML = data.projects.map(p => {
-      const color = STATUS_COLOR[p.estado] || '#6b7280';
-      const initial = (p.nombre || '?')[0].toUpperCase();
-      const coverStyle = p.cover ? `style="background-image:url('${p.cover}')"` : '';
-      const local = pvbProjects.find(lp => lp.notion_page_id === p.id);
-      const syncBadge = local
-        ? `<span class="notion-sync-badge synced" title="Vinculado a Master Brain">⚡</span>`
-        : `<button class="notion-import-btn" data-notion-id="${p.id}" data-nombre="${escapeHtml(p.nombre)}" data-cliente="${escapeHtml(p.cliente)}" data-estado="${escapeHtml(p.estado)}" data-fecha="${p.fecha || ''}" data-objetivo="${escapeHtml(p.objetivo || '')}">+ Import</button>`;
-      return `
-        <div class="notion-project-card" data-notion-id="${p.id}">
-          <div class="notion-card-cover ${p.cover ? 'has-cover' : ''}" ${coverStyle}>
-            ${p.icon ? `<span class="notion-card-icon">${p.icon}</span>` : `<span class="notion-card-initial">${initial}</span>`}
-          </div>
-          <div class="notion-card-body">
-            <div class="notion-card-meta">
-              <span class="notion-card-client">${p.cliente}</span>
-              <span class="notion-card-status" style="color:${color};border-color:${color}40">${p.estado}</span>
-            </div>
-            <h4 class="notion-card-name">${p.nombre}</h4>
-            <div class="notion-card-footer">
-              ${p.fecha ? `<span class="notion-card-date">${new Date(p.fecha).toLocaleDateString('es-CL', {month:'short',year:'numeric'})}</span>` : '<span></span>'}
-              ${syncBadge}
-            </div>
-          </div>
-        </div>`;
-    }).join('');
+    // Only add cards for Notion projects NOT yet imported to Master Brain
+    const unlinked = data.projects.filter(np => !pvbProjects.find(lp => lp.notion_page_id === np.id));
+    const empty = document.getElementById('projectsEmpty');
+    if (unlinked.length && empty) empty.classList.add('hidden');
 
-    // Wire Import buttons
-    container.querySelectorAll('.notion-import-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    unlinked.forEach(p => {
+      const color = clientColor(p.cliente || p.nombre || '');
+      const statusColor = STATUS_COLOR[p.estado] || '#6b7280';
+      const icon = p.icon || '📋';
+      const card = document.createElement('div');
+      card.className = 'project-card project-card--notion-only';
+      card.style.setProperty('--client-color', color);
+      card.innerHTML = `
+        <div class="project-card-header">
+          <span class="project-card-client" style="color:${color}">${p.cliente || p.nombre}</span>
+          <span class="notion-n-badge" title="En Notion — no importado">N</span>
+        </div>
+        <h3 class="project-card-name">${p.nombre}</h3>
+        <p class="project-card-contact" style="color:${statusColor}">${p.estado || '—'}</p>
+        <div class="project-card-phase">${p.fecha ? new Date(p.fecha).toLocaleDateString('es-CL', { month: 'long', year: 'numeric' }) : 'Sin fecha'}</div>
+        <div class="project-card-footer" style="margin-top:12px">
+          <span class="notion-card-icon-lg">${icon}</span>
+          <button type="button" class="btn-notion-import"
+            data-notion-id="${p.id}"
+            data-nombre="${escapeHtml(p.nombre)}"
+            data-cliente="${escapeHtml(p.cliente || '')}"
+            data-estado="${escapeHtml(p.estado || '')}"
+            data-fecha="${p.fecha || ''}"
+            data-objetivo="${escapeHtml(p.objetivo || '')}">
+            ⬇ Importar
+          </button>
+        </div>
+      `;
+      card.querySelector('.btn-notion-import').addEventListener('click', (e) => {
         e.stopPropagation();
-        const { notionId, nombre, cliente, estado, fecha, objetivo } = btn.dataset;
+        const d = e.currentTarget.dataset;
         const proj = createProject({
-          campaignName: nombre, client: cliente,
-          startDate: fecha || new Date().toISOString().slice(0, 10),
-          objective: objetivo,
+          campaignName: d.nombre, client: d.cliente || d.nombre,
+          startDate: d.fecha || new Date().toISOString().slice(0, 10),
+          objective: d.objetivo,
         });
-        proj.notion_page_id = notionId;
-        proj.status = NOTION_TO_LOCAL_STATUS[estado] || 'briefing';
+        proj.notion_page_id = d.notionId;
+        proj.status = NOTION_TO_LOCAL_STATUS[d.estado] || 'briefing';
         saveProjects();
         renderProjects();
-        showVBToast(`"${nombre}" importado a Master Brain`, 'success');
-        loadNotionProjectsGallery(); // refresh to show sync badge
+        loadNotionProjectsGallery();
+        showVBToast(`"${d.nombre}" importado`, 'success');
       });
-    });
-
-    // Wire card click → open local project if linked
-    container.querySelectorAll('.notion-project-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.notion-import-btn')) return;
-        const notionId = card.dataset.notionId;
-        const local = pvbProjects.find(lp => lp.notion_page_id === notionId);
-        if (local) {
-          document.querySelector('.brain-tab[data-tab="proyectos"]')?.click();
-          setTimeout(() => openProjectDetail(local.id), 150);
-        }
-      });
+      grid.appendChild(card);
     });
 
   } catch (e) {
-    container.innerHTML = `<div class="notion-gallery-empty">Error: ${e.message}</div>`;
+    console.error('Notion gallery error:', e);
+  } finally {
+    if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↺ Notion'; }
   }
 }
 
@@ -3056,9 +3463,13 @@ function openProjectDetail(id) {
   document.getElementById('detailClient').textContent = currentProject.client;
   document.getElementById('detailName').textContent = currentProject.name;
   document.getElementById('detailStatus').textContent = PROJECT_STATUS[currentProject.status] || currentProject.status;
+  const color = clientColor(currentProject.client || '');
+  document.getElementById('detailClient').style.color = color;
+  renderOverview();
   renderBriefDisplay();
   renderGantt();
-  if (currentProject.creativeSession.length > 0) renderCreativeSession();
+  renderEquipo();
+  if ((currentProject.creativeSession || []).length > 0) renderCreativeSession();
   switchSubTab('brief');
 }
 
@@ -3101,6 +3512,8 @@ function renderBriefDisplay() {
         <h4>Path de producción</h4>
         <p class="brief-value">${pathLabels[p.path] || p.path || '—'}</p>
       </div>
+      ${p.website ? `<div class="brief-section"><h4>Página web</h4><p class="brief-value"><a href="${p.website}" target="_blank" class="brief-link">${p.website}</a></p></div>` : ''}
+      ${p.clientIg ? `<div class="brief-section"><h4>Instagram</h4><p class="brief-value"><a href="https://instagram.com/${p.clientIg.replace('@','')}" target="_blank" class="brief-link">${p.clientIg}</a></p></div>` : ''}
       ${p.references ? `<div class="brief-section full"><h4>Referencias</h4><p class="brief-value">${p.references}</p></div>` : ''}
       ${p.notes ? `<div class="brief-section full"><h4>Notas de la reunión</h4><p class="brief-value">${p.notes}</p></div>` : ''}
     </div>
@@ -3273,6 +3686,8 @@ function initProyectosTab() {
 
   document.getElementById('refreshNotionGallery')?.addEventListener('click', loadNotionProjectsGallery);
 
+  document.getElementById('importNotionBtn')?.addEventListener('click', importFromNotion);
+
   document.getElementById('openNewProjectBtn')?.addEventListener('click', () => {
     document.getElementById('newProjectModal').classList.remove('hidden');
     document.getElementById('briefStartDate').valueAsDate = new Date();
@@ -3305,6 +3720,8 @@ function initProyectosTab() {
       p.launchDate = data.launchDate;
       p.formats = data.formats || fd.getAll('formats');
       p.path = data.path;
+      p.website = data.website;
+      p.clientIg = data.clientIg;
       p.references = data.references;
       p.notes = data.notes;
       saveProjects();
@@ -3338,6 +3755,8 @@ function initProyectosTab() {
     form.querySelector('[name=kpis]').value = p.kpis || '';
     form.querySelector('[name=startDate]').value = p.startDate || '';
     form.querySelector('[name=launchDate]').value = p.launchDate || '';
+    form.querySelector('[name=website]').value = p.website || '';
+    form.querySelector('[name=clientIg]').value = p.clientIg || '';
     form.querySelector('[name=references]').value = p.references || '';
     form.querySelector('[name=notes]').value = p.notes || '';
     // Checkboxes
@@ -3362,7 +3781,11 @@ function initProyectosTab() {
   document.querySelectorAll('.project-sub-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       switchSubTab(btn.dataset.subtab);
+      if (btn.dataset.subtab === 'overview') renderOverview();
       if (btn.dataset.subtab === 'gantt') renderGantt();
+      if (btn.dataset.subtab === 'equipo') renderEquipo();
+      if (btn.dataset.subtab === 'competidores') renderCompetidores();
+      if (btn.dataset.subtab === 'actividad') renderActividad();
     });
   });
 
@@ -3657,9 +4080,16 @@ function initVoiceBot() {
     else speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
   }
 
+  const SPEAKER_LABELS = {
+    droga: '🎯 David Droga',
+    rubin: '🎨 Rubín',
+    null:  '🧠 Brain',
+  };
+
   async function speak(text, voice = null) {
     if (!ttsEnabled) { onSpeakEnd?.(); return; }
     const token = localStorage.getItem('brain_token');
+    const speakerLabel = SPEAKER_LABELS[voice] || '🧠 Brain';
     try {
       const res = await fetch('/api/brain?action=tts', {
         method: 'POST',
@@ -3673,6 +4103,7 @@ function initVoiceBot() {
         const source = ctx.createBufferSource();
         source.buffer = decoded;
         source.connect(ctx.destination);
+        statusEl.textContent = `${speakerLabel} hablando…`;
         source.onended = () => { statusEl.textContent = autoListen ? 'escuchando…' : 'listo'; onSpeakEnd?.(); };
         source.start(0);
         return;
@@ -3885,4 +4316,145 @@ function initVoiceBot() {
   } else {
     micBtn.style.display = 'none';
   }
+}
+
+// ─── Notion Hub ──────────────────────────────────────────────────────────────
+let notionHubLoaded = false;
+
+async function loadNotionHub(force = false) {
+  if (notionHubLoaded && !force) return;
+  notionHubLoaded = true;
+
+  const token = localStorage.getItem('brain_token');
+  const setLoading = (id) => { document.getElementById(id).innerHTML = '<div class="loading-state">Cargando Notion...</div>'; };
+  ['notionClientes','notionCampanas','notionUcars','notionTareas'].forEach(setLoading);
+
+  try {
+    const res = await fetch('/api/brain?action=notion-hub', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Error Notion');
+
+    renderNotionClientes(data.clientes || []);
+    renderNotionCampanas(data.campanas || []);
+    renderNotionUcars(data.ucars_campanas || []);
+    renderNotionTareas(data.tareas || []);
+
+    const badge = document.getElementById('notionBadge');
+    const total = (data.clientes?.length || 0) + (data.campanas?.length || 0);
+    badge.textContent = total;
+    badge.classList.remove('hidden');
+  } catch (err) {
+    ['notionClientes','notionCampanas','notionUcars','notionTareas'].forEach(id => {
+      document.getElementById(id).innerHTML = `<div class="error-state">Error: ${err.message}</div>`;
+    });
+    notionHubLoaded = false;
+  }
+}
+
+const STATUS_COLORS = {
+  Active: '#4CAF50', Onboarding: '#FF9800', Paused: '#607D8B', Churned: '#F44336',
+  'Pre-Production': '#2196F3', Production: '#9C27B0', Delivered: '#4CAF50',
+  Brainstorming: '#FF9800', Archived: '#607D8B',
+  Planificando: '#607D8B', Activa: '#4CAF50', Pausada: '#FF9800', Finalizada: '#9C27B0',
+};
+
+function statusChip(s) {
+  if (!s) return '';
+  const color = STATUS_COLORS[s] || '#888';
+  return `<span class="notion-chip" style="background:${color}22;color:${color};border-color:${color}44">${s}</span>`;
+}
+
+function renderNotionClientes(clientes) {
+  const el = document.getElementById('notionClientes');
+  if (!clientes.length) { el.innerHTML = '<p class="empty-state-text">Sin clientes en Notion.</p>'; return; }
+  el.innerHTML = clientes.map(c => `
+    <a class="notion-client-card" href="${c.url}" target="_blank" rel="noopener">
+      <div class="nclient-header">
+        <div class="nclient-avatar">${(c.nombre||'?')[0].toUpperCase()}</div>
+        <div>
+          <div class="nclient-name">${c.nombre || '—'}</div>
+          <div class="nclient-industry">${c.industria || ''}</div>
+        </div>
+        ${statusChip(c.status)}
+      </div>
+      <div class="nclient-meta">
+        ${c.contacto ? `<span>👤 ${c.contacto}</span>` : ''}
+        ${c.email    ? `<span>✉️ ${c.email}</span>` : ''}
+        ${c.budget   ? `<span>💰 $${Number(c.budget).toLocaleString('es-CL')}</span>` : ''}
+        ${c.desde    ? `<span>📅 Desde ${c.desde}</span>` : ''}
+      </div>
+      ${c.valores ? `<div class="nclient-values">${c.valores.slice(0,120)}${c.valores.length>120?'…':''}</div>` : ''}
+    </a>
+  `).join('');
+}
+
+function renderNotionCampanas(campanas) {
+  const el = document.getElementById('notionCampanas');
+  if (!campanas.length) { el.innerHTML = '<p class="empty-state-text">Sin campañas activas.</p>'; return; }
+  el.innerHTML = `
+    <table class="notion-table">
+      <thead><tr>
+        <th>Campaña</th><th>Cliente</th><th>Estado</th><th>Plataformas</th>
+        <th>Leads</th><th>Budget</th><th>Deadline</th>
+      </tr></thead>
+      <tbody>${campanas.map(c => {
+        const pct = c.leadsObj ? Math.min(100, Math.round((c.leadsAct||0) / c.leadsObj * 100)) : null;
+        return `<tr>
+          <td><a href="${c.url}" target="_blank" class="notion-link">${c.nombre}</a></td>
+          <td>${c.cliente || '—'}</td>
+          <td>${statusChip(c.status)}</td>
+          <td class="notion-chips">${(c.plataformas||[]).map(p=>`<span class="notion-chip-sm">${p}</span>`).join('')}</td>
+          <td>${pct !== null
+            ? `<div class="notion-progress-wrap"><div class="notion-progress-bar" style="width:${pct}%"></div></div><span class="notion-progress-label">${c.leadsAct||0}/${c.leadsObj}</span>`
+            : '—'}</td>
+          <td>${c.budget ? `$${Number(c.budget).toLocaleString('es-CL')}` : '—'}</td>
+          <td>${c.deadline ? c.deadline.slice(0,10) : '—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+function renderNotionUcars(campanas) {
+  const el = document.getElementById('notionUcars');
+  if (!campanas.length) { el.innerHTML = '<p class="empty-state-text">Sin campañas UCars.</p>'; return; }
+  el.innerHTML = `
+    <table class="notion-table">
+      <thead><tr>
+        <th>Campaña</th><th>Estado</th><th>Formato</th>
+        <th>CPL Obj.</th><th>CPL Real</th><th>Leads</th>
+      </tr></thead>
+      <tbody>${campanas.map(c => {
+        const cplOk = c.cplReal && c.cplObj ? c.cplReal <= c.cplObj : null;
+        return `<tr>
+          <td><a href="${c.url}" target="_blank" class="notion-link">${c.nombre}</a></td>
+          <td>${statusChip(c.estado)}</td>
+          <td class="notion-chips">${(c.formatos||[]).map(f=>`<span class="notion-chip-sm">${f}</span>`).join('')}</td>
+          <td>${c.cplObj ? `$${Number(c.cplObj).toLocaleString('es-CL')}` : '—'}</td>
+          <td style="color:${cplOk===true?'#4CAF50':cplOk===false?'#F44336':'inherit'}">${c.cplReal ? `$${Number(c.cplReal).toLocaleString('es-CL')}` : '—'}</td>
+          <td>${c.leads ?? '—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+function renderNotionTareas(tareas) {
+  const el = document.getElementById('notionTareas');
+  if (!tareas.length) { el.innerHTML = '<p class="empty-state-text">Sin tareas recurrentes.</p>'; return; }
+  const grupos = { Diario: [], Semanal: [], Mensual: [] };
+  tareas.forEach(t => { if (grupos[t.frecuencia]) grupos[t.frecuencia].push(t); else grupos['Mensual'].push(t); });
+  el.innerHTML = Object.entries(grupos).map(([freq, items]) => `
+    <div class="notion-tareas-col">
+      <div class="notion-tareas-col-title">${freq === 'Diario' ? '⚡' : freq === 'Semanal' ? '📅' : '📆'} ${freq}</div>
+      ${items.length === 0 ? '<p class="empty-state-text">—</p>' : items.map(t => `
+        <div class="notion-tarea-item ${t.completada ? 'completada' : ''}">
+          <span class="tarea-check">${t.completada ? '✅' : '⬜'}</span>
+          <div>
+            <a href="${t.url}" target="_blank" class="notion-link tarea-nombre">${t.tarea}</a>
+            ${t.ultimaVez ? `<div class="tarea-meta">Última: ${t.ultimaVez.slice(0,10)}</div>` : ''}
+            ${t.notas ? `<div class="tarea-notas">${t.notas.slice(0,80)}${t.notas.length>80?'…':''}</div>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
 }
