@@ -1,6 +1,6 @@
 /**
  * PVB MASTER BRAIN — Agent Command Center
- * Visualizes 68 AI agents, budgets, routines, and audit logs
+ * Visualizes 75 AI agents, budgets, routines, and audit logs
  */
 
 let allAgents = [];
@@ -20,7 +20,7 @@ const DEPT_CONFIG = {
   sales:       { name: 'Sales',             icon: '&#9654;', color: '#F59E0B', director: 'Sales Lead' },
 };
 
-// ─── All 68 Agents ───
+// ─── All 75 Agents ───
 // Models: opus = Opus 4.6 (complex reasoning), sonnet = Sonnet 4.6 (balanced), haiku = Haiku 4.5 (fast/simple)
 const AGENTS_DATA = [
   // CEO

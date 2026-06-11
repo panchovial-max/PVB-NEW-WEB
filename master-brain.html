@@ -56,7 +56,7 @@
         <!-- KPI Strip -->
         <section class="brain-kpis">
             <div class="brain-kpi">
-                <div class="brain-kpi-value" id="kpiTotalAgents">68</div>
+                <div class="brain-kpi-value" id="kpiTotalAgents">75</div>
                 <div class="brain-kpi-label">AGENTS</div>
             </div>
             <div class="brain-kpi">
@@ -85,20 +85,15 @@
         <div class="brain-tabs">
             <button type="button" class="brain-tab active" data-tab="neural-map">Office</button>
             <button type="button" class="brain-tab" data-tab="hub">Hub ⚡</button>
-            <button type="button" class="brain-tab" data-tab="accounts">Cuentas PVB 🔐</button>
+            <button type="button" class="brain-tab" data-tab="proyectos">Proyectos 🎬</button>
+            <button type="button" class="brain-tab" data-tab="clients">Clientes <span class="tab-badge hidden" id="clientsBadge">0</span></button>
+            <button type="button" class="brain-tab" data-tab="notion">Notion <span class="tab-badge hidden" id="notionBadge">0</span></button>
             <button type="button" class="brain-tab" data-tab="esperanza">Esperanza 🌟</button>
             <button type="button" class="brain-tab" data-tab="proposals">Reportes <span class="tab-badge tab-badge--hidden" id="proposalBadge">0</span></button>
-            <button type="button" class="brain-tab" data-tab="proyectos">Proyectos 🎬</button>
-            <button type="button" class="brain-tab" data-tab="campaigns">Campaigns</button>
             <button type="button" class="brain-tab" data-tab="departments">Departments</button>
             <button type="button" class="brain-tab" data-tab="agents">All Agents</button>
-            <button type="button" class="brain-tab" data-tab="clients">Clientes <span class="tab-badge hidden" id="clientsBadge">0</span></button>
-            <button type="button" class="brain-tab" data-tab="competitor-config">Competidores</button>
-            <button type="button" class="brain-tab" data-tab="activity">Activity <span class="tab-badge tab-badge--hidden" id="activityBadge">0</span></button>
             <button type="button" class="brain-tab" data-tab="routines">Routines</button>
-            <button type="button" class="brain-tab" data-tab="portfolio">Portfolio</button>
-            <button type="button" class="brain-tab" data-tab="learnings">Learnings</button>
-            <button type="button" class="brain-tab" data-tab="audit">Audit Log</button>
+            <button type="button" class="brain-tab" data-tab="activity">Activity <span class="tab-badge tab-badge--hidden" id="activityBadge">0</span></button>
         </div>
 
         <!-- TAB: Office Canvas -->
@@ -459,6 +454,46 @@
             </div>
         </section>
 
+        <!-- TAB: Notion Hub -->
+        <section class="brain-tab-content" id="tab-notion">
+            <div class="section-header">
+                <h2 class="section-title">Notion Hub</h2>
+                <button type="button" class="action-btn" id="refreshNotion">&#8635; Sincronizar</button>
+            </div>
+
+            <!-- Clientes & Brand DNA -->
+            <div class="notion-section">
+                <h3 class="notion-section-title">&#128101; Clientes & Brand DNA</h3>
+                <div id="notionClientes" class="notion-clientes-grid">
+                    <div class="loading-state">Cargando...</div>
+                </div>
+            </div>
+
+            <!-- Campañas Activas -->
+            <div class="notion-section">
+                <h3 class="notion-section-title">&#128227; Campañas Activas</h3>
+                <div id="notionCampanas" class="notion-table-wrap">
+                    <div class="loading-state">Cargando...</div>
+                </div>
+            </div>
+
+            <!-- UCars Meta Ads -->
+            <div class="notion-section">
+                <h3 class="notion-section-title">&#128664; UCars — Campañas Meta Ads</h3>
+                <div id="notionUcars" class="notion-table-wrap">
+                    <div class="loading-state">Cargando...</div>
+                </div>
+            </div>
+
+            <!-- Tareas Recurrentes -->
+            <div class="notion-section">
+                <h3 class="notion-section-title">&#9989; Tareas Recurrentes</h3>
+                <div id="notionTareas" class="notion-tareas-cols">
+                    <div class="loading-state">Cargando...</div>
+                </div>
+            </div>
+        </section>
+
         <!-- TAB: Competitor Tracker Config -->
         <section class="brain-tab-content" id="tab-competitor-config">
             <div class="section-header">
@@ -601,24 +636,16 @@
                 <h2 class="section-title">Proyectos de Campaña</h2>
                 <p class="section-sub">Gestión completa desde brief hasta métricas</p>
               </div>
-              <button type="button" class="btn-new-project" id="openNewProjectBtn">+ Nueva Campaña</button>
+              <div class="projects-header-actions">
+                <button type="button" class="btn-refresh-small" id="refreshNotionGallery" title="Sincronizar con Notion">↺ Notion</button>
+                <button type="button" class="btn-new-project" id="openNewProjectBtn">+ Nueva Campaña</button>
+              </div>
             </div>
             <div class="projects-grid" id="projectsGrid">
               <div class="projects-empty" id="projectsEmpty">
                 <div class="projects-empty-icon">🎬</div>
                 <p>Sin proyectos activos.<br>Crea tu primera campaña.</p>
               </div>
-            </div>
-          </div>
-
-          <!-- Notion Projects Gallery -->
-          <div id="notionGallerySection" class="notion-gallery-section">
-            <div class="notion-gallery-header">
-              <h3 class="notion-gallery-title">Proyectos en Notion</h3>
-              <button type="button" class="btn-gallery-refresh" id="refreshNotionGallery" title="Actualizar">↺</button>
-            </div>
-            <div class="notion-projects-gallery" id="notionProjectsGallery">
-              <div class="notion-gallery-loading">Cargando…</div>
             </div>
           </div>
 
@@ -635,8 +662,50 @@
 
             <div class="project-sub-tabs">
               <button type="button" class="project-sub-tab active" data-subtab="brief">Brief</button>
-              <button type="button" class="project-sub-tab" data-subtab="creative">Sesión Creativa</button>
+              <button type="button" class="project-sub-tab" data-subtab="overview">Overview</button>
               <button type="button" class="project-sub-tab" data-subtab="gantt">Gantt</button>
+              <button type="button" class="project-sub-tab" data-subtab="competidores">Competidores</button>
+              <button type="button" class="project-sub-tab" data-subtab="actividad">Actividad</button>
+              <button type="button" class="project-sub-tab" data-subtab="equipo">Equipo</button>
+              <button type="button" class="project-sub-tab" data-subtab="creative">Creativo</button>
+            </div>
+
+            <!-- SUB-TAB: Overview -->
+            <div class="project-sub-content" id="subtab-overview">
+              <div id="overviewContent"></div>
+            </div>
+
+            <!-- SUB-TAB: Gantt -->
+            <div class="project-sub-content" id="subtab-gantt">
+              <div class="gantt-header">
+                <h3>Cronograma de Campaña</h3>
+                <span class="gantt-meta" id="ganttMeta"></span>
+                <button type="button" class="btn-sync-notion" id="syncNotionBtn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                  Sync → Notion
+                </button>
+              </div>
+              <div class="gantt-container" id="ganttContainer"></div>
+            </div>
+
+            <!-- SUB-TAB: Competidores -->
+            <div class="project-sub-content" id="subtab-competidores">
+              <div id="competidoresContent"></div>
+            </div>
+
+            <!-- SUB-TAB: Actividad -->
+            <div class="project-sub-content" id="subtab-actividad">
+              <div id="actividadContent"></div>
+            </div>
+
+            <!-- SUB-TAB: Equipo -->
+            <div class="project-sub-content" id="subtab-equipo">
+              <div class="equipo-header">
+                <h4>Agentes asignados a esta campaña</h4>
+                <span class="equipo-hint">Clic para asignar o quitar</span>
+              </div>
+              <div class="equipo-assigned" id="equipoAssigned"></div>
+              <div class="equipo-roster" id="equipoRoster"></div>
             </div>
 
             <!-- SUB-TAB: Brief -->
@@ -665,19 +734,6 @@
                 <button type="button" id="iterateBtn">Enviar →</button>
               </div>
               <div class="concept-output hidden" id="conceptOutput"></div>
-            </div>
-
-            <!-- SUB-TAB: Gantt -->
-            <div class="project-sub-content" id="subtab-gantt">
-              <div class="gantt-header">
-                <h3>Cronograma de Campaña</h3>
-                <span class="gantt-meta" id="ganttMeta"></span>
-                <button type="button" class="btn-sync-notion" id="syncNotionBtn">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                  Sync → Notion
-                </button>
-              </div>
-              <div class="gantt-container" id="ganttContainer"></div>
             </div>
           </div>
 
@@ -716,8 +772,18 @@
                     <input type="email" name="contactEmail" placeholder="contacto@marca.cl">
                   </div>
                   <div class="form-group">
+                    <label>Página web del cliente</label>
+                    <input type="url" name="website" placeholder="https://marcacliente.cl">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
                     <label>Presupuesto estimado</label>
                     <input type="text" name="budget" placeholder="Ej: $5.000.000 CLP">
+                  </div>
+                  <div class="form-group">
+                    <label>Instagram del cliente</label>
+                    <input type="text" name="clientIg" placeholder="@marcacliente">
                   </div>
                 </div>
                 <div class="form-group full">
