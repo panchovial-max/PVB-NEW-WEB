@@ -58,37 +58,36 @@
         .topbar-title { font-size: 13px; font-weight: 600; }
         .topbar-right { display: flex; align-items: center; gap: 12px; }
 
-        .nav-tabs { display: flex; gap: 2px; }
-        .nav-tab {
-            padding: 6px 14px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
-            background: none; border: none; color: var(--muted); cursor: pointer;
-            font-family: inherit; border-bottom: 2px solid transparent; transition: all .15s;
-        }
-        .nav-tab.active { color: var(--text); border-bottom-color: var(--text); }
-        .nav-tab:hover { color: var(--text); }
-
         .main { display: flex; flex: 1; }
 
         /* ── SIDEBAR ── */
         .sidebar {
-            width: 220px; background: var(--surface); border-right: 1px solid var(--border);
-            padding: 20px 0; flex-shrink: 0; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto;
+            width: 236px; background: #0d0d0d; border-right: 1px solid var(--border);
+            padding: 16px 0; flex-shrink: 0; position: sticky; top: 56px;
+            height: calc(100vh - 56px); overflow-y: auto;
         }
-        .sidebar-section { margin-bottom: 28px; }
-        .sidebar-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); padding: 0 16px; margin-bottom: 8px; }
+        .sidebar-section { margin-bottom: 24px; }
+        .sidebar-label {
+            font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+            color: var(--subtle); padding: 0 16px; margin-bottom: 6px; display: block;
+        }
         .sidebar-item {
             display: flex; align-items: center; gap: 10px;
-            padding: 8px 16px; cursor: pointer; transition: background .15s;
-            font-size: 13px; color: var(--muted); border: none; background: none;
+            padding: 9px 16px; cursor: pointer; transition: background .12s, color .12s;
+            font-size: 13px; color: #888; border: none; background: none;
             width: 100%; text-align: left; font-family: inherit;
+            border-left: 2px solid transparent;
         }
-        .sidebar-item:hover { background: var(--surface2); color: var(--text); }
-        .sidebar-item.active { background: var(--surface2); color: var(--text); }
+        .sidebar-item:hover { background: #161616; color: #ddd; }
+        .sidebar-item.active {
+            background: #1a1a1a; color: #fff; border-left-color: #fff;
+        }
         .sidebar-count {
-            margin-left: auto; font-size: 10px; background: var(--border2);
-            padding: 2px 7px; border-radius: 10px; color: var(--muted);
+            margin-left: auto; font-size: 10px; background: #222;
+            padding: 2px 7px; border-radius: 10px; color: #666;
         }
-        .sidebar-item.active .sidebar-count { background: #333; color: #aaa; }
+        .sidebar-item.active .sidebar-count { background: #2a2a2a; color: #aaa; }
+        .sidebar-divider { height: 1px; background: var(--border); margin: 12px 16px; }
 
         /* ── CONTENT ── */
         .content { flex: 1; padding: 24px; overflow-y: auto; }
@@ -352,11 +351,6 @@
         <div class="topbar-left">
             <a href="/dashboard" class="topbar-logo">PVB</a>
             <span class="topbar-title">Production CRM</span>
-            <div class="nav-tabs">
-                <button type="button" class="nav-tab active" onclick="showView('providers')">Proveedores</button>
-                <button type="button" class="nav-tab" onclick="showView('projects')">Proyectos</button>
-                <button type="button" class="nav-tab" onclick="showView('new-project')">+ Nuevo Proyecto</button>
-            </div>
         </div>
         <div class="topbar-right">
             <button type="button" class="btn btn-ghost btn-sm" onclick="refreshData()">↻ Actualizar</button>
@@ -367,12 +361,25 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
+
+            <!-- NAVEGACIÓN PRINCIPAL -->
             <div class="sidebar-section">
-                <p class="sidebar-label">Mensajes</p>
-                <button type="button" class="sidebar-item" onclick="showView('inbox')">
+                <p class="sidebar-label">Vistas</p>
+                <button type="button" class="sidebar-item active" id="nav-providers" onclick="showView('providers')">
+                    🧍 Proveedores <span class="sidebar-count" id="cnt-nav-providers">0</span>
+                </button>
+                <button type="button" class="sidebar-item" id="nav-projects" onclick="showView('projects')">
+                    🗂 Proyectos
+                </button>
+                <button type="button" class="sidebar-item" id="nav-inbox" onclick="showView('inbox')">
                     💬 Inbox <span class="sidebar-count inbox-badge" id="inboxBadge">0</span>
                 </button>
+                <button type="button" class="sidebar-item" id="nav-new-project" onclick="showView('new-project')">
+                    ＋ Nuevo Proyecto
+                </button>
             </div>
+
+            <div class="sidebar-divider"></div>
 
             <div class="sidebar-section" id="sidebarProviders">
                 <p class="sidebar-label">Categoría</p>
@@ -504,15 +511,18 @@
                 ? allProviders.length
                 : allProviders.filter(p => p.category === cat).length;
         });
+        const navCount = document.getElementById('cnt-nav-providers');
+        if (navCount) navCount.textContent = allProviders.length;
     }
 
     // ── VIEWS ──
     function showView(view) {
         currentView = view;
-        document.querySelectorAll('.nav-tab').forEach((t, i) => {
-            t.classList.toggle('active', ['providers','projects','inbox','new-project'][i] === view);
+        // Mark active nav item in sidebar
+        ['providers','projects','inbox','new-project'].forEach(v => {
+            const el = document.getElementById('nav-' + v);
+            if (el) el.classList.toggle('active', v === view);
         });
-        document.getElementById('sidebar').style.display = 'block';
         document.getElementById('sidebarProviders').style.display = view === 'providers' ? 'block' : 'none';
         document.getElementById('sidebarStatus').style.display = view === 'providers' ? 'block' : 'none';
         renderView();
