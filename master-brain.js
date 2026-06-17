@@ -4353,7 +4353,7 @@ async function loadNotionHub(force = false) {
   }
 }
 
-const STATUS_COLORS = {
+const NOTION_STATUS_COLORS = {
   Active: '#4CAF50', Onboarding: '#FF9800', Paused: '#607D8B', Churned: '#F44336',
   'Pre-Production': '#2196F3', Production: '#9C27B0', Delivered: '#4CAF50',
   Brainstorming: '#FF9800', Archived: '#607D8B',
@@ -4362,7 +4362,7 @@ const STATUS_COLORS = {
 
 function statusChip(s) {
   if (!s) return '';
-  const color = STATUS_COLORS[s] || '#888';
+  const color = NOTION_STATUS_COLORS[s] || '#888';
   return `<span class="notion-chip" style="background:${color}22;color:${color};border-color:${color}44">${s}</span>`;
 }
 
