@@ -704,6 +704,24 @@ export default async function handler(req, res) {
             deadline:   { type: 'string', description: 'Fecha de lanzamiento YYYY-MM-DD' },
           }},
         },
+        {
+          name: 'list_drive_folder',
+          description: 'Lista las imágenes en una carpeta de Google Drive. Usar cuando el usuario mencione "fotos de Drive", "imágenes del cliente", "ver qué hay en Drive".',
+          input_schema: { type: 'object', required: ['folderUrl'], properties: {
+            folderUrl: { type: 'string', description: 'URL completa de la carpeta Google Drive (ej: https://drive.google.com/drive/folders/1ABC...)' },
+          }},
+        },
+        {
+          name: 'generate_catalog',
+          description: 'Genera un catálogo HTML profesional con fotos reales desde una carpeta de Drive. Cruza con inventario Supabase si el cliente es UCars. Guarda el resultado en la misma carpeta Drive. Usar cuando pidan catálogo, fichas de autos, material de venta, brochure de productos.',
+          input_schema: { type: 'object', required: ['folderUrl', 'clientName'], properties: {
+            folderUrl:   { type: 'string', description: 'URL de la carpeta Drive con las fotos' },
+            clientName:  { type: 'string', description: 'Nombre del cliente (ej: UCars)' },
+            style:       { type: 'string', enum: ['catalog', 'social', 'whatsapp'], description: 'Tipo de output: catalog=PDF/web, social=cards IG, whatsapp=fichas compactas. Default: catalog' },
+            title:       { type: 'string', description: 'Título del catálogo. Si no se provee, se genera automáticamente.' },
+            maxItems:    { type: 'number', description: 'Máximo de autos a incluir. Default: 12.' },
+          }},
+        },
       ];
 
       async function runTool(name, input) {
@@ -816,6 +834,115 @@ export default async function handler(req, res) {
         if (name === 'delete_project_local') {
           if (!input.confirm) return { command: { type: 'show_toast', message: '⚠️ ¿Confirmas eliminar el proyecto? Responde "sí, eliminar" para confirmar.', level: 'warning' } };
           return { command: { type: 'delete_project_local', id: input.id } };
+        }
+
+        if (name === 'list_drive_folder') {
+          const { listFolderImages } = await import('../lib/google-drive.js');
+          const folderId = input.folderUrl.match(/folders\/([a-zA-Z0-9_-]+)/)?.[1] || input.folderUrl;
+          const images = await listFolderImages(folderId);
+          return { ok: true, count: images.length, folderId, images };
+        }
+
+        if (name === 'generate_catalog') {
+          const { listFolderImages, saveToFolder } = await import('../lib/google-drive.js');
+          const folderId = input.folderUrl.match(/folders\/([a-zA-Z0-9_-]+)/)?.[1] || input.folderUrl;
+          const maxItems = input.maxItems || 12;
+
+          // 1. List images from Drive
+          const images = await listFolderImages(folderId);
+          if (!images.length) return { ok: false, error: 'No se encontraron imágenes en la carpeta.' };
+
+          // 2. Build car data — try Supabase cross-reference for UCars
+          let carsData = images.slice(0, maxItems).map(img => ({
+            imageUrl: img.embedUrl,
+            name: img.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
+            model: '', year: '', price: '', km: '', transmission: '', color: '',
+          }));
+
+          const isUCars = /ucars|u-cars/i.test(input.clientName);
+          if (isUCars) {
+            try {
+              const { createClient } = await import('@supabase/supabase-js');
+              const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+              const { data: vehicles } = await sb.from('stock_vehicles').select('*').eq('status', 'available').limit(50);
+              if (vehicles?.length) {
+                carsData = images.slice(0, maxItems).map(img => {
+                  const base = img.name.toLowerCase().replace(/\.[^.]+$/, '');
+                  const match = vehicles.find(v =>
+                    base.includes((v.model || '').toLowerCase()) || base.includes((v.make || '').toLowerCase())
+                  );
+                  return {
+                    imageUrl: img.embedUrl,
+                    name: match ? `${match.make} ${match.model}` : img.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
+                    year: match?.year || '',
+                    price: match?.price ? `$ ${Number(match.price).toLocaleString('es-CL')}` : '',
+                    km: match?.mileage ? `${Number(match.mileage).toLocaleString('es-CL')} km` : '',
+                    transmission: match?.transmission || '',
+                    color: match?.color || '',
+                    badge: match?.vehicle_type || '',
+                  };
+                });
+              }
+            } catch { /* non-blocking — use filename data */ }
+          }
+
+          // 3. Generate HTML via Codex/GPT-4o
+          const style = input.style || 'catalog';
+          const catalogTitle = input.title || `Catálogo ${input.clientName} — ${new Date().toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })}`;
+
+          const styleInstructions = {
+            catalog: 'Catálogo imprimible tipo PDF: 2 columnas, fondo blanco, tipografía profesional. Header oscuro con logo placeholder. Footer con datos de contacto.',
+            social: 'Cards cuadradas estilo Instagram: foto full-bleed, texto mínimo en overlay, colores vibrantes. Grid 3 columnas.',
+            whatsapp: 'Fichas compactas para WhatsApp: 1 columna, foto pequeña a la izquierda, info a la derecha, fondo muy claro, fácil de leer en móvil.',
+          }[style];
+
+          const gptRes = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+            body: JSON.stringify({
+              model: 'gpt-4o',
+              max_tokens: 6000,
+              messages: [{
+                role: 'user',
+                content: `Genera un catálogo HTML profesional de autos para ${input.clientName}.
+
+Título: "${catalogTitle}"
+Estilo requerido: ${styleInstructions}
+Datos de autos (JSON): ${JSON.stringify(carsData, null, 2)}
+
+Requisitos técnicos:
+- HTML completamente self-contained (todo inline: CSS en <style>, sin libs externas)
+- Imágenes: usar exactamente las imageUrl provistas como src del <img> (son URLs de Google Drive)
+- Si imageUrl falla, mostrar un placeholder gris elegante con el nombre del auto
+- Idioma: español
+- Precio en formato chileno con punto de miles
+- Botón CTA por auto: "Consultar" en color #E63946
+- Responsive y print-ready (@media print que oculte CTAs)
+- Solo HTML puro, sin markdown, sin explicación, sin \`\`\`html`,
+              }],
+            }),
+          });
+          const gptData = await gptRes.json();
+          let html = gptData.choices?.[0]?.message?.content || '';
+          html = html.replace(/^```html\n?|\n?```$/g, '').trim();
+
+          if (!html) return { ok: false, error: 'No se pudo generar el catálogo.' };
+
+          // 4. Save HTML to Drive folder
+          let savedUrl = null;
+          try {
+            const slug = input.clientName.toLowerCase().replace(/\s+/g, '-');
+            const filename = `catalogo-${slug}-${new Date().toISOString().slice(0, 10)}.html`;
+            const saved = await saveToFolder(folderId, filename, html);
+            savedUrl = saved.webViewLink;
+          } catch { /* non-blocking */ }
+
+          return {
+            ok: true,
+            carsIncluded: carsData.length,
+            savedUrl,
+            command: { type: 'open_catalog', url: savedUrl, html, title: catalogTitle },
+          };
         }
 
         if (name === 'execute_concept') {

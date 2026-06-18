@@ -2190,6 +2190,8 @@ function executeVBCommands(commands = []) {
 
     } else if (cmd.type === 'execute_concept_done') {
       showConceptExecutedPanel(cmd);
+    } else if (cmd.type === 'open_catalog') {
+      showCatalogPanel(cmd);
     }
   }
 }
@@ -2250,6 +2252,45 @@ function showConceptExecutedPanel(data) {
     if (notionId) { newProj.notion_page_id = notionId; saveProjects(); }
   }
   showVBToast(`🚀 Pipeline completo — "${data.clientName}" listo`, 'success');
+}
+
+// ── Catalog Preview Panel ────────────────────────────────────────
+function showCatalogPanel(data) {
+  document.getElementById('catalogPanel')?.remove();
+
+  const panel = document.createElement('div');
+  panel.id = 'catalogPanel';
+  panel.style.cssText = `
+    position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:9000;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px;
+  `;
+  panel.innerHTML = `
+    <div style="background:#1a1a1a; border-radius:12px; width:100%; max-width:1100px; max-height:90vh;
+      display:flex; flex-direction:column; overflow:hidden; border:1px solid #333;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 20px;
+        border-bottom:1px solid #333; background:#111; flex-shrink:0;">
+        <span style="font-weight:600; color:#fff; font-size:15px;">📄 ${data.title || 'Catálogo generado'}</span>
+        <div style="display:flex; gap:10px; align-items:center;">
+          ${data.url ? `<a href="${data.url}" target="_blank"
+            style="background:#4CAF50; color:#fff; padding:6px 14px; border-radius:6px;
+            font-size:13px; text-decoration:none; font-weight:600;">Abrir en Drive ↗</a>` : ''}
+          <button onclick="document.getElementById('catalogPanel')?.remove()"
+            style="background:none; border:none; color:#999; font-size:22px; cursor:pointer; line-height:1;">×</button>
+        </div>
+      </div>
+      <iframe id="catalogFrame" style="flex:1; border:none; background:#fff;"
+        sandbox="allow-same-origin allow-popups"></iframe>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  if (data.html) {
+    const frame = panel.querySelector('#catalogFrame');
+    const blob = new Blob([data.html], { type: 'text/html' });
+    frame.src = URL.createObjectURL(blob);
+  } else if (data.url) {
+    panel.querySelector('#catalogFrame').src = data.url;
+  }
 }
 
 // ── Hub Chat + Voice ─────────────────────────────────────────────
