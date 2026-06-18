@@ -257,10 +257,11 @@ export default async function handler(req, res) {
 
       const proyectos = (proyectosRes.results || []).map(p => ({
         id: p.id,
-        nombre: getText(p, 'Nombre') || getText(p, 'Name') || getText(p, 'Proyecto') || '—',
+        nombre: getText(p, 'Cuentas') || getText(p, 'Nombre') || getText(p, 'Name') || getText(p, 'Proyecto') || '—',
         estado: getSelect(p, 'Estado'),
-        cliente: getSelect(p, 'Cliente') || getText(p, 'Cliente'),
-        fecha: getDate(p, 'Fecha inicio') || getDate(p, 'Fecha'),
+        cliente: getSelect(p, 'Cliente') || getText(p, 'Cliente') || '',
+        fecha: getDate(p, 'Fecha Inicio') || getDate(p, 'Fecha inicio') || getDate(p, 'Fecha'),
+        driveFolder: p.properties?.['Drive Folder']?.url || null,
         url: p.url,
       }));
 
@@ -479,10 +480,11 @@ export default async function handler(req, res) {
         const getText = (p, key) => p.properties?.[key]?.title?.[0]?.plain_text || p.properties?.[key]?.rich_text?.[0]?.plain_text || '';
         const projects = (data.results || []).map(p => ({
           id: p.id,
-          nombre: getText(p, 'Nombre') || getText(p, 'Name') || getText(p, 'Proyecto') || '—',
+          nombre: getText(p, 'Cuentas') || getText(p, 'Nombre') || getText(p, 'Name') || getText(p, 'Proyecto') || '—',
           estado: p.properties?.Estado?.select?.name || '—',
-          cliente: p.properties?.Cliente?.select?.name || getText(p, 'Cliente') || '—',
-          fecha: p.properties?.['Fecha inicio']?.date?.start || p.properties?.Fecha?.date?.start || null,
+          cliente: p.properties?.Cliente?.select?.name || getText(p, 'Cliente') || '',
+          fecha: p.properties?.['Fecha Inicio']?.date?.start || p.properties?.['Fecha inicio']?.date?.start || p.properties?.Fecha?.date?.start || null,
+          driveFolder: p.properties?.['Drive Folder']?.url || null,
           launchDate: p.properties?.['Fecha lanzamiento']?.date?.start || p.properties?.['Launch Date']?.date?.start || null,
           objetivo: getText(p, 'Objetivo') || getText(p, 'Descripción') || '',
           cover: p.cover?.external?.url || p.cover?.file?.url || null,
@@ -729,10 +731,11 @@ export default async function handler(req, res) {
           const data = await r.json();
           return (data.results || []).map(p => ({
             id: p.id,
-            nombre: getText(p, 'Nombre') || getText(p, 'Name') || getText(p, 'Proyecto') || '—',
+            nombre: getText(p, 'Cuentas') || getText(p, 'Nombre') || getText(p, 'Name') || getText(p, 'Proyecto') || '—',
             estado: p.properties?.Estado?.select?.name,
-            cliente: p.properties?.Cliente?.select?.name || getText(p, 'Cliente'),
-            fecha: p.properties?.['Fecha inicio']?.date?.start || p.properties?.Fecha?.date?.start,
+            cliente: p.properties?.Cliente?.select?.name || getText(p, 'Cliente') || '',
+            fecha: p.properties?.['Fecha Inicio']?.date?.start || p.properties?.['Fecha inicio']?.date?.start || p.properties?.Fecha?.date?.start,
+            driveFolder: p.properties?.['Drive Folder']?.url || null,
           }));
         }
         if (name === 'complete_task') {
@@ -765,11 +768,10 @@ export default async function handler(req, res) {
         }
         if (name === 'create_project') {
           const props = {
-            Nombre: { title: [{ text: { content: input.nombre } }] },
-            Estado: { select: { name: input.estado || 'En pausa' } },
+            Cuentas: { title: [{ text: { content: input.nombre } }] },
+            Estado: { select: { name: input.estado || 'Brief' } },
           };
-          if (input.cliente) props.Cliente = { select: { name: input.cliente } };
-          if (input.fecha) props['Fecha inicio'] = { date: { start: input.fecha } };
+          if (input.fecha) props['Fecha Inicio'] = { date: { start: input.fecha } };
           const r = await fetch('https://api.notion.com/v1/pages', { method: 'POST', headers: NH, body: JSON.stringify({ parent: { database_id: DB_PROJECTS }, properties: props }) });
           const data = await r.json();
           return { ok: r.ok, id: data.id };
@@ -820,12 +822,12 @@ export default async function handler(req, res) {
           const DB_CLIENTES = '185296d3-8790-420b-aa31-9ccc55ceb468';
           const { brief, clientName, objective, format, budget, tone, deadline } = input;
 
-          // 1. Look up client in Notion → find Drive folder URL
+          // 1. Look up client in Notion (Clientes DB) → find Drive folder URL
           let driveFolder = null;
           try {
             const cr = await fetch(`https://api.notion.com/v1/databases/${DB_CLIENTES}/query`, {
               method: 'POST', headers: NH,
-              body: JSON.stringify({ filter: { property: 'Cliente', title: { contains: clientName } }, page_size: 1 })
+              body: JSON.stringify({ filter: { property: 'Brand Name', title: { contains: clientName } }, page_size: 1 })
             });
             const cd = await cr.json();
             const cp = cd.results?.[0];
@@ -833,7 +835,7 @@ export default async function handler(req, res) {
               driveFolder = cp.properties?.['Drive Folder']?.url
                 || cp.properties?.['Carpeta Drive']?.url
                 || cp.properties?.['Drive']?.url
-                || cp.properties?.['Google Drive']?.url
+                || cp.properties?.['Brand Guide URL']?.url
                 || null;
             }
           } catch { /* non-blocking */ }
@@ -842,11 +844,12 @@ export default async function handler(req, res) {
           let notionProject = { ok: false };
           try {
             const props = {
-              Nombre: { title: [{ text: { content: `${clientName} — ${brief.slice(0, 50)}` } }] },
-              Estado: { select: { name: 'En pausa' } },
-              Cliente: { select: { name: clientName } },
+              Cuentas: { title: [{ text: { content: `${clientName} — ${brief.slice(0, 50)}` } }] },
+              Estado: { select: { name: 'Brainstorming' } },
             };
-            if (deadline) props['Fecha inicio'] = { date: { start: deadline } };
+            if (deadline) props['Fecha Inicio'] = { date: { start: deadline } };
+            else props['Fecha Inicio'] = { date: { start: new Date().toISOString().slice(0, 10) } };
+            if (driveFolder) props['Drive Folder'] = { url: driveFolder };
             const pr = await fetch('https://api.notion.com/v1/pages', {
               method: 'POST', headers: NH,
               body: JSON.stringify({
