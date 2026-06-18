@@ -860,7 +860,7 @@ export default async function handler(req, res) {
           if (isUCars) {
             try {
               const { createClient } = await import('@supabase/supabase-js');
-              const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+              const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
               const { data } = await sb.from('stock_vehicles').select('*').eq('status', 'available').limit(50);
               vehicles = data || [];
             } catch { /* non-blocking */ }
