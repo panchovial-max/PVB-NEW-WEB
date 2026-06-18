@@ -2187,8 +2187,69 @@ function executeVBCommands(commands = []) {
         renderProjects();
         showVBToast(`Proyecto "${name}" eliminado`, 'warning');
       }
+
+    } else if (cmd.type === 'execute_concept_done') {
+      showConceptExecutedPanel(cmd);
     }
   }
+}
+
+function showConceptExecutedPanel(data) {
+  // Remove any existing panel
+  document.getElementById('conceptDonePanel')?.remove();
+
+  const panel = document.createElement('div');
+  panel.id = 'conceptDonePanel';
+  panel.className = 'concept-done-panel';
+  panel.innerHTML = `
+    <div class="concept-done-header">
+      <span class="concept-done-title">🚀 Pipeline ejecutado — ${data.clientName}</span>
+      <button class="modal-close" id="conceptDonePanelClose">×</button>
+    </div>
+    <div class="concept-done-body">
+      <p class="concept-done-brief">${data.brief?.slice(0, 200) || ''}${(data.brief?.length || 0) > 200 ? '…' : ''}</p>
+      <div class="concept-done-checklist">
+        <div class="concept-done-item ${data.notionUrl ? 'done' : 'fail'}">
+          ${data.notionUrl ? '✅' : '❌'} Proyecto Notion
+          ${data.notionUrl ? `<a href="${data.notionUrl}" target="_blank" class="notion-link">Abrir ↗</a>` : ''}
+        </div>
+        <div class="concept-done-item done">✅ ${data.tasksCreated || 6} tareas creadas en Notion</div>
+        <div class="concept-done-item ${data.videoPrompts ? 'done' : 'fail'}">
+          ${data.videoPrompts ? '✅' : '⚠️'} Prompts Higgsfield generados
+        </div>
+        ${data.driveFolder ? `<div class="concept-done-item done">✅ Carpeta Drive detectada <a href="${data.driveFolder}" target="_blank" class="notion-link">Abrir ↗</a></div>` : '<div class="concept-done-item warn">⚠️ Carpeta Drive no encontrada en Notion</div>'}
+        <div class="concept-done-item done">✅ Equipo notificado por Telegram</div>
+      </div>
+      ${data.videoPrompts ? `
+        <div class="concept-done-section">
+          <div class="concept-done-section-title">🎬 Prompts para Higgsfield</div>
+          <pre class="concept-done-prompts">${data.videoPrompts.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+          <button class="concept-done-copy" id="copyPromptsBtn">Copiar prompts</button>
+        </div>` : ''}
+      ${data.deadline ? `<div class="concept-done-deadline">📅 Launch: <strong>${data.deadline}</strong></div>` : ''}
+    </div>`;
+
+  document.body.appendChild(panel);
+  document.getElementById('conceptDonePanelClose')?.addEventListener('click', () => panel.remove());
+  document.getElementById('copyPromptsBtn')?.addEventListener('click', () => {
+    navigator.clipboard.writeText(data.videoPrompts || '').then(() => showVBToast('Prompts copiados ✓', 'success'));
+  });
+
+  // Also create local project automatically
+  const newProj = createProject({
+    name: `${data.clientName} — ${(data.brief || '').slice(0, 45)}`,
+    client: data.clientName,
+    launchDate: data.deadline || null,
+    objective: data.brief?.slice(0, 150) || '',
+    notes: data.videoPrompts ? `## Prompts Higgsfield\n${data.videoPrompts}` : '',
+    notion_page_id: null,
+  });
+  renderProjects();
+  if (data.notionUrl) {
+    const notionId = data.notionUrl?.split('/').pop()?.replace(/-/g, '');
+    if (notionId) { newProj.notion_page_id = notionId; saveProjects(); }
+  }
+  showVBToast(`🚀 Pipeline completo — "${data.clientName}" listo`, 'success');
 }
 
 // ── Hub Chat + Voice ─────────────────────────────────────────────

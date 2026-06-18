@@ -689,6 +689,19 @@ export default async function handler(req, res) {
             confirm: { type: 'boolean', description: 'true solo si el usuario confirmó explícitamente la eliminación' },
           }},
         },
+        {
+          name: 'execute_concept',
+          description: 'Ejecuta un concepto aprobado después de brainstorm: crea proyecto Notion con brief + 6 tareas automáticas + 3 prompts Higgsfield + notifica Telegram + detecta carpeta Drive del cliente desde Notion. USAR cuando el usuario diga "aprobado", "ejecutar", "lanzar", "vamos con esto", "dale", "hacemos esto" después de una sesión creativa.',
+          input_schema: { type: 'object', required: ['brief', 'clientName'], properties: {
+            brief:      { type: 'string', description: 'Resumen completo del concepto aprobado — captura la esencia del brainstorm' },
+            clientName: { type: 'string', description: 'Nombre del cliente exacto: UCars | Kaya Unite | Refugio Chiloé u otro' },
+            objective:  { type: 'string', description: 'awareness | leads | conversión | engagement | retención' },
+            format:     { type: 'string', description: 'video | carousel | imagen | stories | reels | mixed' },
+            budget:     { type: 'string', description: 'Presupuesto estimado ej: $500/mes o $2.000.000 CLP' },
+            tone:       { type: 'string', description: 'aspiracional | divertido | urgencia | premium | cercano | formal' },
+            deadline:   { type: 'string', description: 'Fecha de lanzamiento YYYY-MM-DD' },
+          }},
+        },
       ];
 
       async function runTool(name, input) {
@@ -802,6 +815,114 @@ export default async function handler(req, res) {
           if (!input.confirm) return { command: { type: 'show_toast', message: '⚠️ ¿Confirmas eliminar el proyecto? Responde "sí, eliminar" para confirmar.', level: 'warning' } };
           return { command: { type: 'delete_project_local', id: input.id } };
         }
+
+        if (name === 'execute_concept') {
+          const DB_CLIENTES = '185296d3-8790-420b-aa31-9ccc55ceb468';
+          const { brief, clientName, objective, format, budget, tone, deadline } = input;
+
+          // 1. Look up client in Notion → find Drive folder URL
+          let driveFolder = null;
+          try {
+            const cr = await fetch(`https://api.notion.com/v1/databases/${DB_CLIENTES}/query`, {
+              method: 'POST', headers: NH,
+              body: JSON.stringify({ filter: { property: 'Cliente', title: { contains: clientName } }, page_size: 1 })
+            });
+            const cd = await cr.json();
+            const cp = cd.results?.[0];
+            if (cp) {
+              driveFolder = cp.properties?.['Drive Folder']?.url
+                || cp.properties?.['Carpeta Drive']?.url
+                || cp.properties?.['Drive']?.url
+                || cp.properties?.['Google Drive']?.url
+                || null;
+            }
+          } catch { /* non-blocking */ }
+
+          // 2. Create Notion project with brief as page body
+          let notionProject = { ok: false };
+          try {
+            const props = {
+              Nombre: { title: [{ text: { content: `${clientName} — ${brief.slice(0, 50)}` } }] },
+              Estado: { select: { name: 'En pausa' } },
+              Cliente: { select: { name: clientName } },
+            };
+            if (deadline) props['Fecha inicio'] = { date: { start: deadline } };
+            const pr = await fetch('https://api.notion.com/v1/pages', {
+              method: 'POST', headers: NH,
+              body: JSON.stringify({
+                parent: { database_id: DB_PROJECTS }, properties: props,
+                children: [{ type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content:
+                  `BRIEF APROBADO:\n${brief}\n\nObjetivo: ${objective || '—'} | Formato: ${format || '—'} | Budget: ${budget || '—'} | Tono: ${tone || '—'}${driveFolder ? `\n\nDrive cliente: ${driveFolder}` : ''}`
+                } }] } }]
+              })
+            });
+            const pd = await pr.json();
+            notionProject = { ok: pr.ok, id: pd.id, url: pd.url };
+          } catch (e) { notionProject = { ok: false, error: e.message }; }
+
+          // 3. Auto-generate 6 tasks with sequential dates
+          let tasksCreated = 0;
+          try {
+            const today = new Date();
+            const taskDefs = [
+              { tarea: `[${clientName}] Brief detallado y referencias visuales`, dias: 1, prioridad: 'Alta' },
+              { tarea: `[${clientName}] Diseño en Figma — ${format || 'creativos ads'}`, dias: 3, prioridad: 'Alta' },
+              { tarea: `[${clientName}] Producción y edición de creativos`, dias: 5, prioridad: 'Alta' },
+              { tarea: `[${clientName}] Review y aprobación de creativos`, dias: 6, prioridad: 'Media' },
+              { tarea: `[${clientName}] Setup campaña Meta Ads y segmentación`, dias: 7, prioridad: 'Alta' },
+              { tarea: `[${clientName}] Lanzamiento y monitoreo D1`, dias: 8, prioridad: 'Alta' },
+            ];
+            await Promise.all(taskDefs.map(async t => {
+              const d = new Date(today);
+              d.setDate(d.getDate() + t.dias);
+              await fetch('https://api.notion.com/v1/pages', {
+                method: 'POST', headers: NH,
+                body: JSON.stringify({ parent: { database_id: DB_TASKS }, properties: {
+                  Tarea:    { title: [{ text: { content: t.tarea } }] },
+                  Fecha:    { date: { start: d.toISOString().slice(0, 10) } },
+                  Prioridad:{ select: { name: t.prioridad } },
+                  Contexto: { select: { name: 'PVB' } },
+                }})
+              });
+              tasksCreated++;
+            }));
+          } catch { /* non-blocking */ }
+
+          // 4. Generate 3 Higgsfield video prompts via LLM
+          let videoPrompts = '';
+          try {
+            const vr = await llm.messages.create({
+              max_tokens: 350,
+              system: 'Eres director creativo de video IA. Genera prompts concisos en inglés para Higgsfield.',
+              messages: [{ role: 'user', content: `3 prompts cinematicos para Higgsfield:\nCliente: ${clientName}\nConcepto: ${brief}\nTono: ${tone || 'aspiracional'}\nFormato: ${format || '9:16 reels'}\n\nFormato de respuesta:\n1. [prompt en inglés, máx 2 oraciones]\n2. [prompt]\n3. [prompt]` }]
+            });
+            videoPrompts = vr.content.find(b => b.type === 'text')?.text || '';
+          } catch { /* non-blocking */ }
+
+          // 5. Telegram team notification
+          try {
+            const BOT = process.env.TELEGRAM_BOT_TOKEN, CHAT = process.env.TELEGRAM_CHAT_ID;
+            if (BOT && CHAT) {
+              const msg = `🚀 *CONCEPTO APROBADO — ${clientName}*\n\n📋 ${brief.slice(0, 280)}\n\n🎯 ${objective || '—'} | 📐 ${format || '—'} | 💰 ${budget || '—'}\n📅 Launch: ${deadline || 'por definir'}${driveFolder ? `\n📁 Drive: ${driveFolder}` : ''}\n\n✅ Notion + ${tasksCreated} tareas + prompts Higgsfield generados`;
+              await fetch(`https://api.telegram.org/bot${BOT}/sendMessage`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT, text: msg, parse_mode: 'Markdown' })
+              });
+            }
+          } catch { /* non-blocking */ }
+
+          return {
+            ok: true, tasksCreated, videoPrompts, driveFolder,
+            notion: notionProject,
+            command: {
+              type: 'execute_concept_done',
+              clientName, brief, deadline,
+              notionUrl: notionProject.url,
+              driveFolder, videoPrompts, tasksCreated,
+            }
+          };
+        }
+
         return { error: 'Unknown tool' };
       }
 
