@@ -89,6 +89,7 @@
             <button type="button" class="brain-tab" data-tab="clients">Clientes <span class="tab-badge hidden" id="clientsBadge">0</span></button>
             <button type="button" class="brain-tab" data-tab="notion">Notion <span class="tab-badge hidden" id="notionBadge">0</span></button>
             <button type="button" class="brain-tab" data-tab="esperanza">Esperanza 🌟</button>
+            <button type="button" class="brain-tab" data-tab="meta-ads">Ads 📊</button>
             <button type="button" class="brain-tab" data-tab="proposals">Reportes <span class="tab-badge tab-badge--hidden" id="proposalBadge">0</span></button>
             <button type="button" class="brain-tab" data-tab="departments">Departments</button>
             <button type="button" class="brain-tab" data-tab="agents">All Agents</button>
@@ -300,6 +301,117 @@
                 <div class="esp-note-row">
                     <textarea class="accounts-input accounts-textarea" id="espNoteInput" placeholder="Notas internas…" rows="2"></textarea>
                     <button type="button" class="action-btn" id="espNoteSave">Guardar nota</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Meta Ads — Performance Hub -->
+        <section class="brain-tab-content" id="tab-meta-ads">
+            <div class="section-header">
+                <h2 class="section-title">Meta Ads <span class="accounts-badge">Performance Hub</span></h2>
+                <button type="button" class="action-btn" id="adsRefreshBtn">↻ Actualizar</button>
+            </div>
+
+            <!-- KPI Strip -->
+            <div class="ads-kpi-strip" id="adsKpiStrip">
+                <div class="ads-kpi-card"><div class="ads-kpi-label">Gasto 7d</div><div class="ads-kpi-value" id="kpiSpend">—</div></div>
+                <div class="ads-kpi-card"><div class="ads-kpi-label">Alcance</div><div class="ads-kpi-value" id="kpiReach">—</div></div>
+                <div class="ads-kpi-card"><div class="ads-kpi-label">CTR</div><div class="ads-kpi-value" id="kpiCtr">—</div></div>
+                <div class="ads-kpi-card"><div class="ads-kpi-label">CPM</div><div class="ads-kpi-value" id="kpiCpm">—</div></div>
+                <div class="ads-kpi-card"><div class="ads-kpi-label">Clicks</div><div class="ads-kpi-value" id="kpiClicks">—</div></div>
+            </div>
+
+            <!-- Valentina Quick Chat -->
+            <div class="ads-valentina-bar">
+                <div class="ads-valentina-avatar">V</div>
+                <input type="text" id="adsValentinaInput" class="ads-valentina-input" placeholder="Valentina, ¿cómo va UCars esta semana? / pausa campaña X / qué audiencias saturar...">
+                <button type="button" class="ads-valentina-send" id="adsValentinaSend">→</button>
+            </div>
+            <div class="ads-valentina-response hidden" id="adsValentinaResponse"></div>
+
+            <!-- Campaigns Grid -->
+            <div class="notion-section">
+                <h3 class="notion-section-title">📣 Campañas</h3>
+                <div class="ads-campaigns-grid" id="adsCampaignsGrid">
+                    <div class="hub-loading">Cargando campañas…</div>
+                </div>
+            </div>
+
+            <!-- Studio Tools Row -->
+            <div class="ads-tools-row">
+                <div class="ads-tool-card">
+                    <div class="ads-tool-icon">🎨</div>
+                    <div class="ads-tool-name">Figma</div>
+                    <div class="ads-tool-desc">Assets y specs de diseño</div>
+                    <button type="button" class="ads-tool-btn" id="figmaOpenBtn">Abrir</button>
+                </div>
+                <div class="ads-tool-card">
+                    <div class="ads-tool-icon">🎬</div>
+                    <div class="ads-tool-name">Higgsfield</div>
+                    <div class="ads-tool-desc">Generar video con IA</div>
+                    <button type="button" class="ads-tool-btn" id="higgsfieldOpenBtn">Generar</button>
+                </div>
+                <div class="ads-tool-card">
+                    <div class="ads-tool-icon">💻</div>
+                    <div class="ads-tool-name">Codex</div>
+                    <div class="ads-tool-desc">GPT-4o dev agent</div>
+                    <button type="button" class="ads-tool-btn" id="codexOpenBtn">Usar</button>
+                </div>
+            </div>
+
+            <!-- Higgsfield Panel -->
+            <div class="ads-panel hidden" id="higgsfieldPanel">
+                <div class="ads-panel-header">
+                    <h3>🎬 Higgsfield — Video con IA</h3>
+                    <button type="button" class="modal-close" id="higgsfieldPanelClose">×</button>
+                </div>
+                <div class="ads-panel-body">
+                    <textarea id="higgsfieldPrompt" class="accounts-input accounts-textarea" rows="3" placeholder="Describe el video... Ej: 'Auto UCars saliendo de garage, luz dorada atardecer, estilo cinematográfico, slow motion'"></textarea>
+                    <div class="ads-panel-row">
+                        <select class="filter-select" id="higgsfieldStyle" title="Estilo de video">
+                            <option value="cinematic">Cinematográfico</option>
+                            <option value="social">Social Media</option>
+                            <option value="product">Product Showcase</option>
+                            <option value="documentary">Documental</option>
+                        </select>
+                        <select class="filter-select" id="higgsfieldAspect" title="Relación de aspecto">
+                            <option value="9:16">9:16 (Reels / Stories)</option>
+                            <option value="1:1">1:1 (Feed)</option>
+                            <option value="16:9">16:9 (YouTube)</option>
+                        </select>
+                        <button type="button" class="action-btn" id="higgsfieldGenerate">Generar ↗</button>
+                    </div>
+                    <div class="ads-panel-result hidden" id="higgsfieldResult"></div>
+                </div>
+            </div>
+
+            <!-- Figma Panel -->
+            <div class="ads-panel hidden" id="figmaPanel">
+                <div class="ads-panel-header">
+                    <h3>🎨 Figma — Design Files</h3>
+                    <button type="button" class="modal-close" id="figmaPanelClose">×</button>
+                </div>
+                <div class="ads-panel-body">
+                    <div id="figmaFilesList"><div class="hub-loading">Cargando archivos Figma…</div></div>
+                </div>
+            </div>
+
+            <!-- Codex Panel -->
+            <div class="ads-panel hidden" id="codexPanel">
+                <div class="ads-panel-header">
+                    <h3>💻 Codex — GPT-4o Dev Agent</h3>
+                    <button type="button" class="modal-close" id="codexPanelClose">×</button>
+                </div>
+                <div class="ads-panel-body">
+                    <textarea id="codexPrompt" class="accounts-input accounts-textarea" rows="3" placeholder="¿Qué necesitas construir? Ej: 'Escríbeme un script que tome el CSV de leads y lo suba a Supabase'"></textarea>
+                    <div class="ads-panel-row">
+                        <select class="filter-select" id="codexModel" title="Modelo GPT">
+                            <option value="gpt-4o">GPT-4o (recomendado)</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini (rápido)</option>
+                        </select>
+                        <button type="button" class="action-btn" id="codexRun">Ejecutar ↗</button>
+                    </div>
+                    <div class="ads-panel-result hidden" id="codexResult"></div>
                 </div>
             </div>
         </section>

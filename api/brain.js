@@ -1238,6 +1238,210 @@ Sé específica y visionaria. Sin ambigüedades.`,
       return res.status(200).json({ ok: true, clientes, campanas, tareas, ucars_campanas });
     }
 
+    // ── Meta Ads ──────────────────────────────────────────────────────────────
+    if (action === 'meta-ads') {
+      const metaToken = process.env.META_ACCESS_TOKEN;
+      const acctId   = process.env.META_AD_ACCOUNT_ID;
+      const sub      = req.query.sub || req.body?.sub || 'campaigns';
+
+      if (!metaToken || !acctId) {
+        return res.status(200).json({ ok: false, needsSetup: true, message: 'Configura META_ACCESS_TOKEN y META_AD_ACCOUNT_ID en Vercel → Settings → Environment Variables.' });
+      }
+
+      const BASE = 'https://graph.facebook.com/v20.0';
+
+      if (req.method !== 'POST') {
+        if (sub === 'campaigns') {
+          const fields = 'name,status,effective_status,objective,daily_budget,lifetime_budget,start_time,stop_time,insights.date_preset(last_7d){impressions,reach,clicks,ctr,cpm,spend,actions}';
+          const r = await fetch(`${BASE}/act_${acctId}/campaigns?fields=${encodeURIComponent(fields)}&access_token=${metaToken}`);
+          const data = await r.json();
+          if (data.error) return res.status(200).json({ ok: false, error: data.error.message });
+          return res.status(200).json({ ok: true, campaigns: data.data || [] });
+        }
+        if (sub === 'insights') {
+          const fields = 'impressions,reach,clicks,ctr,cpm,cpp,spend,actions,frequency';
+          const r = await fetch(`${BASE}/act_${acctId}/insights?fields=${encodeURIComponent(fields)}&date_preset=last_7d&access_token=${metaToken}`);
+          const data = await r.json();
+          if (data.error) return res.status(200).json({ ok: false, error: data.error.message });
+          return res.status(200).json({ ok: true, insights: data.data?.[0] || {} });
+        }
+        if (sub === 'account') {
+          const r = await fetch(`${BASE}/act_${acctId}?fields=name,currency,account_status,amount_spent,balance&access_token=${metaToken}`);
+          const data = await r.json();
+          if (data.error) return res.status(200).json({ ok: false, error: data.error.message });
+          return res.status(200).json({ ok: true, account: data });
+        }
+      }
+
+      if (req.method === 'POST') {
+        const { campaignId, newStatus } = req.body || {};
+        if (sub === 'toggle' && campaignId && newStatus) {
+          const r = await fetch(`${BASE}/${campaignId}?access_token=${metaToken}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+          });
+          const data = await r.json();
+          return res.status(200).json({ ok: !!data.success, data });
+        }
+      }
+      return res.status(400).json({ error: 'Unknown meta-ads sub' });
+    }
+
+    // ── Valentina Chat (Meta Ads specialist) ──────────────────────────────────
+    if (action === 'valentina-chat') {
+      if (req.method !== 'POST') return res.status(405).end();
+      const { message, history = [] } = req.body || {};
+      if (!message) return res.status(400).json({ error: 'message required' });
+
+      const metaToken = process.env.META_ACCESS_TOKEN;
+      const acctId   = process.env.META_AD_ACCOUNT_ID;
+
+      let adsCtx = '';
+      if (metaToken && acctId) {
+        try {
+          const BASE = 'https://graph.facebook.com/v20.0';
+          const fields = 'name,status,effective_status,objective,daily_budget,insights.date_preset(last_7d){impressions,reach,clicks,ctr,cpm,spend,frequency}';
+          const r = await fetch(`${BASE}/act_${acctId}/campaigns?fields=${encodeURIComponent(fields)}&access_token=${metaToken}`);
+          const data = await r.json();
+          if (data.data?.length) {
+            const lines = data.data.map(c => {
+              const ins = c.insights?.data?.[0] || {};
+              return `• ${c.name} [${c.effective_status}] — Gasto: $${ins.spend||0} | Alcance: ${ins.reach||0} | CTR: ${ins.ctr||0}% | CPM: $${ins.cpm||0} | Freq: ${ins.frequency||0}`;
+            }).join('\n');
+            adsCtx = `\n\nCAMPAÑAS META ADS (últimos 7 días):\n${lines}`;
+          }
+        } catch { /* no bloquear si falla */ }
+      }
+
+      const VSYSTEM = `Eres Valentina, Directora de Performance de PVB Estudio Creativo (Santiago, Chile). Especialista en Meta Ads.
+
+CLIENTES ACTIVOS:
+- UCars: campaña awareness + leads en preparación. Target: compradores auto usado Santiago. Budget ~$50-100/día. Objetivo: leads calificados vía Lead Form.
+- Kaya Unite: campaña Invierno 2026 en producción. Ropa outdoor premium.
+- Refugio Chiloé: temporada baja, mantención audiencias warm.
+
+ALERTAS AUTOMÁTICAS:
+- Frecuencia > 3.5 → fatiga creativa, recomendar rotar creativos
+- CTR < 0.8% → copy débil, revisar hook
+- CPM > $8 → saturación de audiencia, expandir targeting
+- ROAS < 2x → revisar embudo de conversión
+
+Responde en español directo. Máximo 4 líneas salvo que pidan análisis completo. Da datos concretos y recomendaciones accionables.${adsCtx}`;
+
+      const llm = new LLMClient();
+      const messages = [...history.slice(-8), { role: 'user', content: message }];
+      let resp;
+      try {
+        resp = await llm.messages.create({ max_tokens: 512, system: VSYSTEM, messages });
+      } catch (err) {
+        return res.status(200).json({ ok: false, error: err.message });
+      }
+      const reply = resp.content.find(b => b.type === 'text')?.text || '';
+      return res.status(200).json({ ok: true, reply });
+    }
+
+    // ── Figma ─────────────────────────────────────────────────────────────────
+    if (action === 'figma') {
+      const figmaToken = process.env.FIGMA_TOKEN;
+      const sub = req.query.sub || 'files';
+
+      if (!figmaToken) {
+        return res.status(200).json({ ok: false, needsSetup: true, message: 'Configura FIGMA_TOKEN en Vercel. Obtén tu token en figma.com → Account Settings → Personal Access Tokens.' });
+      }
+
+      const FH = { 'X-Figma-Token': figmaToken };
+      const FBASE = 'https://api.figma.com/v1';
+
+      if (sub === 'projects') {
+        const teamId = process.env.FIGMA_TEAM_ID;
+        if (!teamId) return res.status(200).json({ ok: false, needsSetup: true, message: 'Agrega FIGMA_TEAM_ID en Vercel (lo encuentras en la URL del team: figma.com/files/team/XXXXX/).' });
+        const r = await fetch(`${FBASE}/teams/${teamId}/projects`, { headers: FH });
+        const data = await r.json();
+        if (data.err) return res.status(200).json({ ok: false, error: data.err });
+        const projects = data.projects || [];
+        const withFiles = await Promise.all(projects.map(async proj => {
+          const fr = await fetch(`${FBASE}/projects/${proj.id}/files`, { headers: FH });
+          const fd = await fr.json();
+          return { id: proj.id, name: proj.name, files: (fd.files || []).map(f => ({ key: f.key, name: f.name, thumbnail_url: f.thumbnail_url, last_modified: f.last_modified })) };
+        }));
+        return res.status(200).json({ ok: true, projects: withFiles });
+      }
+
+      if (sub === 'file') {
+        const { fileKey } = req.query;
+        if (!fileKey) return res.status(400).json({ error: 'fileKey required' });
+        const r = await fetch(`${FBASE}/files/${fileKey}?depth=1`, { headers: FH });
+        const data = await r.json();
+        if (data.err) return res.status(200).json({ ok: false, error: data.err });
+        return res.status(200).json({ ok: true, name: data.name, pages: (data.document?.children || []).map(p => ({ id: p.id, name: p.name })), lastModified: data.lastModified });
+      }
+
+      return res.status(400).json({ error: 'Unknown figma sub' });
+    }
+
+    // ── Higgsfield ────────────────────────────────────────────────────────────
+    if (action === 'higgsfield') {
+      const hKey = process.env.HIGGSFIELD_API_KEY;
+      const sub  = req.query.sub || req.body?.sub || 'generate';
+
+      if (!hKey) {
+        return res.status(200).json({ ok: false, needsSetup: true, message: 'Configura HIGGSFIELD_API_KEY en Vercel. Obtén tu key en higgsfield.ai → Settings.' });
+      }
+
+      const HH = { 'Authorization': `Bearer ${hKey}`, 'Content-Type': 'application/json' };
+
+      if (sub === 'generate' && req.method === 'POST') {
+        const { prompt, style = 'cinematic', aspect_ratio = '9:16', duration = 6 } = req.body || {};
+        if (!prompt) return res.status(400).json({ error: 'prompt required' });
+        const r = await fetch('https://api.higgsfield.ai/v1/generation', {
+          method: 'POST', headers: HH,
+          body: JSON.stringify({ prompt, style, aspect_ratio, duration })
+        });
+        if (!r.ok) {
+          const txt = await r.text();
+          return res.status(200).json({ ok: false, error: `Higgsfield ${r.status}: ${txt.slice(0, 200)}` });
+        }
+        const data = await r.json();
+        return res.status(200).json({ ok: true, jobId: data.id || data.job_id, status: data.status, data });
+      }
+
+      if (sub === 'status') {
+        const { jobId } = req.query;
+        if (!jobId) return res.status(400).json({ error: 'jobId required' });
+        const r = await fetch(`https://api.higgsfield.ai/v1/generation/${jobId}`, { headers: HH });
+        const data = await r.json();
+        return res.status(200).json({ ok: true, status: data.status, videoUrl: data.video_url || data.url, thumbnailUrl: data.thumbnail_url, data });
+      }
+
+      return res.status(400).json({ error: 'Unknown higgsfield sub' });
+    }
+
+    // ── Codex / GPT-4o Dev Agent ──────────────────────────────────────────────
+    if (action === 'codex') {
+      if (req.method !== 'POST') return res.status(405).end();
+      const key = process.env.OPENAI_API_KEY;
+      if (!key) return res.status(200).json({ ok: false, error: 'OPENAI_API_KEY no configurada' });
+      const { prompt, context = '', model = 'gpt-4o' } = req.body || {};
+      if (!prompt) return res.status(400).json({ error: 'prompt required' });
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model, max_tokens: 2048,
+          messages: [
+            { role: 'system', content: `Eres Codex, agente de desarrollo de PVB Estudio Creativo. Stack: HTML/CSS/JS vanilla, Vercel serverless (api/), Supabase PostgreSQL, Node.js. Genera código limpio y funcional. Sin comentarios innecesarios.${context ? `\n\nCONTEXTO DE ARCHIVO:\n${context}` : ''}` },
+            { role: 'user', content: prompt }
+          ]
+        })
+      });
+      if (!r.ok) {
+        const txt = await r.text();
+        return res.status(200).json({ ok: false, error: `OpenAI ${r.status}: ${txt.slice(0, 200)}` });
+      }
+      const data = await r.json();
+      return res.status(200).json({ ok: true, reply: data.choices?.[0]?.message?.content || '', model });
+    }
+
     return res.status(400).json({ error: 'Unknown action' });
   } catch (err) {
     console.error('brain error:', err);

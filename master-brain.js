@@ -72,15 +72,26 @@ const AGENTS_DATA = [
     capabilities: 'community-engagement, reddit-culture, authentic-marketing', skills: '' },
 
   // PAID MEDIA (3)
-  { id: 'paid-media-meta-ads', name: 'Valentina — Meta Ads', title: 'Meta Ads specialist: fatiga creativa, audiencias, pacing y saturacion para Kaya, Aboga y Compliance', dept: 'marketing', model: 'sonnet',
-    capabilities: 'custom-audiences, lookalikes, creative-fatigue-detection, audience-saturation, budget-pacing, crm-upload',
-    skills: 'meta-audience-builder, meta-creative-fatigue-analyzer, meta-fatigue-monitor, meta-spend-tracker' },
+  { id: 'paid-media-meta-ads', name: 'Valentina — Meta Ads', title: 'Directora de Performance: UCars en prep, Kaya Invierno 2026, Refugio Chiloé. Meta Ads con acceso real a campañas, audiencias, creativos y presupuesto', dept: 'marketing', model: 'opus',
+    capabilities: 'campaign-creation, custom-audiences, lookalikes, creative-fatigue-detection, audience-saturation, budget-pacing, crm-upload, real-time-insights, ucars-campaign, lead-gen-forms',
+    skills: 'meta-audience-builder, meta-creative-fatigue-analyzer, meta-fatigue-monitor, meta-spend-tracker, meta-campaign-creator, meta-budget-optimizer' },
   { id: 'paid-media-google-ads', name: 'Rodrigo — Google Ads', title: 'Google Ads specialist: Quality Score, keyword gaps, search term mining y performance period-over-period', dept: 'marketing', model: 'sonnet',
     capabilities: 'quality-score-audit, keyword-gap-analysis, search-term-mining, negative-keyword-lists, period-comparison, impression-share',
     skills: 'google-keyword-analyzer, google-negative-keywords, google-performance-auditor, google-search-terms' },
   { id: 'paid-media-linkedin-ads', name: 'Isidora — LinkedIn Ads', title: 'LinkedIn Ads specialist B2B: ABM audiences, bid optimization, bulk edits y copy Feel First para Compliance', dept: 'marketing', model: 'sonnet',
     capabilities: 'abm-audiences, firmographic-targeting, bid-optimization, bulk-campaign-editing, b2b-copy, feel-first-framework',
     skills: 'linkedin-audience-builder, linkedin-bid-optimizer, linkedin-bulk-editor, linkedin-creative-builder' },
+
+  // CREATIVE TOOLS (3)
+  { id: 'creative-figma', name: 'Figma — Design Director', title: 'Revisión de diseños Figma, export de assets, specs para ads, componentes de marca y handoff para desarrollo', dept: 'creative', model: 'sonnet',
+    capabilities: 'figma-api, design-review, asset-export, brand-components, ad-specs, dev-handoff, component-audit',
+    skills: 'figma-connector, brand-system-review, ad-creative-specs, design-qa' },
+  { id: 'creative-higgsfield', name: 'Higgsfield — Video Director', title: 'Generación de video IA: prompts cinematicos, motion graphics, social video y product showcases para campañas PVB', dept: 'creative', model: 'opus',
+    capabilities: 'video-generation, cinematic-prompts, social-video, motion-graphics, product-videos, b-roll-generation',
+    skills: 'higgsfield-api, video-prompt-engineering, social-video-specs, cinematic-direction' },
+  { id: 'engineering-codex', name: 'Codex — GPT Dev Agent', title: 'GPT-4o code generation: scripts, automatizaciones, integraciones API y data processing para stack PVB (Vercel + Supabase)', dept: 'engineering', model: 'sonnet',
+    capabilities: 'gpt-4o, code-generation, script-writing, api-integration, supabase-queries, vercel-functions, debugging',
+    skills: 'openai-codex, code-review, script-generation, api-integration, data-processing' },
 
   // ENGINEERING (10)
   { id: 'engineering-frontend-developer', name: 'Frontend Developer', title: 'React/Vue/Angular, responsive, Core Web Vitals', dept: 'engineering', model: 'sonnet',
@@ -1247,6 +1258,7 @@ function setupEventListeners() {
       if (tab.dataset.tab === 'hub') loadHub();
       if (tab.dataset.tab === 'accounts' && !accountsLoaded) { initAccountsTab(); loadAccounts(); }
       if (tab.dataset.tab === 'esperanza' && !esperanzaLoaded) { initEsperanzaTab(); loadEsperanza(); }
+      if (tab.dataset.tab === 'meta-ads') { if (!metaAdsTabInitialized) { metaAdsTabInitialized = true; initMetaAdsTab(); } loadMetaAdsTab(); }
       if (tab.dataset.tab === 'competitor-config' && !competitorTabInitialized) {
         competitorTabInitialized = true;
         initCompetitorConfigTab();
@@ -1905,6 +1917,7 @@ function escapeHtmlMB(str) {
 }
 
 let competitorTabInitialized = false;
+let metaAdsTabInitialized = false;
 
 // ── Hub Tab: Notion + Telegram ────────────────────────────────────────────────
 let hubLoaded = false;
@@ -4457,4 +4470,264 @@ function renderNotionTareas(tareas) {
           </div>
         </div>`).join('')}
     </div>`).join('');
+}
+
+// ─── META ADS TAB ──────────────────────────────────────────────────────────────
+
+let metaAdsHistory = [];
+
+async function loadMetaAdsTab() {
+  const grid = document.getElementById('adsCampaignsGrid');
+  const token = localStorage.getItem('brain_token');
+
+  // Load account insights for KPI strip
+  try {
+    const r = await fetch('/api/brain?action=meta-ads&sub=insights', { headers: { Authorization: `Bearer ${token}` } });
+    const data = await r.json();
+    if (data.ok && data.insights) {
+      const ins = data.insights;
+      document.getElementById('kpiSpend').textContent   = ins.spend   ? `$${parseFloat(ins.spend).toFixed(0)}`   : '—';
+      document.getElementById('kpiReach').textContent   = ins.reach   ? Number(ins.reach).toLocaleString()         : '—';
+      document.getElementById('kpiCtr').textContent     = ins.ctr     ? `${parseFloat(ins.ctr).toFixed(2)}%`      : '—';
+      document.getElementById('kpiCpm').textContent     = ins.cpm     ? `$${parseFloat(ins.cpm).toFixed(2)}`      : '—';
+      document.getElementById('kpiClicks').textContent  = ins.clicks  ? Number(ins.clicks).toLocaleString()        : '—';
+    } else if (data.needsSetup) {
+      renderAdsSetupBanner(data.message);
+      return;
+    }
+  } catch { /* non-blocking */ }
+
+  // Load campaigns
+  try {
+    const r = await fetch('/api/brain?action=meta-ads&sub=campaigns', { headers: { Authorization: `Bearer ${token}` } });
+    const data = await r.json();
+    if (data.needsSetup) { renderAdsSetupBanner(data.message); return; }
+    if (!data.ok || !data.campaigns?.length) {
+      grid.innerHTML = '<div class="hub-empty">Sin campañas activas — configura META_ACCESS_TOKEN y META_AD_ACCOUNT_ID en Vercel.</div>';
+      return;
+    }
+    grid.innerHTML = data.campaigns.map(renderAdsCampaignCard).join('');
+    // Wire up pause/resume buttons
+    grid.querySelectorAll('[data-toggle-campaign]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const { campaignId, targetStatus } = btn.dataset;
+        btn.textContent = '…';
+        btn.disabled = true;
+        const res = await fetch('/api/brain?action=meta-ads&sub=toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ campaignId, newStatus: targetStatus })
+        });
+        const d = await res.json();
+        if (d.ok) { showNotification('Campaña actualizada', 'success'); loadMetaAdsTab(); }
+        else { btn.textContent = 'Error'; btn.disabled = false; }
+      });
+    });
+  } catch (err) {
+    grid.innerHTML = `<div class="hub-empty">Error: ${err.message}</div>`;
+  }
+}
+
+function renderAdsSetupBanner(msg) {
+  document.getElementById('adsCampaignsGrid').innerHTML =
+    `<div class="ads-setup-banner">⚙️ ${msg}</div>`;
+}
+
+function renderAdsCampaignCard(c) {
+  const ins    = c.insights?.data?.[0] || {};
+  const status = c.effective_status || c.status;
+  const isActive = status === 'ACTIVE';
+  const budget = c.daily_budget
+    ? `$${(parseInt(c.daily_budget) / 100).toFixed(0)}/día`
+    : c.lifetime_budget
+      ? `$${(parseInt(c.lifetime_budget) / 100).toFixed(0)} total`
+      : '—';
+  const freq = ins.frequency ? parseFloat(ins.frequency).toFixed(1) : null;
+  const freqAlert = freq && parseFloat(freq) > 3.5
+    ? `<span class="ads-alert">⚠️ Freq ${freq} — rotar creativos</span>` : '';
+  const ctrAlert = ins.ctr && parseFloat(ins.ctr) < 0.8
+    ? `<span class="ads-alert">⚠️ CTR bajo — revisar hook</span>` : '';
+
+  return `<div class="ads-campaign-card">
+    <div class="ads-campaign-header">
+      <div class="ads-campaign-name">${c.name}</div>
+      <span class="ads-status-badge ${isActive ? 'active' : 'paused'}">${isActive ? '● ACTIVA' : '○ PAUSADA'}</span>
+    </div>
+    <div class="ads-campaign-meta">${c.objective || ''} · ${budget}</div>
+    <div class="ads-campaign-metrics">
+      <span>👁 ${ins.reach ? Number(ins.reach).toLocaleString() : '—'}</span>
+      <span>👆 ${ins.clicks || '—'}</span>
+      <span>CTR ${ins.ctr ? parseFloat(ins.ctr).toFixed(2) + '%' : '—'}</span>
+      <span>CPM $${ins.cpm ? parseFloat(ins.cpm).toFixed(2) : '—'}</span>
+      <span>💸 $${ins.spend || '0'}</span>
+    </div>
+    ${freqAlert}${ctrAlert}
+    <div class="ads-campaign-actions">
+      <button class="ads-action-btn" data-toggle-campaign data-campaign-id="${c.id}" data-target-status="${isActive ? 'PAUSED' : 'ACTIVE'}">
+        ${isActive ? '⏸ Pausar' : '▶ Activar'}
+      </button>
+    </div>
+  </div>`;
+}
+
+// Valentina quick chat
+async function sendValentinaMessage(text) {
+  const input    = document.getElementById('adsValentinaInput');
+  const response = document.getElementById('adsValentinaResponse');
+  const token    = localStorage.getItem('brain_token');
+  if (!text) text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  response.classList.remove('hidden');
+  response.innerHTML = '<div class="hub-loading">Valentina analizando…</div>';
+  try {
+    const r = await fetch('/api/brain?action=valentina-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ message: text, history: metaAdsHistory.slice(-6) })
+    });
+    const data = await r.json();
+    if (data.ok) {
+      response.innerHTML = `<div class="ads-valentina-reply"><span class="ads-valentina-label">Valentina:</span> ${data.reply}</div>`;
+      metaAdsHistory.push({ role: 'user', content: text });
+      metaAdsHistory.push({ role: 'assistant', content: data.reply });
+    } else {
+      response.innerHTML = `<div class="ads-valentina-reply error">Error: ${data.error}</div>`;
+    }
+  } catch (err) {
+    response.innerHTML = `<div class="ads-valentina-reply error">Error: ${err.message}</div>`;
+  }
+}
+
+// Higgsfield generation
+async function generateHiggsfield() {
+  const prompt  = document.getElementById('higgsfieldPrompt').value.trim();
+  const style   = document.getElementById('higgsfieldStyle').value;
+  const aspect  = document.getElementById('higgsfieldAspect').value;
+  const result  = document.getElementById('higgsfieldResult');
+  const btn     = document.getElementById('higgsfieldGenerate');
+  const token   = localStorage.getItem('brain_token');
+  if (!prompt) { showNotification('Describe el video primero', 'warning'); return; }
+  btn.textContent = 'Generando…';
+  btn.disabled = true;
+  result.classList.remove('hidden');
+  result.innerHTML = '<div class="hub-loading">Enviando a Higgsfield…</div>';
+  try {
+    const r = await fetch('/api/brain?action=higgsfield&sub=generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ prompt, style, aspect_ratio: aspect })
+    });
+    const data = await r.json();
+    if (data.needsSetup) {
+      result.innerHTML = `<div class="ads-setup-banner">⚙️ ${data.message}</div>`;
+    } else if (data.ok) {
+      result.innerHTML = `<div class="ads-panel-success">✅ Job enviado — ID: <code>${data.jobId}</code><br><small>Estado: ${data.status}</small><br><a href="https://higgsfield.ai" target="_blank" class="notion-link">Ver en Higgsfield ↗</a></div>`;
+    } else {
+      result.innerHTML = `<div class="ads-valentina-reply error">Error: ${data.error}</div>`;
+    }
+  } catch (err) {
+    result.innerHTML = `<div class="ads-valentina-reply error">Error: ${err.message}</div>`;
+  }
+  btn.textContent = 'Generar ↗';
+  btn.disabled = false;
+}
+
+// Figma files
+async function loadFigmaFiles() {
+  const list  = document.getElementById('figmaFilesList');
+  const token = localStorage.getItem('brain_token');
+  list.innerHTML = '<div class="hub-loading">Conectando con Figma…</div>';
+  try {
+    const r = await fetch('/api/brain?action=figma&sub=projects', { headers: { Authorization: `Bearer ${token}` } });
+    const data = await r.json();
+    if (data.needsSetup) {
+      list.innerHTML = `<div class="ads-setup-banner">⚙️ ${data.message}</div>`;
+      return;
+    }
+    if (!data.ok || !data.projects?.length) {
+      list.innerHTML = '<div class="hub-empty">Sin proyectos Figma — verifica FIGMA_TOKEN y FIGMA_TEAM_ID.</div>';
+      return;
+    }
+    list.innerHTML = data.projects.map(proj => `
+      <div class="figma-project">
+        <div class="figma-project-name">📁 ${proj.name}</div>
+        <div class="figma-files-grid">
+          ${proj.files.map(f => `
+            <a href="https://figma.com/file/${f.key}" target="_blank" class="figma-file-card">
+              ${f.thumbnail_url ? `<img src="${f.thumbnail_url}" alt="${f.name}" class="figma-thumb" loading="lazy">` : '<div class="figma-thumb-placeholder">🎨</div>'}
+              <div class="figma-file-name">${f.name}</div>
+              <div class="figma-file-meta">${f.last_modified ? new Date(f.last_modified).toLocaleDateString('es-CL') : ''}</div>
+            </a>`).join('')}
+        </div>
+      </div>`).join('');
+  } catch (err) {
+    list.innerHTML = `<div class="hub-empty">Error: ${err.message}</div>`;
+  }
+}
+
+// Codex / GPT-4o
+async function runCodex() {
+  const prompt = document.getElementById('codexPrompt').value.trim();
+  const model  = document.getElementById('codexModel').value;
+  const result = document.getElementById('codexResult');
+  const btn    = document.getElementById('codexRun');
+  const token  = localStorage.getItem('brain_token');
+  if (!prompt) { showNotification('Escribe qué necesitas construir', 'warning'); return; }
+  btn.textContent = 'Ejecutando…';
+  btn.disabled = true;
+  result.classList.remove('hidden');
+  result.innerHTML = '<div class="hub-loading">GPT-4o procesando…</div>';
+  try {
+    const r = await fetch('/api/brain?action=codex', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ prompt, model })
+    });
+    const data = await r.json();
+    if (data.ok) {
+      const escaped = data.reply.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      result.innerHTML = `<pre class="codex-output">${escaped}</pre>`;
+    } else {
+      result.innerHTML = `<div class="ads-valentina-reply error">Error: ${data.error}</div>`;
+    }
+  } catch (err) {
+    result.innerHTML = `<div class="ads-valentina-reply error">Error: ${err.message}</div>`;
+  }
+  btn.textContent = 'Ejecutar ↗';
+  btn.disabled = false;
+}
+
+// Wire up Ads tab events (called once on DOMContentLoaded)
+function initMetaAdsTab() {
+  document.getElementById('adsRefreshBtn')?.addEventListener('click', loadMetaAdsTab);
+
+  const valInput = document.getElementById('adsValentinaInput');
+  document.getElementById('adsValentinaSend')?.addEventListener('click', () => sendValentinaMessage(valInput?.value?.trim()));
+  valInput?.addEventListener('keydown', e => { if (e.key === 'Enter') sendValentinaMessage(valInput.value.trim()); });
+
+  // Tool panel toggles
+  document.getElementById('higgsfieldOpenBtn')?.addEventListener('click', () => {
+    document.getElementById('higgsfieldPanel').classList.toggle('hidden');
+    document.getElementById('figmaPanel').classList.add('hidden');
+    document.getElementById('codexPanel').classList.add('hidden');
+  });
+  document.getElementById('higgsfieldPanelClose')?.addEventListener('click', () => document.getElementById('higgsfieldPanel').classList.add('hidden'));
+  document.getElementById('higgsfieldGenerate')?.addEventListener('click', generateHiggsfield);
+
+  document.getElementById('figmaOpenBtn')?.addEventListener('click', () => {
+    document.getElementById('figmaPanel').classList.toggle('hidden');
+    document.getElementById('higgsfieldPanel').classList.add('hidden');
+    document.getElementById('codexPanel').classList.add('hidden');
+    loadFigmaFiles();
+  });
+  document.getElementById('figmaPanelClose')?.addEventListener('click', () => document.getElementById('figmaPanel').classList.add('hidden'));
+
+  document.getElementById('codexOpenBtn')?.addEventListener('click', () => {
+    document.getElementById('codexPanel').classList.toggle('hidden');
+    document.getElementById('higgsfieldPanel').classList.add('hidden');
+    document.getElementById('figmaPanel').classList.add('hidden');
+  });
+  document.getElementById('codexPanelClose')?.addEventListener('click', () => document.getElementById('codexPanel').classList.add('hidden'));
+  document.getElementById('codexRun')?.addEventListener('click', runCodex);
 }
