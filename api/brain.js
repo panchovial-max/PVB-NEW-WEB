@@ -713,13 +713,14 @@ export default async function handler(req, res) {
         },
         {
           name: 'generate_catalog',
-          description: 'Genera un catálogo HTML profesional con fotos reales desde una carpeta de Drive. Cruza con inventario Supabase si el cliente es UCars. Guarda el resultado en la misma carpeta Drive. Usar cuando pidan catálogo, fichas de autos, material de venta, brochure de productos.',
-          input_schema: { type: 'object', required: ['folderUrl', 'clientName'], properties: {
-            folderUrl:   { type: 'string', description: 'URL de la carpeta Drive con las fotos' },
-            clientName:  { type: 'string', description: 'Nombre del cliente (ej: UCars)' },
-            style:       { type: 'string', enum: ['catalog', 'social', 'whatsapp'], description: 'Tipo de output: catalog=PDF/web, social=cards IG, whatsapp=fichas compactas. Default: catalog' },
-            title:       { type: 'string', description: 'Título del catálogo. Si no se provee, se genera automáticamente.' },
-            maxItems:    { type: 'number', description: 'Máximo de autos a incluir. Default: 12.' },
+          description: 'Genera un catálogo HTML profesional con fotos reales desde Drive. Para autos sin foto, genera imágenes con gpt-image-1 si se pide. Cruza con inventario Supabase si es UCars. Guarda HTML + imágenes IA en la carpeta Drive. Usar cuando pidan catálogo, fichas de autos, material de venta, brochure.',
+          input_schema: { type: 'object', required: ['clientName'], properties: {
+            folderUrl:            { type: 'string', description: 'URL de la carpeta Drive con las fotos reales (opcional si se usa solo IA)' },
+            clientName:           { type: 'string', description: 'Nombre del cliente (ej: UCars)' },
+            style:                { type: 'string', enum: ['catalog', 'social', 'whatsapp'], description: 'Tipo de output: catalog=PDF/web, social=cards IG, whatsapp=fichas compactas. Default: catalog' },
+            title:                { type: 'string', description: 'Título del catálogo. Si no se provee, se genera automáticamente.' },
+            maxItems:             { type: 'number', description: 'Máximo de autos a incluir. Default: 12.' },
+            generateMissingWithAI:{ type: 'boolean', description: 'Si true, genera imágenes con gpt-image-1 para autos sin foto en Drive. Imágenes se guardan en la misma carpeta para reusar. Default: false.' },
           }},
         },
       ];
@@ -845,55 +846,98 @@ export default async function handler(req, res) {
 
         if (name === 'generate_catalog') {
           const { listFolderImages, saveToFolder } = await import('../lib/google-drive.js');
-          const folderId = input.folderUrl.match(/folders\/([a-zA-Z0-9_-]+)/)?.[1] || input.folderUrl;
           const maxItems = input.maxItems || 12;
+          const folderId = input.folderUrl
+            ? (input.folderUrl.match(/folders\/([a-zA-Z0-9_-]+)/)?.[1] || input.folderUrl)
+            : null;
 
-          // 1. List images from Drive
-          const images = await listFolderImages(folderId);
-          if (!images.length) return { ok: false, error: 'No se encontraron imágenes en la carpeta.' };
+          // 1. List Drive images (if folder provided)
+          const driveImages = folderId ? await listFolderImages(folderId) : [];
 
-          // 2. Build car data — try Supabase cross-reference for UCars
-          let carsData = images.slice(0, maxItems).map(img => ({
-            imageUrl: img.embedUrl,
-            name: img.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
-            model: '', year: '', price: '', km: '', transmission: '', color: '',
-          }));
-
+          // 2. Get UCars inventory from Supabase
+          let vehicles = [];
           const isUCars = /ucars|u-cars/i.test(input.clientName);
           if (isUCars) {
             try {
               const { createClient } = await import('@supabase/supabase-js');
               const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-              const { data: vehicles } = await sb.from('stock_vehicles').select('*').eq('status', 'available').limit(50);
-              if (vehicles?.length) {
-                carsData = images.slice(0, maxItems).map(img => {
-                  const base = img.name.toLowerCase().replace(/\.[^.]+$/, '');
-                  const match = vehicles.find(v =>
-                    base.includes((v.model || '').toLowerCase()) || base.includes((v.make || '').toLowerCase())
-                  );
-                  return {
-                    imageUrl: img.embedUrl,
-                    name: match ? `${match.make} ${match.model}` : img.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
-                    year: match?.year || '',
-                    price: match?.price ? `$ ${Number(match.price).toLocaleString('es-CL')}` : '',
-                    km: match?.mileage ? `${Number(match.mileage).toLocaleString('es-CL')} km` : '',
-                    transmission: match?.transmission || '',
-                    color: match?.color || '',
-                    badge: match?.vehicle_type || '',
-                  };
-                });
-              }
-            } catch { /* non-blocking — use filename data */ }
+              const { data } = await sb.from('stock_vehicles').select('*').eq('status', 'available').limit(50);
+              vehicles = data || [];
+            } catch { /* non-blocking */ }
           }
 
-          // 3. Generate HTML via Codex/GPT-4o
+          // 3. Build unified car list: match Drive photos to inventory
+          const driveMap = new Map(driveImages.map(img => [img.name.toLowerCase().replace(/\.[^.]+$/, ''), img]));
+          let carsData = [];
+
+          if (vehicles.length) {
+            // Start from inventory, find matching Drive photo by filename
+            carsData = vehicles.slice(0, maxItems).map(v => {
+              const key = `${v.make} ${v.model} ${v.year}`.toLowerCase().replace(/\s+/g, ' ');
+              const matchedImg = [...driveMap.entries()].find(([k]) =>
+                k.includes((v.model || '').toLowerCase()) || key.split(' ').some(w => w.length > 3 && k.includes(w))
+              )?.[1];
+              return {
+                id: v.id,
+                name: `${v.make} ${v.model}`,
+                year: v.year || '',
+                price: v.price ? `$ ${Number(v.price).toLocaleString('es-CL')}` : '',
+                km: v.mileage ? `${Number(v.mileage).toLocaleString('es-CL')} km` : '',
+                transmission: v.transmission || '',
+                color: v.color || '',
+                badge: v.vehicle_type || '',
+                imageUrl: matchedImg?.embedUrl || null,
+                hasPhoto: !!matchedImg,
+                aiGenerated: false,
+              };
+            });
+          } else if (driveImages.length) {
+            // No inventory: use Drive images directly
+            carsData = driveImages.slice(0, maxItems).map(img => ({
+              name: img.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
+              imageUrl: img.embedUrl,
+              hasPhoto: true, aiGenerated: false,
+              year: '', price: '', km: '', transmission: '', color: '', badge: '',
+            }));
+          } else {
+            return { ok: false, error: 'Se requiere al menos una carpeta Drive con fotos o inventario en Supabase.' };
+          }
+
+          // 4. Generate AI images for cars without Drive photo
+          const missing = carsData.filter(c => !c.hasPhoto);
+          if (input.generateMissingWithAI && missing.length && process.env.OPENAI_API_KEY) {
+            for (const car of missing) {
+              try {
+                const prompt = `Professional automotive dealership photography. ${car.year} ${car.name}${car.color ? ` in ${car.color}` : ''}. Clean light studio background, dramatic 3/4 front angle, high-end commercial look, sharp details, no text, no watermark.`;
+                const imgRes = await fetch('https://api.openai.com/v1/images/generations', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+                  body: JSON.stringify({ model: 'gpt-image-1', prompt, n: 1, size: '1024x1024', quality: 'medium' }),
+                });
+                const imgData = await imgRes.json();
+                const tempUrl = imgData.data?.[0]?.url;
+                if (tempUrl && folderId) {
+                  // Download and save to same Drive folder for reuse
+                  const dlRes = await fetch(tempUrl);
+                  const buf = Buffer.from(await dlRes.arrayBuffer());
+                  const slug = car.name.toLowerCase().replace(/\s+/g, '-');
+                  const saved = await saveToFolder(folderId, `ai-${slug}-${car.year}.png`, buf, 'image/png');
+                  car.imageUrl = `https://lh3.googleusercontent.com/d/${saved.id}=w1200`;
+                } else if (tempUrl) {
+                  car.imageUrl = tempUrl;
+                }
+                car.aiGenerated = true;
+              } catch { /* non-blocking — skip this car's AI image */ }
+            }
+          }
+
+          // 5. Generate HTML catalog via GPT-4o
           const style = input.style || 'catalog';
           const catalogTitle = input.title || `Catálogo ${input.clientName} — ${new Date().toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })}`;
-
           const styleInstructions = {
-            catalog: 'Catálogo imprimible tipo PDF: 2 columnas, fondo blanco, tipografía profesional. Header oscuro con logo placeholder. Footer con datos de contacto.',
-            social: 'Cards cuadradas estilo Instagram: foto full-bleed, texto mínimo en overlay, colores vibrantes. Grid 3 columnas.',
-            whatsapp: 'Fichas compactas para WhatsApp: 1 columna, foto pequeña a la izquierda, info a la derecha, fondo muy claro, fácil de leer en móvil.',
+            catalog: 'Catálogo imprimible: 2 columnas, fondo blanco, tipografía profesional. Header oscuro. Footer con contacto. Badge "IA" sutil en fotos generadas por IA.',
+            social:  'Cards cuadradas estilo Instagram: foto full-bleed, texto overlay minimal, 3 columnas, vibrante.',
+            whatsapp:'Fichas compactas 1 columna: foto pequeña izquierda, specs derecha, fondo muy claro, legible en móvil.',
           }[style];
 
           const gptRes = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -907,39 +951,41 @@ export default async function handler(req, res) {
                 content: `Genera un catálogo HTML profesional de autos para ${input.clientName}.
 
 Título: "${catalogTitle}"
-Estilo requerido: ${styleInstructions}
-Datos de autos (JSON): ${JSON.stringify(carsData, null, 2)}
+Estilo: ${styleInstructions}
+Autos (JSON): ${JSON.stringify(carsData.map(c => ({ ...c, id: undefined })), null, 2)}
 
-Requisitos técnicos:
-- HTML completamente self-contained (todo inline: CSS en <style>, sin libs externas)
-- Imágenes: usar exactamente las imageUrl provistas como src del <img> (son URLs de Google Drive)
-- Si imageUrl falla, mostrar un placeholder gris elegante con el nombre del auto
-- Idioma: español
-- Precio en formato chileno con punto de miles
-- Botón CTA por auto: "Consultar" en color #E63946
-- Responsive y print-ready (@media print que oculte CTAs)
-- Solo HTML puro, sin markdown, sin explicación, sin \`\`\`html`,
+Requisitos:
+- HTML self-contained (CSS inline en <style>, sin librerías externas)
+- Imágenes: <img src="[imageUrl]"> — si imageUrl es null, mostrar placeholder gris con nombre del auto
+- Si aiGenerated=true: badge pequeño "✦ IA" en esquina superior derecha de la foto
+- Precio formato chileno (punto de miles)
+- Botón "Consultar" por auto en #E63946
+- Responsive + @media print (ocultar CTAs al imprimir)
+- Solo HTML puro, sin markdown, sin \`\`\`html`,
               }],
             }),
           });
           const gptData = await gptRes.json();
           let html = gptData.choices?.[0]?.message?.content || '';
           html = html.replace(/^```html\n?|\n?```$/g, '').trim();
+          if (!html) return { ok: false, error: 'No se pudo generar el HTML del catálogo.' };
 
-          if (!html) return { ok: false, error: 'No se pudo generar el catálogo.' };
-
-          // 4. Save HTML to Drive folder
+          // 6. Save HTML to Drive folder
           let savedUrl = null;
-          try {
-            const slug = input.clientName.toLowerCase().replace(/\s+/g, '-');
-            const filename = `catalogo-${slug}-${new Date().toISOString().slice(0, 10)}.html`;
-            const saved = await saveToFolder(folderId, filename, html);
-            savedUrl = saved.webViewLink;
-          } catch { /* non-blocking */ }
+          if (folderId) {
+            try {
+              const slug = input.clientName.toLowerCase().replace(/\s+/g, '-');
+              const saved = await saveToFolder(folderId, `catalogo-${slug}-${new Date().toISOString().slice(0, 10)}.html`, html);
+              savedUrl = saved.webViewLink;
+            } catch { /* non-blocking */ }
+          }
 
+          const aiCount = carsData.filter(c => c.aiGenerated).length;
           return {
             ok: true,
             carsIncluded: carsData.length,
+            realPhotos: carsData.filter(c => c.hasPhoto && !c.aiGenerated).length,
+            aiGenerated: aiCount,
             savedUrl,
             command: { type: 'open_catalog', url: savedUrl, html, title: catalogTitle },
           };
