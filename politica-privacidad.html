@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad — PVB Estudio Creativo</title>
+    <meta name="description" content="Política de privacidad de PVB Estudio Creativo: cómo tratamos los datos accedidos mediante integraciones con Pinterest, Meta y otras plataformas conectadas.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* ── Layout ─────────────────────────────────────── */
+        .contract-page {
+            background: #fff;
+            min-height: 100vh;
+            padding-top: 100px;
+        }
+
+        .contract-header {
+            background: #1A1A1A;
+            padding: 72px 0 56px;
+            text-align: center;
+        }
+
+        .contract-header .contract-badge {
+            display: inline-block;
+            border: 1px solid rgba(201,169,110,0.5);
+            color: #c9a96e;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            padding: 6px 18px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .contract-header h1 {
+            font-size: clamp(28px, 5vw, 52px);
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .contract-header .subtitle {
+            color: rgba(255,255,255,0.55);
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Document ───────────────────────────────────── */
+        .contract-document {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 64px 24px 120px;
+        }
+
+        /* TOC */
+        .contract-toc {
+            background: #F5F5F5;
+            border-left: 3px solid #1A1A1A;
+            padding: 28px 32px;
+            margin-bottom: 56px;
+        }
+
+        .contract-toc h3 {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: #1A1A1A;
+            margin-bottom: 16px;
+        }
+
+        .contract-toc ol {
+            padding-left: 20px;
+        }
+
+        .contract-toc li {
+            margin-bottom: 8px;
+        }
+
+        .contract-toc a {
+            color: #6B6B6B;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            transition: color 0.2s;
+        }
+
+        .contract-toc a:hover {
+            color: #1A1A1A;
+        }
+
+        /* Sections */
+        .contract-section {
+            margin-bottom: 52px;
+            scroll-margin-top: 100px;
+        }
+
+        .section-number {
+            display: inline-block;
+            background: #1A1A1A;
+            color: #c9a96e;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            padding: 4px 10px;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+        }
+
+        .contract-section h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1A1A1A;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+
+        .contract-section p {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #3a3a3a;
+            margin-bottom: 14px;
+        }
+
+        .contract-section p strong {
+            color: #1A1A1A;
+            font-weight: 600;
+        }
+
+        .contract-section ul,
+        .contract-section ol {
+            padding-left: 22px;
+            margin-bottom: 14px;
+        }
+
+        .contract-section li {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #3a3a3a;
+            margin-bottom: 6px;
+        }
+
+        .contract-section a.inline-link {
+            color: #1A1A1A;
+            text-decoration: underline;
+            text-decoration-color: #c9a96e;
+        }
+
+        /* Highlight boxes */
+        .highlight-box {
+            background: #F5F5F5;
+            border-left: 3px solid #c9a96e;
+            padding: 20px 24px;
+            margin: 20px 0;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0 !important;
+            font-size: 14px !important;
+            color: #4a4a4a !important;
+        }
+
+        .highlight-box.alert {
+            background: #fff8f0;
+            border-left-color: #c9a96e;
+        }
+
+        /* Divider */
+        .section-divider {
+            border: none;
+            border-top: 1px solid #e8e8e8;
+            margin: 52px 0;
+        }
+
+        /* CTA */
+        .contract-cta {
+            text-align: center;
+            background: #1A1A1A;
+            padding: 56px 24px;
+            margin-top: 80px;
+        }
+
+        .contract-cta p {
+            color: rgba(255,255,255,0.65);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .contract-cta .btn-gold {
+            display: inline-block;
+            background: #c9a96e;
+            color: #1A1A1A;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 16px 40px;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .contract-cta .btn-gold:hover {
+            opacity: 0.85;
+        }
+
+        /* Print button */
+        .print-bar {
+            background: #F5F5F5;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .print-bar span {
+            font-size: 12px;
+            color: #6B6B6B;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-print {
+            background: none;
+            border: 1px solid #1A1A1A;
+            color: #1A1A1A;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-print:hover {
+            background: #1A1A1A;
+            color: #fff;
+        }
+
+        /* Responsive */
+        @media print {
+            .navbar, .back-to-top, .print-bar, .contract-cta { display: none !important; }
+            .contract-page { padding-top: 0; }
+            .contract-header { padding: 32px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="pvb-logo.svg" alt="PVB Estudio Creativo" class="logo-image">
+                </a>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html#work" class="nav-link">TRABAJO</a>
+                <a href="index.html#about" class="nav-link">NOSOTROS</a>
+                <a href="index.html#agenda" class="nav-link">AGENDA</a>
+                <a href="login.html" class="nav-link">CLIENT LOGIN</a>
+                <a href="index.html#contact" class="nav-link">CONTACTO</a>
+                <a href="https://wa.me/56944328662?text=Hola!%20Quiero%20iniciar%20un%20proyecto%20con%20PVB%20Estudio%20Creativo" target="_blank" rel="noopener" class="btn btn-primary">INICIAR PROYECTO</a>
+            </div>
+            <button class="hamburger" id="hamburger">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Back to Top -->
+    <button class="back-to-top" id="backToTop">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </button>
+
+    <div class="contract-page">
+
+        <!-- Header -->
+        <div class="contract-header">
+            <div class="contract-badge">Documento Legal</div>
+            <h1>Política de Privacidad</h1>
+            <p class="subtitle">PVB Estudio Creativo — Integraciones con plataformas conectadas</p>
+        </div>
+
+        <!-- Print bar -->
+        <div class="print-bar">
+            <span>Última actualización: 23 de julio de 2026 · Jurisdicción: República de Chile</span>
+            <button class="btn-print" onclick="window.print()">IMPRIMIR / PDF</button>
+        </div>
+
+        <!-- Document body -->
+        <div class="contract-document">
+
+            <!-- TOC -->
+            <div class="contract-toc">
+                <h3>Contenido</h3>
+                <ol>
+                    <li><a href="#responsable">Responsable del Tratamiento</a></li>
+                    <li><a href="#alcance">Alcance de esta Política</a></li>
+                    <li><a href="#datos">Datos que Accedemos y Tratamos</a></li>
+                    <li><a href="#finalidad">Finalidad del Tratamiento</a></li>
+                    <li><a href="#pinterest">Integración con Pinterest</a></li>
+                    <li><a href="#plataformas">Otras Plataformas Conectadas</a></li>
+                    <li><a href="#compartir">Con Quién Compartimos Datos</a></li>
+                    <li><a href="#retencion">Almacenamiento y Retención</a></li>
+                    <li><a href="#seguridad">Seguridad</a></li>
+                    <li><a href="#derechos">Tus Derechos y Revocación de Acceso</a></li>
+                    <li><a href="#menores">Menores de Edad</a></li>
+                    <li><a href="#cambios">Cambios a esta Política</a></li>
+                    <li><a href="#contacto">Contacto</a></li>
+                </ol>
+            </div>
+
+            <!-- 1 -->
+            <div class="contract-section" id="responsable">
+                <div class="section-number">Sección 1</div>
+                <h2>Responsable del Tratamiento</h2>
+                <p>El responsable del tratamiento de los datos descritos en esta política es:</p>
+                <p>
+                    <strong>Francisco Vial Brown Cine E.I.R.L.</strong> (en adelante, «PVB Estudio Creativo» o «PVB»)<br>
+                    RUT: 77.478.304-0<br>
+                    Domicilio: Santiago, República de Chile<br>
+                    Correo de contacto para privacidad: <a class="inline-link" href="mailto:info@panchovial.com">info@panchovial.com</a><br>
+                    Sitio web: <a class="inline-link" href="https://panchovial.com">panchovial.com</a>
+                </p>
+            </div>
+
+            <!-- 2 -->
+            <div class="contract-section" id="alcance">
+                <div class="section-number">Sección 2</div>
+                <h2>Alcance de esta Política</h2>
+                <p>Esta Política de Privacidad describe cómo PVB Estudio Creativo recolecta, usa, almacena y protege la información a la que accede cuando un usuario autoriza la conexión de sus cuentas de plataformas de terceros —como <strong>Pinterest</strong>, Meta (Facebook/Instagram), TikTok, YouTube o LinkedIn— con las herramientas de gestión de contenido y marketing operadas por PVB.</p>
+                <p>La autorización se realiza mediante procesos estándar de <strong>OAuth</strong>, en los que el usuario concede permisos explícitos y revocables. PVB accede únicamente a los datos necesarios para prestar los servicios descritos en esta política, y solo con el consentimiento del titular de la cuenta.</p>
+                <div class="highlight-box">
+                    <p>El tratamiento se rige por la <strong>Ley N° 19.628 sobre Protección de la Vida Privada</strong> de Chile y por las políticas y términos de cada plataforma conectada, incluyendo la <em>Pinterest Developer Policy</em>.</p>
+                </div>
+            </div>
+
+            <!-- 3 -->
+            <div class="contract-section" id="datos">
+                <div class="section-number">Sección 3</div>
+                <h2>Datos que Accedemos y Tratamos</h2>
+                <p>Según los permisos que otorgues al conectar tu cuenta, PVB puede acceder a:</p>
+                <ul>
+                    <li><strong>Información básica de perfil:</strong> nombre de usuario, nombre público, identificador de cuenta y foto de perfil.</li>
+                    <li><strong>Contenido de la cuenta:</strong> tableros, pines, publicaciones, imágenes, descripciones y enlaces asociados que tú administras.</li>
+                    <li><strong>Métricas y analíticas:</strong> impresiones, guardados, clics, alcance y otras estadísticas de rendimiento de tu contenido.</li>
+                    <li><strong>Tokens de acceso:</strong> credenciales técnicas emitidas por la plataforma para operar en tu nombre dentro de los permisos concedidos.</li>
+                </ul>
+                <p>PVB <strong>no</strong> accede a tu contraseña, ni a mensajes privados, ni a información de pago o financiera de tu cuenta de la plataforma conectada.</p>
+            </div>
+
+            <!-- 4 -->
+            <div class="contract-section" id="finalidad">
+                <div class="section-number">Sección 4</div>
+                <h2>Finalidad del Tratamiento</h2>
+                <p>Utilizamos los datos accedidos exclusivamente para:</p>
+                <ul>
+                    <li>Programar, publicar y administrar contenido en tus cuentas, según tus instrucciones.</li>
+                    <li>Generar reportes de rendimiento y análisis de contenido.</li>
+                    <li>Organizar y respaldar assets creativos vinculados a tus proyectos con PVB.</li>
+                    <li>Operar y mejorar las herramientas internas de automatización de marketing de PVB.</li>
+                </ul>
+                <div class="highlight-box alert">
+                    <p><strong>Nunca</strong> vendemos, alquilamos ni comercializamos tus datos, y no los usamos para fines de publicidad de terceros ajenos a la prestación del servicio acordado contigo.</p>
+                </div>
+            </div>
+
+            <!-- 5 -->
+            <div class="contract-section" id="pinterest">
+                <div class="section-number">Sección 5</div>
+                <h2>Integración con Pinterest</h2>
+                <p>Cuando conectas tu cuenta de <strong>Pinterest</strong>, PVB accede a la API de Pinterest únicamente con los permisos (<em>scopes</em>) que autorizas —típicamente lectura de tableros y pines, publicación de contenido y consulta de analíticas—.</p>
+                <p>El uso de datos provenientes de Pinterest se realiza en cumplimiento de la <a class="inline-link" href="https://developers.pinterest.com/terms/" target="_blank" rel="noopener">Pinterest Developer Policy y sus Términos</a>. No combinamos datos de Pinterest con datos de otras fuentes para elaborar perfiles ajenos a la finalidad autorizada, ni transferimos datos de Pinterest a terceros no esenciales para el servicio.</p>
+                <p>Puedes revocar el acceso de PVB a tu cuenta de Pinterest en cualquier momento desde la configuración de tu cuenta de Pinterest, sección <em>Apps conectadas</em>. Al revocar, los tokens de acceso quedan invalidados y dejamos de acceder a tu cuenta.</p>
+            </div>
+
+            <!-- 6 -->
+            <div class="contract-section" id="plataformas">
+                <div class="section-number">Sección 6</div>
+                <h2>Otras Plataformas Conectadas</h2>
+                <p>El mismo principio de acceso mínimo, consentido y revocable aplica a cualquier otra plataforma que decidas conectar (Meta/Instagram/Facebook, TikTok, YouTube, LinkedIn u otras). En cada caso, el tratamiento se limita a los permisos que otorgues y a las finalidades descritas en la Sección 4, y se rige adicionalmente por los términos de la plataforma correspondiente.</p>
+            </div>
+
+            <!-- 7 -->
+            <div class="contract-section" id="compartir">
+                <div class="section-number">Sección 7</div>
+                <h2>Con Quién Compartimos Datos</h2>
+                <p>No vendemos tus datos. Podemos compartir información estrictamente necesaria con proveedores de infraestructura que actúan como encargados de tratamiento bajo obligaciones de confidencialidad, tales como:</p>
+                <ul>
+                    <li><strong>Vercel</strong> — alojamiento de la aplicación web.</li>
+                    <li><strong>Supabase</strong> — base de datos y almacenamiento seguro.</li>
+                    <li><strong>Proveedores de modelos de IA</strong> — para funciones de asistencia y automatización, procesando solo los datos necesarios para ejecutar la tarea solicitada.</li>
+                </ul>
+                <p>También podremos divulgar información cuando la ley lo exija o para proteger derechos, seguridad o integridad legítimos.</p>
+            </div>
+
+            <!-- 8 -->
+            <div class="contract-section" id="retencion">
+                <div class="section-number">Sección 8</div>
+                <h2>Almacenamiento y Retención</h2>
+                <p>Conservamos los datos y tokens de acceso solo mientras exista una relación de servicio activa y la conexión permanezca autorizada. Cuando revocas el acceso o solicitas la eliminación, borramos los tokens y los datos personales asociados dentro de un plazo razonable, salvo obligación legal de conservación.</p>
+            </div>
+
+            <!-- 9 -->
+            <div class="contract-section" id="seguridad">
+                <div class="section-number">Sección 9</div>
+                <h2>Seguridad</h2>
+                <p>Aplicamos medidas técnicas y organizativas razonables para proteger tus datos: cifrado en tránsito, almacenamiento seguro de credenciales, acceso restringido y buenas prácticas de manejo de tokens. Ningún sistema es infalible, pero trabajamos para minimizar riesgos y responder oportunamente ante cualquier incidente.</p>
+            </div>
+
+            <!-- 10 -->
+            <div class="contract-section" id="derechos">
+                <div class="section-number">Sección 10</div>
+                <h2>Tus Derechos y Revocación de Acceso</h2>
+                <p>Conforme a la Ley N° 19.628, tienes derecho a acceder, rectificar, cancelar (eliminar) y oponerte al tratamiento de tus datos personales. Además, puedes:</p>
+                <ul>
+                    <li>Revocar en cualquier momento la conexión OAuth desde la configuración de la plataforma correspondiente.</li>
+                    <li>Solicitar la eliminación de los datos que mantengamos, escribiéndonos a <a class="inline-link" href="mailto:info@panchovial.com">info@panchovial.com</a>.</li>
+                    <li>Solicitar información sobre qué datos tuyos tratamos y con qué finalidad.</li>
+                </ul>
+                <p>Atenderemos tu solicitud dentro de los plazos que exige la normativa aplicable.</p>
+            </div>
+
+            <!-- 11 -->
+            <div class="contract-section" id="menores">
+                <div class="section-number">Sección 11</div>
+                <h2>Menores de Edad</h2>
+                <p>Nuestros servicios están dirigidos a personas mayores de edad y a titulares de cuentas comerciales o profesionales. No recolectamos deliberadamente datos de menores de edad. Si detectamos que hemos tratado datos de un menor sin la autorización correspondiente, los eliminaremos.</p>
+            </div>
+
+            <!-- 12 -->
+            <div class="contract-section" id="cambios">
+                <div class="section-number">Sección 12</div>
+                <h2>Cambios a esta Política</h2>
+                <p>Podemos actualizar esta Política de Privacidad para reflejar cambios en nuestras prácticas, en las plataformas conectadas o en la legislación. Publicaremos la versión vigente en esta misma página, indicando la fecha de última actualización. El uso continuado del servicio tras una actualización implica la aceptación de la política revisada.</p>
+            </div>
+
+            <!-- 13 -->
+            <div class="contract-section" id="contacto">
+                <div class="section-number">Sección 13</div>
+                <h2>Contacto</h2>
+                <p>Para cualquier consulta, solicitud de derechos o reclamo relacionado con esta política o con el tratamiento de tus datos, contáctanos en:</p>
+                <p>
+                    <strong>PVB Estudio Creativo</strong> — Francisco Vial Brown Cine E.I.R.L.<br>
+                    Correo: <a class="inline-link" href="mailto:info@panchovial.com">info@panchovial.com</a><br>
+                    Web: <a class="inline-link" href="https://panchovial.com">panchovial.com</a>
+                </p>
+            </div>
+
+        </div>
+        <!-- /contract-document -->
+
+        <!-- CTA -->
+        <div class="contract-cta">
+            <p>¿Dudas sobre cómo tratamos tus datos?</p>
+            <a href="mailto:info@panchovial.com" class="btn-gold">ESCRÍBENOS</a>
+        </div>
+
+    </div>
+    <!-- /contract-page -->
+
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.style.background = window.scrollY > 50
+                ? 'rgba(26,26,26,0.98)'
+                : 'transparent';
+        });
+
+        // Back to top
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            backToTop.style.opacity = window.scrollY > 400 ? '1' : '0';
+        });
+        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        // Hamburger
+        const hamburger = document.getElementById('hamburger');
+        const navMenu = document.getElementById('navMenu');
+        hamburger?.addEventListener('click', () => navMenu.classList.toggle('active'));
+    </script>
+</body>
+</html>
